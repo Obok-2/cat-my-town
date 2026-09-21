@@ -1,3 +1,5 @@
+import { selectCandidates } from './matchConfig';
+
 // ⚠️ 목데이터 — 실제 매칭이 아니다.
 // 기획안 §3-1의 진짜 파이프라인(Voyage AI 임베딩 + pgvector 코사인 유사도 + Claude 설명 생성)은
 // server/ 가 아직 비어 있어 쓸 수 없다. 백엔드가 생기기 전까지 화면 흐름만 검증하는 자리표시자.
@@ -24,13 +26,14 @@ function pickRandomTags(count) {
   return picked;
 }
 
-// cats: 현재 사용자가 등록한 고양이 목록. 후보가 없으면(신규 사용자) 항상 "새 친구" 취급.
+// cats: 현재 사용자가 등록한 고양이 목록. 등록된 고양이마다 무작위 일치율(0.35 ~ 0.95)을 매기고,
+// 기준(MATCH_THRESHOLD) 이상인 것만 일치율 높은 순으로 최대 3개를 candidates 로 돌려준다.
+// candidates 가 비어 있으면(신규 사용자이거나 전부 기준 미만) 새 고양이로 취급한다.
 export function mockMatchAgainstExisting(cats) {
   const tags = pickRandomTags(2);
-  if (!cats || cats.length === 0) {
-    return { candidateCat: null, score: 0, tags };
-  }
-  const candidateCat = cats[Math.floor(Math.random() * cats.length)];
-  const score = Math.round((Math.random() * 0.5 + 0.4) * 100) / 100; // 0.40 ~ 0.90
-  return { candidateCat, score, tags };
+  const scored = (cats ?? []).map((cat) => ({
+    cat,
+    score: Math.round((Math.random() * 0.6 + 0.35) * 100) / 100,
+  }));
+  return { tags, candidates: selectCandidates(scored) };
 }
