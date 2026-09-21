@@ -29,6 +29,19 @@
   그런 경우엔 effect를 없애는 방향(위 첫 항목)으로 구조를 바꾼다.
 - `useFocusEffect`는 `useEffect`와 별개다. 탭 화면은 언마운트되지 않아서 "화면에 돌아올 때마다 새로 읽어야 하는 데이터"에 필요하므로 `[]`(1회)로 바꾸지 않는다.
 
+## 코딩 규칙 (Java — server/)
+
+- **앱용 API**는 URL 앞에 `/app`을 붙이고 기능별 패키지로 나눈다: `/app/collection` · `/app/camera` · `/app/level` → `com.catmytown.server.app.{collection,camera,level}`.
+  구조는 `XxxController` → `XxxService` → `XxxDao`(`@Mapper` 인터페이스) → Mapper XML.
+- **MyBatis 설정**은 `application.properties`에 이 형태로 둔다: `mybatis.config-location=classpath:mybatis/mybatis-config.xml` ·
+  `mybatis.type-aliases-package=com.catmytown.server.model` · `mybatis.mapper-locations=mybatis/mappers/*.xml`.
+  Mapper XML은 `src/main/resources/mybatis/mappers/` 한 폴더에 `XxxMapper.xml`로 두고(하위 폴더 없음) `namespace`는 Dao 인터페이스의 전체 이름.
+- **VO/DTO 클래스는 `com.catmytown.server.model` 패키지**에 둔다. 클래스 이름이 곧 **별칭**이라 mapper XML의 `resultType`/`parameterType`에 전체 이름 대신 클래스 이름을 쓴다.
+  같은 이름의 클래스를 둘 이상 만들지 않는다(시작할 때 오류).
+- `mybatis-config.xml`에는 `<settings>`(예: `mapUnderscoreToCamelCase`)를 둔다. **`config-location`을 쓰면 `mybatis.configuration.*` 속성은 같이 쓸 수 없다**(시작 오류) — 그 설정은 XML로.
+  속성 이름은 `mybatis.config`가 아니라 **`mybatis.config-location`** 이다(`mybatis.config`는 무시됨). Mapper는 `mapper-locations`로 잡으므로 config의 `<mappers>`에는 같이 등록하지 않는다(둘 다 쓰면 중복 등록 오류).
+- 의존성 주입은 **필드에 `@Autowired`** 로 한다. `@RequiredArgsConstructor` 생성자 주입은 쓰지 않는다.
+
 ## 절대 규칙
 
 1. **git commit·push는 사용자가 먼저 하기 전까지 하지 않는다.** 코드·문서를 수정해도 커밋하지 않고 작업 트리에만 남겨둔다. "커밋해", "푸시해"처럼 명시적으로 요청했을 때만 실행한다. (2026-09-21 — 동의 없이 커밋·푸시해서 항의받음)
