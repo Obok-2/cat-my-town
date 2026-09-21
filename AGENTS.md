@@ -16,6 +16,9 @@
 - 로컬 전용이라 DB명·계정(`catmytown`)과 비밀번호는 compose 파일과 `application.properties`에 **하드코딩**한다(접속 주소는 `localhost`). 환경변수·`.env`로 분리하지 않는다.
   비밀번호는 무작위 문자열이고 `infra/docker-compose.yml`의 `POSTGRES_PASSWORD`와 `application.properties`의 `spring.datasource.password` **두 곳이 항상 같아야** 한다.
   (git에 올라가는 값이므로 운영 환경에는 절대 재사용하지 않는다)
+- 로컬 사진 저장소 MinIO(`infra/docker-compose.yml`의 `minio`)도 같은 방식으로 계정(`catmytown`)·비밀번호를 **하드코딩**한다. 포트는 API **9000**, 웹 콘솔 **9001**,
+  버킷 `cat-photos`는 `minio-init` 컨테이너가 자동으로 만든다. 비밀번호는 compose 안의 `minio`와 `minio-init` **두 곳이 같아야** 한다.
+  이미지는 Docker Hub의 `minio/minio`가 삭제되어 **Quay의 마지막 공식 이미지(`quay.io/minio/minio:RELEASE.2025-09-07...`)로 고정**한 것이니 `latest`나 Docker Hub 주소로 바꾸지 않는다.
 
 ## 코딩 규칙 (React — app/, web/)
 

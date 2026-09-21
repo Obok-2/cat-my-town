@@ -1,6 +1,8 @@
-# 로컬 개발용 인프라 - PostgreSQL + pgvector
+# 로컬 개발용 인프라 - PostgreSQL + pgvector, MinIO(사진 저장소)
 #   cd infra && docker compose up -d
 # 로컬 전용이라 DB명/계정/비밀번호는 하드코딩한다 (server application.properties 기본값과 동일 — 비밀번호를 바꾸면 두 곳을 함께 수정).
+# MinIO 계정도 하드코딩한다. 비밀번호는 이 파일의 minio(MINIO_ROOT_PASSWORD)와 minio-init(entrypoint) 두 곳이 같아야 하고,
+# server 에서 MinIO 를 붙일 때도 같은 값을 쓴다.
 name: cat-my-town
 
 services:
@@ -17,5 +19,35 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
 
+  # 사진 저장소 (S3 호환). sightings.photo_url 이 가리키는 파일이 여기에 저장된다.
+  # Docker Hub 의 minio/minio 는 삭제되어 Quay 의 마지막 공식 이미지를 고정해서 쓴다 (로컬 개발 전용).
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    container_name: cat-my-town-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ***REMOVED***
+      MINIO_ROOT_PASSWORD: ***REMOVED***
+    ports:
+      # 다른 프로그램이 9000/9001 을 쓰고 있으면 앞쪽(호스트) 번호만 바꾼다
+      - "9000:9000" # S3 API
+      - "9001:9001" # 웹 콘솔 http://localhost:9001
+    volumes:
+      - minio-data:/data
+
+  # 버킷을 자동으로 만들고 끝나는 1회용 컨테이너 (이미 있으면 그대로 둔다)
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    container_name: cat-my-town-minio-init
+    depends_on:
+      - minio
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 ***REMOVED*** ***REMOVED***; do sleep 1; done;
+      mc mb --ignore-existing local/cat-photos
+      "
+
 volumes:
   db-data:
+  minio-data:
