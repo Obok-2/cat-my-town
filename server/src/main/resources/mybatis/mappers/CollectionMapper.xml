@@ -2,4 +2,31 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.catmytown.server.app.collection.CollectionDao">
 
+    <select id="selectCatCount" resultType="int">
+        SELECT COUNT(*)
+          FROM cats
+         WHERE user_id = #{userId}
+    </select>
+
+    <select id="selectCatCardList" resultType="CollectionCatRes">
+        SELECT c.id,
+               c.name,
+               c.photo_url,
+               COUNT(s.id) AS sighting_count
+          FROM cats c
+          LEFT JOIN sightings s ON s.cat_id = c.id
+         WHERE c.user_id = #{userId}
+         GROUP BY c.id, c.name, c.photo_url
+         ORDER BY c.created_at DESC, c.id DESC
+    </select>
+
+    <select id="selectCatTagList" resultType="CollectionCatTagVo">
+        SELECT t.cat_id,
+               t.tag
+          FROM cat_tags t
+          JOIN cats c ON c.id = t.cat_id
+         WHERE c.user_id = #{userId}
+         ORDER BY t.cat_id, t.id
+    </select>
+
 </mapper>

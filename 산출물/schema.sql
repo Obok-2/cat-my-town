@@ -19,7 +19,8 @@ CREATE TABLE cats (
     user_id                   BIGINT        NOT NULL REFERENCES users (id) ON DELETE CASCADE,  -- 이 고양이를 등록한 사용자
     name                      VARCHAR(50)   NOT NULL,
     representative_embedding  VECTOR(1024),                 -- 대표 임베딩 (Voyage AI voyage-multimodal-3.5, 1024차원)
-    created_at                TIMESTAMPTZ   NOT NULL DEFAULT now()   -- 첫 만남 시각
+    created_at                TIMESTAMPTZ   NOT NULL DEFAULT now(),  -- 첫 만남 시각
+    photo_url                 VARCHAR(500)  NOT NULL                    -- 도감 카드의 대표 사진 저장 경로 (새 고양이 등록 시 첫 목격 사진)
 );
 CREATE INDEX idx_cats_user_id ON cats (user_id);
 -- 검색은 항상 "본인 소유 고양이"로 범위를 제한(WHERE user_id = ?)한 뒤 코사인 유사도로 비교한다.
