@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { isLoggedIn, logout } from './auth.js';
 import { DEFAULT_ROUTE, MENU } from './data/menu.js';
 import { navigate, useHashRoute } from './router.js';
@@ -10,16 +10,8 @@ import WipPage from './pages/WipPage.jsx';
 export default function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn);
   const route = useHashRoute();
-  const menuItem = MENU.find((item) => item.route === route);
-
-  // 로그인 상태와 주소가 어긋나면 바로잡는다 (미로그인 → 로그인, 알 수 없는 주소 → 대시보드)
-  useEffect(() => {
-    if (!loggedIn) {
-      if (route !== 'login') navigate('login');
-    } else if (!menuItem) {
-      navigate(DEFAULT_ROUTE);
-    }
-  }, [loggedIn, route, menuItem]);
+  // 알 수 없는 주소는 대시보드로 보여준다. 주소창 자체는 routeGuard.js가 바로잡는다.
+  const menuItem = MENU.find((item) => item.route === route) ?? MENU.find((item) => item.route === DEFAULT_ROUTE);
 
   if (!loggedIn) {
     return (
@@ -31,8 +23,6 @@ export default function App() {
       />
     );
   }
-
-  if (!menuItem) return null;
 
   const handleLogout = () => {
     logout();
