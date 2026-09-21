@@ -1,5 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { computeLevel } from './levels';
+import seedData from './seed.json';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 // ⚠️ 로컬 전용 목 데이터 레이어. server/ 가 비어있어 실제 API가 없다 — 기기 안 AsyncStorage에만 쌓인다.
 // 데이터 모양은 design/우리동네고양이_목업.pdf 8페이지 "DATA SHAPE"를 그대로 따른다.
@@ -127,4 +130,54 @@ export async function addSightingToCat(catId, { photoUri }) {
   await writeJson(KEYS.sightings, [sighting, ...sightings]);
 
   return { cat: nextCats.find((c) => c.id === catId), sighting };
+}
+
+// ⚠️ 개발용 가라 데이터. seed.json의 이름·태그는 목업(design/우리동네고양이 UIUX 목업)의
+// 예시 데이터를 그대로 가져왔다. 기존 도감을 통째로 덮어쓴다 — 확인 화면(ProfileScreen)에서만 호출.
+export async function seedDemoData() {
+  const now = Date.now();
+  const cats = [];
+  const sightings = [];
+
+  for (const seedCat of seedData.cats) {
+    const catId = newId('cat');
+    const explicit = seedData.sightingsByCatName[seedCat.name] ?? [];
+    const entries = [...explicit];
+    while (entries.length < seedCat.sightingCount) {
+      const spread = Math.max(seedCat.firstSeenDaysAgo, 1);
+      entries.push({ daysAgo: Math.floor(Math.random() * spread), memo: '' });
+    }
+    entries.sort((a, b) => b.daysAgo - a.daysAgo);
+
+    entries.forEach((entry, i) => {
+      sightings.push({
+        id: newId('sighting'),
+        catId,
+        photoUri: null,
+        takenAt: now - entry.daysAgo * DAY_MS,
+        lat: null,
+        lng: null,
+        order: i + 1,
+        memo: entry.memo ?? '',
+      });
+    });
+
+    cats.push({
+      id: catId,
+      name: seedCat.name,
+      tags: seedCat.tags,
+      photoUri: null,
+      sightingCount: seedCat.sightingCount,
+      firstSeenAt: now - seedCat.firstSeenDaysAgo * DAY_MS,
+    });
+  }
+
+  await writeJson(KEYS.cats, cats);
+  await writeJson(KEYS.sightings, sightings);
+  return cats;
+}
+
+export async function clearAllCats() {
+  await writeJson(KEYS.cats, []);
+  await writeJson(KEYS.sightings, []);
 }

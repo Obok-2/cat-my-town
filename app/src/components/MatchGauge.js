@@ -2,16 +2,19 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { useColors } from '../theme/ThemeContext';
+import { fonts } from '../theme/fonts';
 
-// 목업 8페이지: "react-native-svg Circle의 strokeDashoffset을 score로 계산하고
-// 0 → score 애니메이션." reanimated 대신 RN 내장 Animated로 동일 효과를 낸다(추가 네이티브 의존성 회피).
+// 목업 a3: r=43(viewBox 100), stroke-width 11, 배경 트랙 #F0E6D8, 진행 #E08B4B.
+// reanimated 대신 RN 내장 Animated로 0 → score 애니메이션.
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+const VIEWBOX = 100;
+const RADIUS = 43;
+const STROKE_WIDTH = 11;
 
-export default function MatchGauge({ percent = 0, size = 140, strokeWidth = 12, label = '일치율' }) {
+export default function MatchGauge({ percent = 0, size = 170, label = '일치율' }) {
   const colors = useColors();
   const animatedValue = useRef(new Animated.Value(0)).current;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
+  const circumference = 2 * Math.PI * RADIUS;
 
   useEffect(() => {
     Animated.timing(animatedValue, {
@@ -28,31 +31,25 @@ export default function MatchGauge({ percent = 0, size = 140, strokeWidth = 12, 
 
   return (
     <View style={[styles.wrap, { width: size, height: size }]}>
-      <Svg width={size} height={size}>
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={colors.border}
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
+      <Svg width={size} height={size} viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`} style={{ transform: [{ rotate: '-90deg' }] }}>
+        <Circle cx={VIEWBOX / 2} cy={VIEWBOX / 2} r={RADIUS} stroke={colors.trackBg} strokeWidth={STROKE_WIDTH} fill="none" />
         <AnimatedCircle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
+          cx={VIEWBOX / 2}
+          cy={VIEWBOX / 2}
+          r={RADIUS}
           stroke={colors.primary}
-          strokeWidth={strokeWidth}
+          strokeWidth={STROKE_WIDTH}
           fill="none"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
-          rotation="-90"
-          origin={`${size / 2}, ${size / 2}`}
         />
       </Svg>
       <View style={styles.center} pointerEvents="none">
-        <Text style={[styles.percent, { color: colors.text }]}>{Math.round(percent)}%</Text>
+        <Text style={[styles.percent, { color: colors.accent }]}>
+          {Math.round(percent)}
+          <Text style={styles.percentSign}>%</Text>
+        </Text>
         <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
       </View>
     </View>
@@ -62,6 +59,7 @@ export default function MatchGauge({ percent = 0, size = 140, strokeWidth = 12, 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', justifyContent: 'center' },
   center: { position: 'absolute', alignItems: 'center' },
-  percent: { fontSize: 30, fontWeight: '800' },
-  label: { fontSize: 13, marginTop: 2 },
+  percent: { fontFamily: fonts.display, fontSize: 52, lineHeight: 52 },
+  percentSign: { fontSize: 24 },
+  label: { fontFamily: fonts.body, fontSize: 13, marginTop: 2 },
 });

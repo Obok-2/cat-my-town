@@ -1,10 +1,12 @@
 import React from 'react';
 import { Modal, View, Text, StyleSheet } from 'react-native';
 import { useColors } from '../theme/ThemeContext';
+import { fonts } from '../theme/fonts';
 import PrimaryButton from './PrimaryButton';
+import PlaceholderArt from './PlaceholderArt';
 import { LEVELS } from '../data/levels';
 
-// 목업 5페이지 "레벨업 팝업": 달성 시 짧게 노출되는 오버레이.
+// 목업 a8 레벨업 팝업: 오버레이 + 일러스트 + "LEVEL UP!" + 타이틀 + 설명 + 진행바 + 버튼.
 export default function LevelUpModal({ visible, levelInfo, onContinue }) {
   const colors = useColors();
   if (!levelInfo) return null;
@@ -13,16 +15,15 @@ export default function LevelUpModal({ visible, levelInfo, onContinue }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onContinue}>
       <View style={[styles.overlay, { backgroundColor: colors.overlay }]}>
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <View style={[styles.badge, { backgroundColor: colors.primarySoft }]}>
-            <Text style={[styles.badgeText, { color: colors.primary }]}>LEVEL UP!</Text>
-          </View>
+        <View style={[styles.card, { backgroundColor: colors.cardAlt }]}>
+          <PlaceholderArt label={'일러스트\n깃발 든 고양이'} round style={styles.illustration} />
+          <Text style={[styles.badge, { color: colors.accent }]}>LEVEL UP!</Text>
           <Text style={[styles.title, { color: colors.text }]}>{levelInfo.title}가 되었습니다</Text>
-          <Text style={[styles.desc, { color: colors.textMuted }]}>
+          <Text style={[styles.desc, { color: colors.textSubtle }]}>
             {levelInfo.catCount}마리째 기록 완료.
             {next ? ` 다음 레벨은 ${next.title}예요.` : ' 최고 레벨을 달성했어요.'}
           </Text>
-          <View style={[styles.track, { backgroundColor: colors.cardAlt }]}>
+          <View style={[styles.track, { backgroundColor: colors.trackBg }]}>
             <View style={[styles.fill, { width: `${Math.round(levelInfo.ratio * 100)}%`, backgroundColor: colors.primary }]} />
           </View>
           <View style={styles.buttonWrap}>
@@ -36,12 +37,12 @@ export default function LevelUpModal({ visible, levelInfo, onContinue }) {
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  card: { width: '100%', maxWidth: 360, borderRadius: 24, padding: 24 },
-  badge: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 14 },
-  badgeText: { fontSize: 12, fontWeight: '800' },
-  title: { fontSize: 20, fontWeight: '800', marginBottom: 8 },
-  desc: { fontSize: 13, lineHeight: 19, marginBottom: 16 },
-  track: { height: 8, borderRadius: 4, overflow: 'hidden', marginBottom: 20 },
-  fill: { height: '100%', borderRadius: 4 },
-  buttonWrap: { marginTop: 4 },
+  card: { width: '100%', maxWidth: 360, borderRadius: 30, padding: 24, alignItems: 'center', gap: 14 },
+  illustration: { width: 120, height: 120 },
+  badge: { fontFamily: fonts.display, fontSize: 15, letterSpacing: 1 },
+  title: { fontFamily: fonts.display, fontSize: 24, textAlign: 'center', lineHeight: 30 },
+  desc: { fontFamily: fonts.body, fontSize: 14, lineHeight: 22, textAlign: 'center' },
+  track: { width: '100%', height: 14, borderRadius: 7, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 7 },
+  buttonWrap: { width: '100%', marginTop: 2 },
 });

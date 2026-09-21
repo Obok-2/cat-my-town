@@ -3,15 +3,18 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useColors } from '../theme/ThemeContext';
+import { fonts } from '../theme/fonts';
 import { useAuth } from '../context/AuthContext';
-import { getUserLevelInfo } from '../data/store';
+import { getUserLevelInfo, seedDemoData, clearAllCats } from '../data/store';
 import GhostButton from '../components/GhostButton';
+import PlaceholderArt from '../components/PlaceholderArt';
 
-// 목업에 "나" 탭 상세 화면은 없음(네비게이션 구조만 8페이지에 명시) — 로그아웃 등 최소 기능만 둔다.
-export default function ProfileScreen() {
+// 목업에 "나" 탭 상세 화면은 없음(네비게이션 구조만 명시) — 로그아웃 등 최소 기능만 둔다.
+export default function ProfileScreen({ navigation }) {
   const colors = useColors();
   const { user, logout } = useAuth();
   const [levelInfo, setLevelInfo] = useState({ level: 0, title: '', catCount: 0 });
+  const [busy, setBusy] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -23,21 +26,55 @@ export default function ProfileScreen() {
     }, [])
   );
 
+  async function handleSeed() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await seedDemoData();
+      const l = await getUserLevelInfo();
+      setLevelInfo(l);
+      navigation.navigate('Collection');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleClear() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await clearAllCats();
+      const l = await getUserLevelInfo();
+      setLevelInfo(l);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.content}>
-        <View style={[styles.avatar, { backgroundColor: colors.cardAlt }]}>
-          <Text style={styles.avatarEmoji}>🙂</Text>
-        </View>
+        <PlaceholderArt round style={styles.avatar} />
         <Text style={[styles.name, { color: colors.text }]}>{user?.displayName ?? '산책자'}</Text>
         {levelInfo.level > 0 && (
-          <Text style={[styles.level, { color: colors.primary }]}>
+          <Text style={[styles.level, { color: colors.accent }]}>
             {levelInfo.title} Lv.{levelInfo.level}
           </Text>
         )}
         <Text style={[styles.stat, { color: colors.textMuted }]}>고양이 {levelInfo.catCount}마리 수집</Text>
 
         <View style={styles.spacer} />
+
+        {__DEV__ && (
+          <View style={styles.devSection}>
+            <Text style={[styles.devLabel, { color: colors.textMuted }]}>개발용</Text>
+            <GhostButton label="데모 데이터 채우기" onPress={handleSeed} disabled={busy} />
+            <View style={{ height: 10 }} />
+            <GhostButton label="도감 비우기" onPress={handleClear} disabled={busy} />
+          </View>
+        )}
+
+        <View style={{ height: 16 }} />
         <GhostButton label="로그아웃" onPress={logout} />
       </View>
     </SafeAreaView>
@@ -47,10 +84,11 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   content: { flex: 1, alignItems: 'center', paddingHorizontal: 28, paddingTop: 48 },
-  avatar: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  avatarEmoji: { fontSize: 40 },
-  name: { fontSize: 18, fontWeight: '800' },
-  level: { fontSize: 13, fontWeight: '700', marginTop: 6 },
-  stat: { fontSize: 12, marginTop: 4 },
+  avatar: { width: 88, height: 88, marginBottom: 16 },
+  name: { fontFamily: fonts.display, fontSize: 20 },
+  level: { fontFamily: fonts.body, fontSize: 13, marginTop: 6 },
+  stat: { fontFamily: fonts.body, fontSize: 12, marginTop: 4 },
   spacer: { flex: 1 },
+  devSection: { width: '100%', marginBottom: 8 },
+  devLabel: { fontFamily: fonts.mono, fontSize: 11, letterSpacing: 1, marginBottom: 10 },
 });

@@ -3,17 +3,19 @@ import { View, Text, Image, ScrollView, StyleSheet, Pressable } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useColors } from '../theme/ThemeContext';
+import { fonts } from '../theme/fonts';
 import { getCatById, getSightingsByCat } from '../data/store';
 import TraitTagList from '../components/TraitTagList';
 import SightingTimelineItem from '../components/SightingTimelineItem';
 import SightingMiniMap from '../components/SightingMiniMap';
+import PlaceholderArt from '../components/PlaceholderArt';
 
 function formatDate(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
-// 목업 6페이지 "고양이 상세": 타임라인 + 목격 미니맵(지도는 상세에서만, 필터 없음).
+// 목업 a7 "고양이 상세": 타임라인 + 목격 미니맵(지도는 상세에서만, 필터 없음).
 export default function CatDetailScreen({ route, navigation }) {
   const { catId } = route.params;
   const colors = useColors();
@@ -42,40 +44,48 @@ export default function CatDetailScreen({ route, navigation }) {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[styles.back, { color: colors.text }]}>← 뒤로</Text>
+          <Text style={[styles.headerIcon, { color: colors.textSubtle }]}>←</Text>
         </Pressable>
+        <Text style={[styles.headerIcon, { color: colors.textSubtle }]}>⋯</Text>
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.topRow}>
           {cat.photoUri ? (
             <Image source={{ uri: cat.photoUri }} style={styles.photo} />
           ) : (
-            <View style={[styles.photo, { backgroundColor: colors.cardAlt }]} />
+            <PlaceholderArt radius={24} style={styles.photo} />
           )}
           <View style={styles.topInfo}>
             <Text style={[styles.name, { color: colors.text }]}>{cat.name}</Text>
             <TraitTagList tags={cat.tags} editable={false} />
+            <Text style={[styles.meta, { color: colors.textMuted }]}>
+              첫 만남 {formatDate(cat.firstSeenAt)} · {cat.sightingCount}번 만남
+            </Text>
           </View>
         </View>
-        <Text style={[styles.meta, { color: colors.textMuted }]}>
-          첫 만남 {formatDate(cat.firstSeenAt)} · {cat.sightingCount}번 만남
-        </Text>
 
         <Text style={[styles.sectionTitle, { color: colors.text }]}>목격 타임라인</Text>
         <View style={styles.timeline}>
           {sightings.map((s, i) => (
-            <SightingTimelineItem key={s.id} sighting={s} isLast={i === sightings.length - 1} />
+            <SightingTimelineItem
+              key={s.id}
+              sighting={s}
+              number={sightings.length - i}
+              isLast={i === sightings.length - 1}
+            />
           ))}
         </View>
 
-        <View style={styles.sectionRow}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>이 친구를 만난 곳들</Text>
-          <Text style={[styles.sectionCount, { color: colors.textMuted }]}>전 {sightings.length}개</Text>
+        <View style={[styles.mapCard, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
+          <View style={styles.sectionRow}>
+            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>이 친구를 만난 곳들</Text>
+            <Text style={[styles.sectionCount, { color: colors.textMuted }]}>핀 {sightings.length}개</Text>
+          </View>
+          <SightingMiniMap sightings={sightings} />
+          <Text style={[styles.mapCaption, { color: colors.textMuted }]}>
+            핀은 만날 때마다 쌓여요. 경로가 아니라 그날의 스냅샷 기록이에요.
+          </Text>
         </View>
-        <SightingMiniMap sightings={sightings} />
-        <Text style={[styles.mapCaption, { color: colors.textMuted }]}>
-          만날 때마다 쌓여요. 경로가 아니라 그날의 스냅샷 기록이에요.
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -83,17 +93,18 @@ export default function CatDetailScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
-  back: { fontSize: 15, fontWeight: '700' },
-  content: { paddingHorizontal: 24, paddingBottom: 40 },
-  topRow: { flexDirection: 'row', gap: 14, marginTop: 8 },
-  photo: { width: 84, height: 84, borderRadius: 20 },
-  topInfo: { flex: 1, justifyContent: 'center', gap: 8 },
-  name: { fontSize: 20, fontWeight: '800' },
-  meta: { fontSize: 12, marginTop: 12, marginBottom: 24 },
-  sectionTitle: { fontSize: 15, fontWeight: '800', marginBottom: 14 },
-  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 },
-  sectionCount: { fontSize: 12, marginBottom: 14 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 22, paddingTop: 8, paddingBottom: 6 },
+  headerIcon: { fontSize: 20 },
+  content: { paddingHorizontal: 22, paddingBottom: 40 },
+  topRow: { flexDirection: 'row', gap: 16, marginTop: 6, alignItems: 'flex-start' },
+  photo: { width: 88, height: 88, borderRadius: 24 },
+  topInfo: { flex: 1, gap: 7 },
+  name: { fontFamily: fonts.display, fontSize: 32, lineHeight: 32 },
+  meta: { fontFamily: fonts.body, fontSize: 13, marginTop: 2 },
+  sectionTitle: { fontFamily: fonts.display, fontSize: 18, marginTop: 22, marginBottom: 14 },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionCount: { fontFamily: fonts.body, fontSize: 12 },
   timeline: { marginBottom: 8 },
-  mapCaption: { fontSize: 11, marginTop: 10, lineHeight: 16 },
+  mapCard: { marginTop: 8, marginBottom: 26, padding: 16, borderRadius: 24, borderWidth: 1.5, gap: 12 },
+  mapCaption: { fontFamily: fonts.body, fontSize: 12, lineHeight: 19 },
 });

@@ -3,11 +3,12 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useColors } from '../theme/ThemeContext';
+import { fonts } from '../theme/fonts';
 import { getCats, getUserLevelInfo } from '../data/store';
 import LevelProgressBar from '../components/LevelProgressBar';
 import CatCard from '../components/CatCard';
 
-// 목업 6페이지 "도감(메인 탭)": 레벨+진행률 카드 + 필터 없는 전체 카드 그리드.
+// 목업 a6 "도감 (메인 탭)": 레벨+진행률 카드 + 필터 없는 전체 카드 그리드.
 export default function CollectionScreen({ navigation }) {
   const colors = useColors();
   const [cats, setCats] = useState([]);
@@ -67,12 +68,12 @@ export default function CollectionScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  list: { paddingHorizontal: 20, paddingBottom: 24 },
-  headerWrap: { marginBottom: 8 },
-  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 22, marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '800' },
-  sectionCount: { fontSize: 12 },
-  column: { gap: 12, marginBottom: 12 },
+  list: { paddingHorizontal: 18, paddingBottom: 24 },
+  headerWrap: { marginBottom: 8, paddingHorizontal: 2 },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 20, marginBottom: 12, paddingHorizontal: 4 },
+  sectionTitle: { fontFamily: fonts.display, fontSize: 19 },
+  sectionCount: { fontFamily: fonts.body, fontSize: 13 },
+  column: { gap: 14, marginBottom: 14 },
   empty: { paddingVertical: 60, paddingHorizontal: 20 },
-  emptyText: { fontSize: 13, textAlign: 'center', lineHeight: 20 },
+  emptyText: { fontFamily: fonts.body, fontSize: 13, textAlign: 'center', lineHeight: 20 },
 });

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
 import { useColors } from '../theme/ThemeContext';
+import { fonts } from '../theme/fonts';
 
-const TAG_PALETTE_KEYS = ['tagPeach', 'tagMint', 'tagBlue'];
+// 목업 태그 팔레트는 살구(peach)·민트 2색이 번갈아 쓰인다.
+const TAG_PALETTE = ['peach', 'mint'];
 
-// editable=false: AI가 찾은 특징 등 읽기 전용 표시 (매칭결과 화면).
-// editable=true: 이름 짓기 화면의 "특징 태그(수정 가능)" — 제거 X + "직접 입력" 추가.
+// editable=false: AI가 찾은 특징 등 읽기 전용 표시.
+// editable=true: 이름 짓기 화면 — 제거 ✕ + 점선 테두리 "+ 직접 입력" 칩으로 추가.
 export default function TraitTagList({ tags, editable = false, onRemove, onAdd }) {
   const colors = useColors();
   const [adding, setAdding] = useState(false);
@@ -21,14 +23,17 @@ export default function TraitTagList({ tags, editable = false, onRemove, onAdd }
   return (
     <View style={styles.wrap}>
       {tags.map((tag, i) => {
-        const paletteKey = TAG_PALETTE_KEYS[i % TAG_PALETTE_KEYS.length];
+        const kind = TAG_PALETTE[i % TAG_PALETTE.length];
+        const bg = kind === 'peach' ? colors.tagPeachBg : colors.tagMintBg;
+        const fg = kind === 'peach' ? colors.tagPeachText : colors.tagMintText;
         return (
-          <View key={tag} style={[styles.chip, { backgroundColor: colors[paletteKey] }]}>
-            <Text style={[styles.chipText, { color: colors.text }]}>{tag}</Text>
+          <View key={tag} style={[styles.chip, { backgroundColor: bg }]}>
+            <Text style={[styles.chipText, { color: fg }]}>
+              {tag}
+              {editable ? ' ✕' : ''}
+            </Text>
             {editable && (
-              <Pressable onPress={() => onRemove?.(tag)} hitSlop={8}>
-                <Text style={[styles.remove, { color: colors.text }]}> ✕</Text>
-              </Pressable>
+              <Pressable onPress={() => onRemove?.(tag)} style={StyleSheet.absoluteFill} hitSlop={4} />
             )}
           </View>
         );
@@ -43,10 +48,17 @@ export default function TraitTagList({ tags, editable = false, onRemove, onAdd }
             onBlur={commitDraft}
             placeholder="태그 입력"
             placeholderTextColor={colors.textMuted}
-            style={[styles.chip, styles.chipInput, { color: colors.text, borderColor: colors.border }]}
+            style={[
+              styles.chip,
+              styles.chipInput,
+              { color: colors.text, borderColor: colors.borderStrong, backgroundColor: colors.card },
+            ]}
           />
         ) : (
-          <Pressable onPress={() => setAdding(true)} style={[styles.chip, styles.addChip, { borderColor: colors.border }]}>
+          <Pressable
+            onPress={() => setAdding(true)}
+            style={[styles.chip, styles.addChip, { borderColor: colors.borderStrong, backgroundColor: colors.card }]}
+          >
             <Text style={[styles.chipText, { color: colors.textMuted }]}>+ 직접 입력</Text>
           </Pressable>
         ))}
@@ -57,14 +69,11 @@ export default function TraitTagList({ tags, editable = false, onRemove, onAdd }
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
   },
-  chipText: { fontSize: 13, fontWeight: '600' },
-  remove: { fontSize: 12, fontWeight: '700' },
-  addChip: { borderWidth: 1, backgroundColor: 'transparent' },
-  chipInput: { borderWidth: 1, minWidth: 100, paddingVertical: 6 },
+  chipText: { fontFamily: fonts.body, fontSize: 14 },
+  addChip: { borderWidth: 1.5, borderStyle: 'dashed' },
+  chipInput: { borderWidth: 1.5, minWidth: 100, paddingVertical: 7 },
 });

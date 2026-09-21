@@ -1,8 +1,10 @@
 import React from 'react';
 import { Pressable, View, Text, Image, StyleSheet } from 'react-native';
 import { useColors } from '../theme/ThemeContext';
+import { fonts } from '../theme/fonts';
+import PlaceholderArt from './PlaceholderArt';
 
-// 목업 6페이지 "도감(메인 탭)" 카드 그리드 1칸: 사진 + 목격 횟수 배지 + 이름 + 대표 태그.
+// 목업 a6 카드 그리드 1칸: 정사각 사진(placeholder) + 우하단 목격 횟수 배지 + Jua 이름 + 대표 태그.
 export default function CatCard({ cat, onPress }) {
   const colors = useColors();
   return (
@@ -13,22 +15,22 @@ export default function CatCard({ cat, onPress }) {
         { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.85 : 1 },
       ]}
     >
-      <View style={[styles.photoWrap, { backgroundColor: colors.cardAlt }]}>
+      <View style={styles.photoWrap}>
         {cat.photoUri ? (
-          <Image source={{ uri: cat.photoUri }} style={styles.photo} />
+          <Image source={{ uri: cat.photoUri }} style={styles.photo} resizeMode="cover" />
         ) : (
-          <Text style={[styles.photoFallback, { color: colors.textMuted }]}>🐱</Text>
+          <PlaceholderArt style={StyleSheet.absoluteFill} />
         )}
-        <View style={[styles.badge, { backgroundColor: colors.overlay }]}>
-          <Text style={styles.badgeText}>{cat.sightingCount}회</Text>
+        <View style={[styles.badge, { backgroundColor: colors.badgeOverlay }]}>
+          <Text style={[styles.badgeText, { color: colors.onPrimary }]}>{cat.sightingCount}회</Text>
         </View>
       </View>
       <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
         {cat.name}
       </Text>
       {cat.tags?.[0] && (
-        <View style={[styles.tag, { backgroundColor: colors.tagPeach }]}>
-          <Text style={[styles.tagText, { color: colors.text }]} numberOfLines={1}>
+        <View style={[styles.tag, { backgroundColor: colors.tagPeachBg }]}>
+          <Text style={[styles.tagText, { color: colors.tagPeachText }]} numberOfLines={1}>
             {cat.tags[0]}
           </Text>
         </View>
@@ -38,26 +40,20 @@ export default function CatCard({ cat, onPress }) {
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, borderRadius: 18, borderWidth: 1, padding: 10 },
-  photoWrap: {
-    aspectRatio: 1,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  photo: { width: '100%', height: '100%' },
-  photoFallback: { fontSize: 32 },
-  badge: {
-    position: 'absolute',
-    right: 8,
-    top: 8,
+  card: { flex: 1, borderRadius: 22, borderWidth: 1.5, overflow: 'hidden' },
+  photoWrap: { aspectRatio: 1, justifyContent: 'flex-end', alignItems: 'flex-end', padding: 8 },
+  photo: { ...StyleSheet.absoluteFillObject },
+  badge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 12 },
+  badgeText: { fontFamily: fonts.body, fontSize: 11 },
+  name: { fontFamily: fonts.display, fontSize: 17, marginTop: 10, marginHorizontal: 12 },
+  tag: {
+    alignSelf: 'flex-start',
+    borderRadius: 10,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
+    paddingVertical: 4,
+    marginTop: 5,
+    marginHorizontal: 12,
+    marginBottom: 13,
   },
-  badgeText: { color: '#FFF', fontSize: 11, fontWeight: '700' },
-  name: { fontSize: 14, fontWeight: '700', marginTop: 8 },
-  tag: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, marginTop: 4 },
-  tagText: { fontSize: 11, fontWeight: '600' },
+  tagText: { fontFamily: fonts.body, fontSize: 11 },
 });

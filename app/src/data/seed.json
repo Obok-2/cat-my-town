@@ -1,0 +1,17 @@
+{
+  "cats": [
+    { "name": "양말이", "tags": ["턱시도", "코 옆 흰 점"], "sightingCount": 7, "firstSeenDaysAgo": 170 },
+    { "name": "치즈", "tags": ["치즈 태비"], "sightingCount": 12, "firstSeenDaysAgo": 210 },
+    { "name": "구름", "tags": ["장모 흰냥"], "sightingCount": 3, "firstSeenDaysAgo": 40 },
+    { "name": "까망이", "tags": ["올블랙"], "sightingCount": 9, "firstSeenDaysAgo": 150 },
+    { "name": "삼색이", "tags": ["삼색", "짧은 꼬리"], "sightingCount": 5, "firstSeenDaysAgo": 60 },
+    { "name": "귀돌이", "tags": ["귀 끝 커팅"], "sightingCount": 2, "firstSeenDaysAgo": 15 }
+  ],
+  "sightingsByCatName": {
+    "양말이": [
+      { "daysAgo": 7, "memo": "놀이터 미끄럼틀 밑" },
+      { "daysAgo": 22, "memo": "3번 출구 화단" },
+      { "daysAgo": 40, "memo": "빌라 주차장" }
+    ]
+  }
+}

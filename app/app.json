@@ -27,7 +27,8 @@
           "cameraPermission": "산책하다 마주친 길고양이를 촬영해서 도감에 기록하려면 카메라 접근이 필요해요."
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-splash-screen"
     ]
   }
 }

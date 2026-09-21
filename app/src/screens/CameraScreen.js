@@ -1,25 +1,36 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useColors } from '../theme/ThemeContext';
+import { fonts } from '../theme/fonts';
 import { getSightings } from '../data/store';
 import PrimaryButton from '../components/PrimaryButton';
 
 function formatToday() {
   const d = new Date();
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
-  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} · ${days[d.getDay()]}요 산책`;
+  const hour = d.getHours();
+  const part = hour < 11 ? '아침' : hour < 17 ? '낮' : '저녁';
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} · ${part} 산책`;
 }
 
-// 목업 4페이지 "홈(카메라)": 앱 실행 시 즉시 카메라, 프레임 가이드 + 단일 셔터.
+// 목업 a2 "홈 (카메라)": 앱 실행 시 즉시 카메라, 프레임 가이드 + 단일 셔터.
 export default function CameraScreen({ navigation }) {
   const colors = useColors();
   const [permission, requestPermission] = useCameraPermissions();
   const [weekCount, setWeekCount] = useState(0);
   const [capturing, setCapturing] = useState(false);
   const cameraRef = useRef(null);
+
+  // 앱이 켜지고 촬영 탭(초기 화면)에 들어오면 버튼 탭 없이 바로 권한을 물어본다.
+  // 웹은 getUserMedia 호출 시 브라우저가 자체 권한 팝업을 띄우므로 우리 쪽 게이트를 두지 않는다.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    if (permission && !permission.granted && permission.canAskAgain) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,101 +57,111 @@ export default function CameraScreen({ navigation }) {
     }
   }
 
-  if (!permission) {
-    return <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} />;
-  }
+  // 웹은 권한 게이트를 두지 않는다 — CameraView가 뜨는 순간 브라우저가 알아서 물어본다.
+  if (Platform.OS !== 'web') {
+    if (!permission) {
+      return <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]} />;
+    }
 
-  if (!permission.granted) {
-    return (
-      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
-        <View style={styles.permissionWrap}>
-          <Text style={[styles.permissionText, { color: colors.text }]}>
-            길고양이를 촬영하려면 카메라 권한이 필요해요
-          </Text>
-          <PrimaryButton label="카메라 권한 허용하기" onPress={requestPermission} />
-        </View>
-      </SafeAreaView>
-    );
+    if (!permission.granted) {
+      const deniedPermanently = !permission.canAskAgain;
+      return (
+        <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+          <View style={styles.permissionWrap}>
+            <Text style={[styles.permissionText, { color: colors.text }]}>
+              {deniedPermanently
+                ? '설정에서 카메라 권한을 허용해주세요'
+                : '길고양이를 촬영하려면 카메라 권한이 필요해요'}
+            </Text>
+            {!deniedPermanently && <PrimaryButton label="카메라 권한 허용하기" onPress={requestPermission} />}
+          </View>
+        </SafeAreaView>
+      );
+    }
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: '#15130F' }]}>
-      <SafeAreaView style={styles.headerSafe}>
-        <Text style={styles.dateText}>{formatToday()}</Text>
-        <Text style={styles.headerTitle}>오늘은 누굴 만날까요?</Text>
-        <View style={styles.hintBubble}>
-          <Text style={styles.hintText}>+ 얼굴이 프레임 안에 들어오면 또렷해요</Text>
+    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+      <View style={styles.headerRow}>
+        <View style={{ gap: 3 }}>
+          <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatToday()}</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>오늘은 누굴 만날까요?</Text>
         </View>
-      </SafeAreaView>
+        <View style={[styles.avatar, { backgroundColor: colors.tagPeachBg }]}>
+          <Text style={[styles.avatarGlyph, { color: colors.tagPeachText }]}>☻</Text>
+        </View>
+      </View>
 
       <View style={styles.viewfinderWrap}>
         <CameraView ref={cameraRef} style={styles.camera} facing="back" />
         <View pointerEvents="none" style={styles.frameGuide}>
-          <View style={[styles.corner, styles.cornerTL]} />
-          <View style={[styles.corner, styles.cornerTR]} />
-          <View style={[styles.corner, styles.cornerBL]} />
-          <View style={[styles.corner, styles.cornerBR]} />
+          <View style={[styles.corner, styles.cornerTL, { borderColor: colors.frameGuide }]} />
+          <View style={[styles.corner, styles.cornerTR, { borderColor: colors.frameGuide }]} />
+          <View style={[styles.corner, styles.cornerBL, { borderColor: colors.frameGuide }]} />
+          <View style={[styles.corner, styles.cornerBR, { borderColor: colors.frameGuide }]} />
+        </View>
+        <View pointerEvents="none" style={styles.hintRow}>
+          <View style={[styles.hintBubble, { backgroundColor: colors.hintBubbleBg }]}>
+            <Text style={[styles.hintStar, { color: colors.accent }]}>✦</Text>
+            <Text style={[styles.hintText, { color: colors.hintBubbleText }]}>얼굴이 프레임 안에 들어오면 또렷해요</Text>
+          </View>
+        </View>
+        <View style={styles.shutterRow}>
+          <Pressable
+            onPress={handleShutter}
+            disabled={capturing}
+            style={({ pressed }) => [
+              styles.shutterOuter,
+              { borderColor: colors.frameGuide, opacity: pressed || capturing ? 0.7 : 1 },
+            ]}
+          >
+            <View style={[styles.shutterInner, { backgroundColor: colors.primary }]} />
+          </Pressable>
         </View>
       </View>
 
-      <SafeAreaView style={styles.footerSafe}>
-        <Text style={styles.weekText}>이번 주에 {weekCount}마리를 만났어요</Text>
-        <Pressable
-          onPress={handleShutter}
-          disabled={capturing}
-          style={({ pressed }) => [
-            styles.shutterOuter,
-            { borderColor: colors.primary, opacity: pressed || capturing ? 0.7 : 1 },
-          ]}
-        >
-          <View style={[styles.shutterInner, { backgroundColor: colors.primary }]} />
-        </Pressable>
-      </SafeAreaView>
-    </View>
+      <Text style={[styles.weekText, { color: colors.textMuted }]}>이번 주에 {weekCount}마리를 만났어요</Text>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  container: { flex: 1 },
-  headerSafe: { paddingHorizontal: 20, paddingTop: 8 },
-  dateText: { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
-  headerTitle: { color: '#FFF', fontSize: 20, fontWeight: '800', marginTop: 4 },
-  hintBubble: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginTop: 10,
-  },
-  hintText: { color: '#FFF', fontSize: 12 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 22, paddingVertical: 12 },
+  dateText: { fontFamily: fonts.body, fontSize: 12 },
+  headerTitle: { fontFamily: fonts.display, fontSize: 22 },
+  avatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  avatarGlyph: { fontSize: 16 },
   viewfinderWrap: {
     flex: 1,
-    marginHorizontal: 24,
-    marginVertical: 16,
-    borderRadius: 24,
+    marginHorizontal: 16,
+    borderRadius: 32,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: '#2E2A26',
   },
   camera: { flex: 1 },
-  frameGuide: { ...StyleSheet.absoluteFillObject, margin: 28 },
-  corner: { position: 'absolute', width: 28, height: 28, borderColor: 'rgba(255,255,255,0.8)' },
-  cornerTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: 12 },
-  cornerTR: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: 12 },
-  cornerBL: { bottom: 0, left: 0, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: 12 },
-  cornerBR: { bottom: 0, right: 0, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 12 },
-  footerSafe: { alignItems: 'center', paddingBottom: 12 },
-  weekText: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 14 },
+  frameGuide: { ...StyleSheet.absoluteFillObject, margin: 34 },
+  corner: { position: 'absolute', width: 74, height: 74 },
+  cornerTL: { top: 76, left: 0, borderLeftWidth: 3, borderTopWidth: 3, borderTopLeftRadius: 26 },
+  cornerTR: { top: 76, right: 0, borderRightWidth: 3, borderTopWidth: 3, borderTopRightRadius: 26 },
+  cornerBL: { bottom: 116, left: 0, borderLeftWidth: 3, borderBottomWidth: 3, borderBottomLeftRadius: 26 },
+  cornerBR: { bottom: 116, right: 0, borderRightWidth: 3, borderBottomWidth: 3, borderBottomRightRadius: 26 },
+  hintRow: { position: 'absolute', left: 0, right: 0, top: 20, alignItems: 'center' },
+  hintBubble: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
+  hintStar: { fontSize: 13 },
+  hintText: { fontFamily: fonts.body, fontSize: 13 },
+  shutterRow: { position: 'absolute', left: 0, right: 0, bottom: 30, alignItems: 'center' },
   shutterOuter: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    borderWidth: 4,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 5,
+    backgroundColor: '#FBF4EA',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shutterInner: { width: 58, height: 58, borderRadius: 29 },
+  shutterInner: { width: 68, height: 68, borderRadius: 34 },
+  weekText: { fontFamily: fonts.body, fontSize: 13, textAlign: 'center', paddingVertical: 14 },
   permissionWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 20 },
-  permissionText: { fontSize: 15, textAlign: 'center' },
+  permissionText: { fontFamily: fonts.body, fontSize: 15, textAlign: 'center' },
 });
