@@ -9,7 +9,7 @@ CREATE TABLE users (
     id            BIGSERIAL     PRIMARY KEY,
     google_uid    VARCHAR(128)  NOT NULL UNIQUE,            -- Firebase Auth(Google) UID
     display_name  VARCHAR(50),
-    level         SMALLINT      NOT NULL DEFAULT 0,         -- 캐싱된 값. 신규 고양이 등록 시점마다 갱신 (등록 개체 수 기준 Lv1~4)
+    level         SMALLINT      NOT NULL DEFAULT 0,         -- 캐싱된 값. 신규 고양이 등록 시점마다 갱신 (등록 개체 수 기준 Lv1~5: 1·5·12·16·30마리 이상, 0은 미등록)
     created_at    TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
@@ -46,18 +46,32 @@ CREATE TABLE sightings (
 );
 CREATE INDEX idx_sightings_cat_id_taken_at ON sightings (cat_id, taken_at DESC);
 
--- AI 매칭 결과 로그 — 관리자 대시보드의 수락률·일치율 집계용
+-- AI 매칭 결과 로그 — 관리자 대시보드의 수락률·일치율 집계용 (촬영 1건 = 1행)
+-- 앱은 일치율 40% 이상 후보를 최대 3명 보여주고 사용자가 하나를 고르거나 "새로운 고양이"를 고른다.
+-- 후보 목록은 match_candidates 에, 사용자가 고른 결과는 여기에 저장한다.
 CREATE TABLE match_logs (
     id                 BIGSERIAL     PRIMARY KEY,
     user_id            BIGINT        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     sighting_id        BIGINT        REFERENCES sightings (id) ON DELETE SET NULL,
-    suggested_cat_id   BIGINT        REFERENCES cats (id) ON DELETE SET NULL,   -- AI 가 제안한 후보 (후보 없음이면 NULL)
-    score              NUMERIC(5, 2),                       -- 보정된 일치율(0~100). 후보 없음이면 NULL
-    result             VARCHAR(20)   NOT NULL,              -- CONFIRMED(같은 고양이 확정) / CORRECTED_NEW(새 고양이로 정정) / NEW(후보 없이 신규 등록)
+    selected_cat_id    BIGINT        REFERENCES cats (id) ON DELETE SET NULL,   -- 사용자가 최종 선택한 기존 고양이 (새 고양이로 등록했거나 후보가 없으면 NULL)
+    score              NUMERIC(5, 2),                       -- 선택한 후보의 보정된 일치율(0~100). 선택 없음이면 NULL
+    result             VARCHAR(20)   NOT NULL,              -- CONFIRMED(후보 중 하나를 같은 고양이로 확정) / CORRECTED_NEW(후보가 있었지만 새 고양이로 등록) / NEW(기준 미만이라 후보 없이 신규 등록)
     created_at         TIMESTAMPTZ   NOT NULL DEFAULT now(),
     CHECK (result IN ('CONFIRMED', 'CORRECTED_NEW', 'NEW'))
 );
 CREATE INDEX idx_match_logs_created_at ON match_logs (created_at);
+
+-- AI 매칭 후보 — 한 번의 매칭에서 보여준 후보(일치율 기준 이상, 최대 3명)
+CREATE TABLE match_candidates (
+    id            BIGSERIAL     PRIMARY KEY,
+    match_log_id  BIGINT        NOT NULL REFERENCES match_logs (id) ON DELETE CASCADE,
+    cat_id        BIGINT        NOT NULL REFERENCES cats (id) ON DELETE CASCADE,
+    rank_no       SMALLINT      NOT NULL,                   -- 일치율 높은 순 순위 (1~3)
+    score         NUMERIC(5, 2) NOT NULL,                   -- 이 후보의 보정된 일치율(0~100)
+    UNIQUE (match_log_id, rank_no),
+    CHECK (rank_no BETWEEN 1 AND 3)
+);
+CREATE INDEX idx_match_candidates_cat_id ON match_candidates (cat_id);
 
 -- 관리자 웹 운영자 계정 (회원가입 없이 내부에서 발급)
 CREATE TABLE admin_users (
