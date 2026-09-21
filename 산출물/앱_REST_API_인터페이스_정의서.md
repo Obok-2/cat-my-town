@@ -8,7 +8,7 @@
 |---|---|
 | 문서명 | 우리동네고양이 앱 REST API 인터페이스 정의서 |
 | 대상 | 모바일 앱(`app/`) ↔ 백엔드(`server/`) |
-| 버전 / 상태 | v0.1 / **초안(검토 전)** — 서버 컨트롤러가 아직 없어 모든 인터페이스가 **미구현** |
+| 버전 / 상태 | v0.2 / **초안(검토 전)** — 도감 화면 API 2개(IF-ME-002, IF-CAT-001)만 구현, 나머지는 **미구현** |
 | 작성일 | 2026-09-21 |
 | 기준 자료 | 앱 코드(`app/src/data/store.js`·`levels.js`·`matchConfig.js`), 새 UIUX 목업(a0~a10), `산출물/schema.sql`, `README.md` |
 | 제외 범위 | 관리자 웹(`web/`)용 API — 관리자 인증·통계는 별도 문서 |
@@ -32,6 +32,16 @@
 | 버전 | 일자 | 내용 |
 |---|---|---|
 | v0.1 | 2026-09-21 | 최초 작성(초안) |
+| v0.2 | 2026-09-21 | 공통 응답을 `ResponseApi` 형태로 변경, 앱용 URL을 `/app/...` 체계로 변경, 도감 화면 API 2개 확정·구현 (아래 1.4) |
+
+### 1.4 v0.2 변경 사항과 후속 정리
+
+| 변경 | 내용 | 아직 반영 안 된 부분 |
+|---|---|---|
+| 공통 응답 | 모든 API가 `{ result, message, code, data }` 형태(2.4~2.6) | 각 인터페이스 표의 문자열 에러 코드(`MATCH_EXPIRED` 등)는 이름 표기용이며, 응답의 `code`는 숫자다. 업무별 숫자 코드는 확정 시 추가 |
+| URL | 앱용 API는 `/app/{collection\|camera\|level}` 아래에 둔다 | 도감 화면 API 2개만 새 주소로 고쳤고, 나머지 인터페이스는 구현할 때 `/app/...`으로 옮긴다(로그인·내 정보의 위치도 미정) |
+| 레벨 계산 | 서버는 등록 고양이 **개수만** 주고 등급·진행률은 앱이 계산한다(IF-ME-002) | 등급표 API(IF-CFG-001)는 불필요해졌고, 새 고양이 등록 응답(IF-MATCH-003)의 `levelUp`(등급 정보 객체)은 `catCount`만 주는 방식으로 단순화할 예정 |
+| 대표 사진 | `cats.photo_url` 컬럼을 추가해 대표 사진을 저장한다(ERD·`schema.sql` 반영) | — |
 
 ---
 
@@ -41,7 +51,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| Base URL | `/api/v1` (로컬: `http://localhost:8080/api/v1`) |
+| Base URL | 앱용 API는 `/app` 아래(로컬: `http://localhost:8080/app/...`). 구현된 인터페이스는 새 주소로 적었고, 나머지는 이전 표기(`/api/v1/...`)이며 구현할 때 옮긴다(1.4) |
 | 프로토콜 | HTTP/1.1 REST. 운영은 HTTPS |
 | 데이터 형식 | JSON(UTF-8). 사진 업로드(IF-MATCH-001)만 `multipart/form-data` |
 | 타임존 | Asia/Seoul (`+09:00`) |
@@ -70,33 +80,44 @@
 
 | 항목 | 내용 |
 |---|---|
-| 성공 | 별도 래퍼 없이 **리소스 JSON을 그대로** 반환한다. 본문이 없는 성공은 `204` |
+| 응답 형태 | 성공·실패 모두 공통 형태 `ResponseApi`(2.5)로 응답하고, 실제 데이터는 `data`에 담는다 |
 | 일치율(`score`) | **0~100** 숫자(소수 2자리). 앱 목데이터는 0~1이라 연동 시 ×100 기준으로 통일 |
 | 사진 URL(`photoUrl`) | 사진은 **비공개 버킷(MinIO)** 에 있고, `photoUrl`은 **만료되는 presigned URL**(예: 1시간). 앱은 그대로 이미지 주소로 쓴다 |
 | 좌표 | 정밀 좌표는 저장·응답하지 않는다. **뭉갠 좌표**(소수 5자리 미만으로 절삭)만 다룬다 |
 | 목록 | 페이징 없음(MVP, 개인 도감이라 수가 적음). 정렬은 각 인터페이스에 명시 |
 
-### 2.5 공통 에러 응답 형식
+### 2.5 공통 응답 형식 (`ResponseApi`)
 
 ```json
-{ "code": "MATCH_EXPIRED", "message": "매칭 시간이 지났어요. 다시 촬영해 주세요." }
+{ "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "catCount": 12 } }
+```
+
+```json
+{ "result": "FAIL", "message": "잘못된 요청입니다.", "code": 400, "data": null }
 ```
 
 | 항목 | 타입 | 설명 |
 |---|---|---|
-| `code` | String | 에러 식별 코드(아래 표) |
-| `message` | String | 사용자에게 그대로 보여줄 수 있는 한글 문구 |
+| `result` | String | `SUCCESS` 성공 / `FAIL` 업무 처리 실패(잘못된 요청·인증·없는 리소스 등) / `ERROR` 시스템 오류 |
+| `message` | String | 성공은 `SUCCESS`, 실패·오류는 사용자에게 그대로 보여줄 수 있는 한글 문구 |
+| `code` | Integer | 성공 `200`, 실패는 HTTP 상태와 같은 숫자(400·401·404·405…), 시스템 오류 `500`. 업무별 세부 코드는 확정 시 추가 |
+| `data` | Object | 응답 데이터. 실패·오류이면 `null` |
 
-### 2.6 공통 에러 코드
+- 이 문서의 각 인터페이스 "Response" 표는 **`data` 안의 내용**을 설명한다.
+- **HTTP 상태와 `result`의 관계**: `SUCCESS`→2xx, `FAIL`→4xx, `ERROR`→500. 본문의 `code`와 HTTP 상태는 같은 값이다.
+- 시스템 오류(`ERROR`)의 `message`는 일반 문구만 내려가고 상세 원인·스택트레이스는 서버 로그에만 남긴다.
 
-| HTTP | code | 발생 조건 | 앱 처리 |
-|---|---|---|---|
-| 400 | `INVALID_REQUEST` | 필수값 누락·형식/길이 위반(이름 비었음 등) | 입력 화면에 메시지 표시 |
-| 401 | `UNAUTHORIZED` | 토큰 없음·만료·위조 | Firebase 토큰 갱신 후 1회 재시도, 실패하면 로그인 화면 |
-| 404 | `NOT_FOUND` | 없는 리소스(남의 것 포함) | 도감으로 돌아가기 |
-| 500 | `INTERNAL_ERROR` | 서버 내부 오류 | "잠시 후 다시 시도" |
+### 2.6 공통 에러
 
-> 각 인터페이스에서만 발생하는 에러 코드(`MATCH_*`, `NO_CAT_DETECTED` 등)는 해당 인터페이스 표에 적는다.
+| HTTP | `result` | `code` | 발생 조건 | 앱 처리 |
+|---|---|---|---|---|
+| 400 | `FAIL` | 400 | 필수값 누락·형식/길이 위반·잘못된 헤더 값 | 입력 화면에 `message` 표시 |
+| 401 | `FAIL` | 401 | 토큰 없음·만료·위조 | Firebase 토큰 갱신 후 1회 재시도, 실패하면 로그인 화면 |
+| 404 | `FAIL` | 404 | 없는 주소·없는 리소스(남의 것 포함) | 도감으로 돌아가기 |
+| 405 | `FAIL` | 405 | 지원하지 않는 HTTP 메서드 | — |
+| 500 | `ERROR` | 500 | 서버 내부 오류 | "잠시 후 다시 시도" |
+
+> 각 인터페이스에서만 발생하는 에러(`MATCH_*`, `NO_CAT_DETECTED` 등)는 해당 인터페이스 표에 적는다. 그 표의 영문 코드는 에러 종류를 부르는 이름이고 실제 `code`는 숫자다.
 
 ### 2.7 공통 데이터 객체
 
@@ -164,12 +185,12 @@
 |---|---|---|---|---|---|---|
 | IF-AUTH-001 | 로그인/가입 처리 | POST | `/auth/login` | 로그인(a1) | 필수 | 미구현 |
 | IF-ME-001 | 내 정보 조회 | GET | `/me` | 앱 시작, 내 정보 | 필수 | 미구현 |
-| IF-ME-002 | 내 레벨 조회 | GET | `/me/level` | 도감(a6), 레벨(a10) | 필수 | 미구현 |
+| IF-ME-002 | 수집 수 조회 | GET | `/app/collection/count` | 도감(a6), 레벨(a10) | 필수 | **구현** |
 | IF-ME-003 | 이번 주 만난 수 조회 | GET | `/me/stats/week` | 홈 카메라(a2) | 필수 | 미구현 |
 | IF-ME-004 | 회원 탈퇴 | DELETE | `/me` | 내 정보 | 후순위 | 미구현 |
-| IF-CFG-001 | 등급표 조회 | GET | `/levels` | 레벨(a10) | 필수 | 미구현 |
+| IF-CFG-001 | 등급표 조회 | GET | `/levels` | 레벨(a10) | ~~필수~~ 불필요(앱이 등급표 보유, 1.4) | — |
 | IF-CFG-002 | 앱 설정 조회 | GET | `/config/app` | 매칭 결과(a3·a4), 이름 짓기(a5) | 필수 | 미구현 |
-| IF-CAT-001 | 도감 목록 조회 | GET | `/cats` | 도감(a6) | 필수 | 미구현 |
+| IF-CAT-001 | 도감 목록 조회 | GET | `/app/collection/cats` | 도감(a6) | 필수 | **구현** |
 | IF-CAT-002 | 고양이 상세 조회 | GET | `/cats/{catId}` | 고양이 상세(a7) | 필수 | 미구현 |
 | IF-CAT-003 | 목격 기록 목록 조회 | GET | `/cats/{catId}/sightings` | 고양이 상세(a7) | 필수 | 미구현 |
 | IF-CAT-004 | 고양이 정보 수정 | PATCH | `/cats/{catId}` | 고양이 상세 ⋯ 메뉴 | 선택(앱 미구현) | 미구현 |
@@ -235,22 +256,27 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 
 ---
 
-### IF-ME-002 내 레벨 조회
+### IF-ME-002 수집 수 조회
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | 도감 상단 카드·레벨 탭이 쓰는 현재 등급/진행률. 등급은 **새로 등록한 고양이 수** 기준이며(같은 고양이를 다시 만나도 오르지 않음) 등록 시점에 `users.level`에 캐싱된 값을 기준으로 한다 |
-| Method / URL | `GET /api/v1/me/level` |
+| 설명 | 내가 등록한 고양이 수. 앱이 이 값으로 등급(레벨)·진행률·다음 등급까지 남은 수를 **직접 계산**한다(등급 기준 1·5·12·16·30마리는 앱 `levels.js`). 등급은 **새로 등록한 고양이 수** 기준이라 같은 고양이를 다시 만나도 오르지 않는다 |
+| Method / URL | `GET /app/collection/count` |
 | 호출 화면 | 도감(a6), 레벨(a10) — 화면에 돌아올 때마다 다시 호출 |
+| 구현 상태 | **구현·검증 완료**(단위 테스트 + 로컬 DB 실제 호출) |
 
-**Request** — 없음
+**Request** — 헤더 `X-User-Id`(임시 사용자 식별, 기본 1. Firebase 인증을 붙이면 토큰으로 대체). 파라미터·본문 없음
 
-**Response `200`**: `LevelInfo`(2.7)
+**Response `200`** — `data`
 
-**에러**: `401 UNAUTHORIZED`
+| 항목 | 타입 | Null | 설명 |
+|---|---|---|---|
+| `catCount` | Integer | N | 등록한 고양이 수(없으면 0) |
+
+**에러**: `400 FAIL`(`X-User-Id` 형식 오류)
 
 ```json
-{ "level": 3, "title": "골목 스카우터", "catCount": 13, "ratio": 0.25, "remainToNext": 3, "nextTitle": "동네 관찰자" }
+{ "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "catCount": 12 } }
 ```
 
 ---
@@ -354,24 +380,31 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | 내가 등록한 고양이 전체(필터·검색 없음). **최근 등록한 순**으로 정렬한다 |
-| Method / URL | `GET /api/v1/cats` |
+| 설명 | 내가 등록한 고양이 전체(필터·검색·페이징 없음). **최근 등록한 순**으로 정렬한다 |
+| Method / URL | `GET /app/collection/cats` |
 | 호출 화면 | 도감(a6) — 화면에 돌아올 때마다 다시 호출(등록 직후 바로 반영되어야 함) |
+| 구현 상태 | **구현·검증 완료**(단위 테스트 + 로컬 DB 실제 호출) |
 
-**Request** — 없음
+**Request** — 헤더 `X-User-Id`(임시, IF-ME-002와 동일). 파라미터·본문 없음
 
-**Response `200`**
+**Response `200`** — `data`
 
 | 항목 | 타입 | Null | 설명 |
 |---|---|---|---|
-| `cats` | Array<Cat> | N | 고양이 목록(0마리면 빈 배열) |
+| `cats` | Array | N | 고양이 목록(0마리면 빈 배열) |
+| `cats[].id` | Long | N | 고양이 ID |
+| `cats[].name` | String | N | 이름 |
+| `cats[].photoUrl` | String | Y | 대표 사진(`cats.photo_url`). 지금은 저장된 경로 그대로이고, MinIO 연동 후 만료되는 presigned URL로 바꾼다 |
+| `cats[].sightingCount` | Integer | N | 만난 횟수(목격 기록 수) |
+| `cats[].tags` | Array<String> | N | 특징 태그(추가한 순서, 없으면 빈 배열). 앱 카드는 첫 번째만 표시 |
 
-**에러**: `401 UNAUTHORIZED`
+**에러**: `400 FAIL`(`X-User-Id` 형식 오류)
 
 ```json
-{ "cats": [
-  { "id": 12, "name": "양말이", "tags": ["턱시도", "코 옆 흰 점"], "photoUrl": "https://…", "sightingCount": 7, "createdAt": "2026-04-02T09:00:00+09:00" }
-] }
+{ "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "cats": [
+  { "id": 2, "name": "치즈", "photoUrl": "cats/2/first.jpg", "sightingCount": 12, "tags": ["치즈 태비"] },
+  { "id": 1, "name": "양말이", "photoUrl": "cats/1/first.jpg", "sightingCount": 7, "tags": ["턱시도", "코 옆 흰 점"] }
+] } }
 ```
 
 ---
@@ -619,7 +652,7 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 | 레벨업 팝업(a8) | — | IF-MATCH-003 응답의 `levelUp`으로 표시 |
 | 도감(a6) | IF-CAT-001, IF-ME-002 | 카드 탭 → 상세로 이동 |
 | 고양이 상세(a7) | IF-CAT-002, IF-CAT-003 | — |
-| 레벨(a10) | IF-ME-002, IF-CFG-001 | — |
+| 레벨(a10) | IF-ME-002 (등급표는 앱이 보유) | — |
 | 내 정보 | IF-ME-001 | 로그아웃(Firebase만) / (개발) IF-DEV-001·002 |
 
 ---
@@ -636,8 +669,8 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 | `getCatById` | IF-CAT-002 |
 | `getSightings`(이번 주 계산) | IF-ME-003 |
 | `getSightingsByCat` | IF-CAT-003 |
-| `getUserLevelInfo` + `levels.js`의 `computeLevel` | IF-ME-002 (계산은 서버) |
-| `levels.js`의 `LEVELS` 상수 | IF-CFG-001 |
+| `getUserLevelInfo`(개수만 서버에서 받아 앱이 `computeLevel`로 계산) | IF-ME-002 (`catCount`) |
+| `levels.js`의 `LEVELS` 상수 | 앱에 그대로 유지(IF-CFG-001 불필요) |
 | `matchConfig.js`의 상수 | IF-CFG-002 |
 | `mockMatchAgainstExisting` | IF-MATCH-001 |
 | `addSightingToCat` | IF-MATCH-002 |

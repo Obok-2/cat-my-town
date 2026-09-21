@@ -16,6 +16,7 @@
 - 로컬 전용이라 DB명·계정(`catmytown`)과 비밀번호는 compose 파일과 `application.properties`에 **하드코딩**한다(접속 주소는 `localhost`). 환경변수·`.env`로 분리하지 않는다.
   비밀번호는 무작위 문자열이고 `infra/docker-compose.yml`의 `POSTGRES_PASSWORD`와 `application.properties`의 `spring.datasource.password` **두 곳이 항상 같아야** 한다.
   (git에 올라가는 값이므로 운영 환경에는 절대 재사용하지 않는다)
+- 로컬 DB 스키마는 compose가 자동으로 적재하지 않는다 — 필요하면 `산출물/schema.sql`을 직접 실행한다. `schema.sql`을 고치면 ERD도 함께 맞춘다.
 - 로컬 사진 저장소 MinIO(`infra/docker-compose.yml`의 `minio`)도 같은 방식으로 계정(`catmytown`)·비밀번호를 **하드코딩**한다. 포트는 API **9000**, 웹 콘솔 **9001**,
   버킷 `cat-photos`는 `minio-init` 컨테이너가 자동으로 만든다. 비밀번호는 compose 안의 `minio`와 `minio-init` **두 곳이 같아야** 한다.
   이미지는 Docker Hub의 `minio/minio`가 삭제되어 **Quay의 마지막 공식 이미지(`quay.io/minio/minio:RELEASE.2025-09-07...`)로 고정**한 것이니 `latest`나 Docker Hub 주소로 바꾸지 않는다.
@@ -40,6 +41,31 @@
   같은 이름의 클래스를 둘 이상 만들지 않는다(시작할 때 오류).
 - `mybatis-config.xml`에는 `<settings>`(예: `mapUnderscoreToCamelCase`)를 둔다. **`config-location`을 쓰면 `mybatis.configuration.*` 속성은 같이 쓸 수 없다**(시작 오류) — 그 설정은 XML로.
   속성 이름은 `mybatis.config`가 아니라 **`mybatis.config-location`** 이다(`mybatis.config`는 무시됨). Mapper는 `mapper-locations`로 잡으므로 config의 `<mappers>`에는 같이 등록하지 않는다(둘 다 쓰면 중복 등록 오류).
+- **SQL(Mapper XML 쿼리, `schema.sql` 포함)은 한 줄로 쓰지 않고 절마다 줄을 나눠 정렬해서 쓴다.** `SELECT`·`FROM`·`JOIN`·`WHERE`·`GROUP BY`·`ORDER BY`를 각각 새 줄에 쓰고 키워드 끝을 맞춘다.
+  조회 컬럼이 여러 개면 한 줄에 하나씩 쓴다. 예:
+  ```xml
+  <select id="selectCatList" parameterType="long" resultType="CatCardVo">
+      SELECT c.id,
+             c.name,
+             COUNT(s.id) AS sighting_count
+        FROM cats c
+        LEFT JOIN sightings s ON s.cat_id = c.id
+       WHERE c.user_id = #{userId}
+       GROUP BY c.id, c.name
+       ORDER BY c.created_at DESC
+  </select>
+  ```
+- **모든 REST API 응답은 공통 클래스 `ResponseApi`(`com.catmytown.server.common`)로 통일한다.** 필드는 `result`(`RESULT` enum: `SUCCESS` 성공 / `FAIL` 업무 처리 실패 / `ERROR` 시스템 오류) · `message` · `code`(int, 성공 기본 200) · `data`(Object).
+  실제 데이터는 `data`에 담는다. 응답 JSON 예: `{ "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "catCount": 12 } }`
+- **컨트롤러와 Service 메서드는 모두 `ResponseApi`를 반환한다.** Service가 결과를 `ResponseApi.success(...)`로 감싸서 돌려주고, 컨트롤러는 그것을 그대로 `return collectionService.getCatList(userId);` 한다. `RESULT`·메시지·코드를 매번 직접 쓰지 않고 정적 팩토리(`ResponseApi.success(data)` / `fail(code, message)` / `error(message)`)를 쓴다.
+  컨트롤러에는 try/catch를 두지 않는다 — 실패·오류는 예외를 던지고 `@RestControllerAdvice` 전역 예외 처리기(`GlobalExceptionHandler`)가 같은 모양으로 변환한다(시스템 오류는 사용자에게 일반 문구만 보이고 스택트레이스는 숨긴다).
+  컨트롤러는 요청을 받아 Service를 호출하고 그 결과를 그대로 반환하기만 하며, 로직과 `ResponseApi` 생성은 Service에 둔다.
+- **요청·응답 객체**: 응답 데이터는 `XxxRes`, 요청 본문·파라미터가 있으면 `XxxReq`(없으면 만들지 않는다), 쿼리 결과만 담는 내부용은 `XxxVo`로 이름 짓고 모두 `com.catmytown.server.model` 패키지에 둔다.
+  클래스 이름이 MyBatis 별칭이라 겹치지 않게 기능명을 앞에 붙인다(예: `CollectionCatRes`). `Res`는 `ResponseApi`의 `data`에 담기는 내용이며, Service가 `ResponseApi.success(new XxxRes(...))`로 만든다.
+- **람다식·스트림·메서드 참조(`->`, `::`)와 `->`를 쓰는 switch 식은 쓰지 않는다.** 읽기 어려우므로 `for`문·`if`문·일반 `switch`로 풀어서 쓴다(컬렉션 묶기·변환도 `for`문으로).
+  이벤트 핸들러 같은 인터페이스 구현이 필요하면 람다 대신 클래스로 구현한다.
+- **서버 오류의 상세 원인은 클라이언트에 알리지 않는다(보안).** 응답에는 일반 문구(`서버 오류가 발생했습니다.`)만 내려가고, 예외 메시지·스택트레이스·DB 접속 정보 등은 서버 로그에만 남긴다.
+  예외 메시지를 응답 `message`에 그대로 넣지 않고, Tomcat 오류 페이지의 서버 이름·버전도 숨긴다(`TomcatErrorPageConfig`).
 - 의존성 주입은 **필드에 `@Autowired`** 로 한다. `@RequiredArgsConstructor` 생성자 주입은 쓰지 않는다.
 
 ## 절대 규칙
