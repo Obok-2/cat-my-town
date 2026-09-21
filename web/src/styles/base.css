@@ -1,0 +1,89 @@
+/* 디자인 토큰 — design/우리동네고양이 UIUX 목업/screens/w1·w2 인라인 스타일에서 추출 */
+:root {
+  --bg: #fbf4ea;
+  --bg-page: #ede4d8;
+  --surface: #ffffff;
+  --surface-warm: #fff8ef;
+  --surface-soft: #f6efe4;
+  --panel: #f3e6d4;
+  --text: #3a322c;
+  --text-sub: #6e6055;
+  --text-nav: #4a4038;
+  --primary: #e08b4b;
+  --primary-shadow: #c0703a;
+  --primary-on: #fff8ef;
+  --accent: #c9713c;
+  --accent-hover: #a8552a;
+  --accent-deep: #8a4f22;
+  --nav-active: #f3e1cc;
+  --border: #eaddcb;
+  --border-input: #e0d3c0;
+  --border-soft: #f0e6d8;
+  --track: #f0e6d8;
+  --track-donut: #efe3d3;
+  --green: #7fa189;
+  --positive: #3f6146;
+  --danger: #b4452f;
+
+  --font-body: 'Gowun Dodum', sans-serif;
+  --font-title: 'Jua', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--accent);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+.brand {
+  font-family: var(--font-title);
+}
+
+.brand small {
+  color: var(--accent-deep);
+}
+
+/* 스트라이프 placeholder — 목업의 대각선 자리표시자 */
+.stripe {
+  background: repeating-linear-gradient(135deg, #e7dbc9 0 8px, #f1e7d8 8px 16px);
+}

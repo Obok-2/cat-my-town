@@ -1,0 +1,44 @@
+import { MENU } from '../data/menu.js';
+import { navigate } from '../router.js';
+import '../styles/admin.css';
+
+export default function AdminLayout({ activeRoute, onLogout, children }) {
+  return (
+    <div className="admin">
+      <aside className="sidebar">
+        <div className="brand sidebar__brand">
+          우리동네고양이 <small>ADMIN</small>
+        </div>
+
+        <nav className="sidebar__nav">
+          {MENU.map((item) => (
+            <button
+              key={item.route}
+              type="button"
+              className={`sidebar__link${item.route === activeRoute ? ' is-active' : ''}`}
+              aria-current={item.route === activeRoute ? 'page' : undefined}
+              onClick={() => navigate(item.route)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="sidebar__spacer" />
+
+        <div className="sidebar__profile">
+          <div className="sidebar__avatar" />
+          <div className="sidebar__who">
+            <span>김운영</span>
+            <small>운영 관리자</small>
+          </div>
+        </div>
+        <button type="button" className="sidebar__logout" onClick={onLogout}>
+          로그아웃
+        </button>
+      </aside>
+
+      <main className="admin__main">{children}</main>
+    </div>
+  );
+}
