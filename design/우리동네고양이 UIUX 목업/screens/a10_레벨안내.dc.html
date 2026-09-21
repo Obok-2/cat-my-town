@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>a6 · 도감 (메인 탭)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#EDE4D8; }
+  a { color:#C9713C; } a:hover { color:#A8552A; }
+</style>
+</helmet>
+<div style="font-family:'Gowun Dodum',sans-serif;color:#3A322C;background:#EDE4D8;min-height:100%;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;align-items:center;gap:28px">
+  <div style="display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:0.14em;color:#8C7B68">a10</div>
+    <div style="font-family:'Jua',sans-serif;font-size:30px">도감 (메인 탭)</div>
+    <div style="font-size:15px;color:#6E6055;max-width:560px;line-height:1.7">세 번째 탭. 현재 등급과 진행률, 등급표 전체를 보여줍니다.</div>
+  </div>
+  <div style="display:flex;justify-content:center;"><div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#6E6055"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+          <div style="padding:14px 22px 0;display:flex;flex-direction:column;gap:4px">
+            <div style="font-family:'Jua',sans-serif;font-size:22px">레벨</div>
+            <div style="font-size:13px;color:#6E6055">고양이를 만날수록 등급이 올라가요</div>
+          </div>
+
+          <div style="margin:16px 18px 0;padding:18px 20px;border-radius:24px;background:#FFF8EF;border:1.5px solid #EADDCB;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="font-size:12px;color:#6E6055">지금 나의 등급</div>
+                <div style="font-family:'Jua',sans-serif;font-size:25px">골목 스카우터 Lv.3</div>
+              </div>
+              <div style="font-family:'Jua',sans-serif;font-size:30px;color:#C9713C">68<span style="font-size:16px">%</span></div>
+            </div>
+            <div style="height:16px;border-radius:8px;background:#F0E6D8;overflow:hidden">
+              <div style="height:100%;border-radius:8px;background:linear-gradient(90deg,#EFA96A,#E08B4B);width:68%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:#6E6055"><span>고양이 12마리 수집</span><span>다음 레벨까지 4마리</span></div>
+          </div>
+
+          <div style="padding:20px 22px 10px;font-family:'Jua',sans-serif;font-size:18px">등급표</div>
+          <div style="flex:1;overflow:hidden;padding:0 18px;display:flex;flex-direction:column;gap:9px">
+            
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:#FFFFFF;border:1.5px solid #EADDCB">
+                <div style="width:44px;height:44px;border-radius:14px;background:#F6E3CF;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:14px;color:#8A4F22;flex:none">Lv.1</div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+                  <div style="font-family:'Jua',sans-serif;font-size:17px">산책 초보</div>
+                  <div style="font-size:12px;color:#6E6055">고양이 1마리 수집</div>
+                </div>
+                <div style="font-size:12px;color:#8A4F22;background:#F6E3CF;border-radius:11px;padding:5px 10px;flex:none">달성</div>
+              </div>
+            
+
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:#FFFFFF;border:1.5px solid #EADDCB">
+                <div style="width:44px;height:44px;border-radius:14px;background:#F6E3CF;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:14px;color:#8A4F22;flex:none">Lv.2</div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+                  <div style="font-family:'Jua',sans-serif;font-size:17px">골목 탐험가</div>
+                  <div style="font-size:12px;color:#6E6055">고양이 5마리 수집</div>
+                </div>
+                <div style="font-size:12px;color:#8A4F22;background:#F6E3CF;border-radius:11px;padding:5px 10px;flex:none">달성</div>
+              </div>
+            
+
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:#FFFFFF;border:1.5px solid #EADDCB">
+                <div style="width:44px;height:44px;border-radius:14px;background:#F6E3CF;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:14px;color:#8A4F22;flex:none">Lv.3</div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+                  <div style="font-family:'Jua',sans-serif;font-size:17px">골목 스카우터</div>
+                  <div style="font-size:12px;color:#6E6055">고양이 12마리 수집</div>
+                </div>
+                <div style="font-size:12px;color:#8A4F22;background:#F6E3CF;border-radius:11px;padding:5px 10px;flex:none">지금 여기</div>
+              </div>
+            
+
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:#FFFFFF;border:1.5px solid #EADDCB">
+                <div style="width:44px;height:44px;border-radius:14px;background:#F6E3CF;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:14px;color:#8A4F22;flex:none">Lv.4</div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+                  <div style="font-family:'Jua',sans-serif;font-size:17px">동네 관찰자</div>
+                  <div style="font-size:12px;color:#6E6055">고양이 16마리 수집</div>
+                </div>
+                <div style="font-size:12px;color:#8A4F22;background:#F6E3CF;border-radius:11px;padding:5px 10px;flex:none">4마리 남음</div>
+              </div>
+            
+
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:#FFFFFF;border:1.5px solid #EADDCB">
+                <div style="width:44px;height:44px;border-radius:14px;background:#F6E3CF;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:14px;color:#8A4F22;flex:none">Lv.5</div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+                  <div style="font-family:'Jua',sans-serif;font-size:17px">고양이 박사</div>
+                  <div style="font-size:12px;color:#6E6055">고양이 30마리 수집</div>
+                </div>
+                <div style="font-size:12px;color:#8A4F22;background:#F6E3CF;border-radius:11px;padding:5px 10px;flex:none">18마리 남음</div>
+              </div>
+            
+          </div>
+
+          <div style="padding:12px 22px 6px;font-size:12px;color:#6E6055;line-height:1.7">같은 고양이를 다시 만나도 기록은 쌓이지만, 등급은 새로 만난 고양이 수로 올라가요.</div>
+
+          <div style="display:flex;background:#FFF8EF;border-top:1.5px solid #EADDCB;padding:12px 0 26px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#A79685;font-size:12px"><span style="font-size:19px">▦</span>도감</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#A79685;font-size:12px"><span style="font-size:19px">◉</span>촬영</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#C9713C;font-size:12px"><span style="font-size:19px">★</span>레벨</div>
+          </div>
+        </div>
+      </div></div>
+</div>
+</x-dc>
+</body>
+</html>

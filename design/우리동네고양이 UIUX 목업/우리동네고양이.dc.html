@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#EDE4D8; }
+  a { color:#C9713C; } a:hover { color:#A8552A; }
+</style>
+</helmet>
+
+<div style="font-family:'Gowun Dodum',sans-serif;color:#3A322C;padding:56px 48px 80px;background:#EDE4D8;min-height:100%;box-sizing:border-box">
+
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:44px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:0.12em;color:#6E6055">UI/UX MOCKUP · REACT NATIVE (EXPO)</div>
+    <div style="font-family:'Jua',sans-serif;font-size:44px;line-height:1.1">우리동네고양이</div>
+    <div style="font-size:17px;color:#6E6055;max-width:620px">산책하며 만난 길고양이를 모으는 개인 수집 다이어리. 카드(도감)가 중심이고, 지도는 고양이 상세 화면 안에서만 등장합니다.</div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start">
+
+    <!-- 0. SPLASH -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">00 · SPLASH</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#F3E6D4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px">
+          <div style="position:absolute;left:-60px;top:90px;width:220px;height:220px;border-radius:50%;background:#EFDCC4"></div>
+          <div style="position:absolute;right:-70px;bottom:130px;width:260px;height:260px;border-radius:50%;background:#F7EEE0"></div>
+          <div style="position:relative;width:184px;height:184px;border-radius:50%;background:repeating-linear-gradient(135deg,#E3D3BC 0 9px,#EFE2CE 9px 18px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E6055;padding:22px;box-sizing:border-box">일러스트<br>손그림 고양이</div>
+          <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:10px">
+            <div style="font-family:'Jua',sans-serif;font-size:38px">우리동네고양이</div>
+            <div style="font-size:15px;color:#7A6B5C">오늘의 산책을 기록해요</div>
+          </div>
+          <div style="position:absolute;bottom:56px;display:flex;flex-direction:column;align-items:center;gap:16px">
+            <div style="display:flex;gap:7px">
+              <div style="width:9px;height:9px;border-radius:50%;background:#E08B4B"></div>
+              <div style="width:9px;height:9px;border-radius:50%;background:#DFCDB4"></div>
+              <div style="width:9px;height:9px;border-radius:50%;background:#DFCDB4"></div>
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;color:#9A8B7B">v1.0.0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. LOGIN -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">01 · LOGIN</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#6E6055"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:0 36px">
+            <div style="width:168px;height:168px;border-radius:50%;background:repeating-linear-gradient(135deg,#E7DBC9 0 8px,#F1E7D8 8px 16px);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E6055;padding:20px;box-sizing:border-box">일러스트<br>손그림 고양이</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+              <div style="font-family:'Jua',sans-serif;font-size:34px">우리동네고양이</div>
+              <div style="font-size:15px;color:#7A6B5C;text-align:center;line-height:1.6">오늘 마주친 고양이를<br>나만의 도감에 담아요</div>
+            </div>
+          </div>
+          <div style="padding:0 28px 48px;display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;justify-content:center;gap:12px;height:58px;border-radius:29px;background:#FFFFFF;border:1.5px solid #DFD2BF;box-shadow:0 2px 0 #E4D8C6">
+              <div style="width:20px;height:20px;border-radius:50%;background:conic-gradient(#EA4335 0 25%,#FBBC05 0 50%,#34A853 0 75%,#4285F4 0)"></div>
+              <span style="font-size:17px;color:#3A322C">Google로 시작하기</span>
+            </div>
+            <div style="text-align:center;font-size:12px;color:#6E6055;line-height:1.6">기록은 이 기기의 내 계정에만 저장돼요</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. CAMERA HOME -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">02 · HOME (CAMERA)</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#6E6055"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px 12px">
+            <div style="display:flex;flex-direction:column;gap:3px">
+              <div style="font-size:12px;color:#6E6055">2026.09.21 · 저녁 산책</div>
+              <div style="font-family:'Jua',sans-serif;font-size:22px">오늘은 누굴 만날까요?</div>
+            </div>
+            <div style="width:38px;height:38px;border-radius:50%;background:#F6E3CF;display:flex;align-items:center;justify-content:center;font-size:16px;color:#8A4F22">☻</div>
+          </div>
+
+          <div style="position:relative;margin:0 16px;border-radius:32px;overflow:hidden;flex:1;background:#2E2A26;box-shadow:0 10px 24px rgba(60,45,30,0.22)">
+            <div style="position:absolute;inset:0;background:repeating-linear-gradient(135deg,#34302B 0 10px,#3C3731 10px 20px)"></div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9A8F83">카메라 프리뷰 (expo-camera)</div>
+
+            <div style="position:absolute;left:34px;top:110px;width:74px;height:74px;border-left:3px solid rgba(240,178,122,0.9);border-top:3px solid rgba(240,178,122,0.9);border-radius:26px 0 0 0"></div>
+            <div style="position:absolute;right:34px;top:110px;width:74px;height:74px;border-right:3px solid rgba(240,178,122,0.9);border-top:3px solid rgba(240,178,122,0.9);border-radius:0 26px 0 0"></div>
+            <div style="position:absolute;left:34px;bottom:150px;width:74px;height:74px;border-left:3px solid rgba(240,178,122,0.9);border-bottom:3px solid rgba(240,178,122,0.9);border-radius:0 0 0 26px"></div>
+            <div style="position:absolute;right:34px;bottom:150px;width:74px;height:74px;border-right:3px solid rgba(240,178,122,0.9);border-bottom:3px solid rgba(240,178,122,0.9);border-radius:0 0 26px 0"></div>
+
+            <div style="position:absolute;left:0;right:0;top:20px;display:flex;justify-content:center">
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:20px;background:rgba(251,244,234,0.92);font-size:13px;color:#4A4038"><span style="color:#C9713C">✦</span>얼굴이 프레임 안에 들어오면 또렷해요</div>
+            </div>
+
+            <div style="position:absolute;left:0;right:0;bottom:30px;display:flex;justify-content:center">
+              <div style="width:96px;height:96px;border-radius:50%;background:#FBF4EA;border:5px solid rgba(240,178,122,0.85);box-sizing:border-box;display:flex;align-items:center;justify-content:center">
+                <div style="width:68px;height:68px;border-radius:50%;background:#E08B4B"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:center;padding:14px 22px 2px;font-size:13px;color:#6E6055">이번 주에 3마리를 만났어요</div>
+
+          <div style="display:flex;background:#FFF8EF;border-top:1.5px solid #EADDCB;padding:12px 0 26px;margin-top:8px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#A79685;font-size:12px"><span style="font-size:19px">▦</span>도감</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#C9713C;font-size:12px"><span style="font-size:19px">◉</span>촬영</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#A79685;font-size:12px"><span style="font-size:19px">★</span>레벨</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. MATCH RESULT -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">03 · MATCH RESULT</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#6E6055"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+          <div style="display:flex;align-items:center;gap:14px;padding:12px 22px 0">
+            <div style="width:62px;height:62px;border-radius:16px;background:repeating-linear-gradient(135deg,#E7DBC9 0 8px,#F1E7D8 8px 16px);flex:none;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6E6055;text-align:center">방금<br>찍은 사진</div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              <div style="font-family:'Jua',sans-serif;font-size:20px">비슷한 친구 {{ candidateCount }}명을 찾았어요</div>
+              <div style="font-size:12px;color:#6E6055">오늘 18:24 · 일치율 높은 순</div>
+            </div>
+          </div>
+
+          <div style="padding:14px 22px 0">
+            <div style="font-size:12px;color:#6E6055;margin-bottom:8px">AI가 찾은 특징</div>
+            <div style="display:flex;flex-wrap:wrap;gap:7px">
+              <div style="padding:7px 13px;border-radius:16px;background:#F6E3CF;font-size:13px;color:#8A4F22">턱시도 무늬</div>
+              <div style="padding:7px 13px;border-radius:16px;background:#F6E3CF;font-size:13px;color:#8A4F22">코 옆 흰 점</div>
+              <div style="padding:7px 13px;border-radius:16px;background:#E2EDE1;font-size:13px;color:#3F6146">스코티시폴드로 추정</div>
+            </div>
+          </div>
+
+          <div style="flex:1;overflow:hidden;padding:14px 18px 0;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ candidates }}" as="c" hint-placeholder-count="3">
+              <div style="padding:11px;border-radius:20px;background:#FFFFFF;border:{{ c.border }};display:flex;gap:11px;align-items:center">
+                <div style="width:58px;height:58px;border-radius:15px;background:repeating-linear-gradient(135deg,#DFD3C0 0 8px,#EADFCE 8px 16px);flex:none"></div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">
+                  <div style="display:flex;align-items:baseline;gap:8px">
+                    <div style="font-family:'Jua',sans-serif;font-size:17px">{{ c.name }}</div>
+                    <div style="font-family:'Jua',sans-serif;font-size:26px;line-height:1;color:{{ c.bar }}">{{ c.score }}<span style="font-size:14px">%</span></div>
+                    <div style="padding:3px 8px;border-radius:10px;background:{{ c.chip }};font-size:10px;color:{{ c.chipText }}">{{ c.label }}</div>
+                  </div>
+                  <div style="height:9px;border-radius:5px;background:#F0E6D8;overflow:hidden"><div style="height:100%;border-radius:5px;background:{{ c.bar }};width:{{ c.width }}"></div></div>
+                  <div style="font-size:11px;color:#6E6055">{{ c.tag }} · {{ c.meets }}번 만남</div>
+                </div>
+                <div style="flex:none;height:38px;padding:0 13px;border-radius:19px;background:#E08B4B;color:#FFF8EF;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 0 #C0703A;text-align:center;line-height:1.2">이 고양이<br>예요</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="padding:14px 20px 30px;display:flex;flex-direction:column;gap:9px">
+            <div style="height:50px;border-radius:25px;background:#F3EADC;border:1.5px solid #E0D3C0;display:flex;align-items:center;justify-content:center;font-size:15px;color:#6E6055">셋 다 아니에요, 새로운 고양이예요</div>
+            <div style="text-align:center;font-size:12px;color:#6E6055">최종 확정은 언제나 내가 해요</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3b. NEW FRIEND -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">03b · 후보 없음 (전부 40% 미만)</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#6E6055"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:0 30px">
+            <div style="width:230px;height:230px;border-radius:30px;background:repeating-linear-gradient(135deg,#E7DBC9 0 8px,#F1E7D8 8px 16px);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6E6055">방금 찍은 사진</div>
+            <div style="font-family:'Jua',sans-serif;font-size:30px;text-align:center;line-height:1.35">새로운 친구를<br>발견했어요!</div>
+            <div style="font-size:15px;color:#7A6B5C;text-align:center;line-height:1.7">일치율 40% 이상인 후보가 없어요.<br>이 친구의 이름을 지어줄까요?</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+              <div style="padding:8px 14px;border-radius:18px;background:#F6E3CF;font-size:14px;color:#8A4F22">치즈 태비 무늬</div>
+              <div style="padding:8px 14px;border-radius:18px;background:#E2EDE1;font-size:14px;color:#3F6146">한쪽 귀 끝이 잘림</div>
+            </div>
+          </div>
+          <div style="padding:0 20px 34px">
+            <div style="height:58px;border-radius:29px;background:#E08B4B;color:#FFF8EF;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 0 #C0703A">이름 짓기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. NAMING -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">04 · NAMING</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#6E6055"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+          <div style="padding:16px 24px 0;display:flex;align-items:center;gap:12px">
+            <span style="font-size:20px;color:#7A6B5C">←</span>
+            <span style="font-family:'Jua',sans-serif;font-size:20px">이름 짓기</span>
+          </div>
+          <div style="padding:26px 30px 0;display:flex;flex-direction:column;align-items:center;gap:22px">
+            <div style="width:150px;height:150px;border-radius:50%;background:repeating-linear-gradient(135deg,#E7DBC9 0 8px,#F1E7D8 8px 16px);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#6E6055">대표 사진</div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+              <div style="font-size:14px;color:#6E6055">이름</div>
+              <div style="height:60px;border-radius:18px;background:#FFFFFF;border:1.5px solid #E08B4B;display:flex;align-items:center;padding:0 18px;font-size:19px;color:#3A322C">양말이<span style="width:2px;height:24px;background:#E08B4B;margin-left:2px"></span></div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:#6E6055"><span>나만 보는 이름이에요</span><span>3 / 12</span></div>
+            </div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+              <div style="font-size:14px;color:#6E6055">특징 태그 (수정 가능)</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px">
+                <div style="padding:8px 14px;border-radius:18px;background:#F6E3CF;font-size:14px;color:#8A4F22">치즈 태비 ✕</div>
+                <div style="padding:8px 14px;border-radius:18px;background:#E2EDE1;font-size:14px;color:#3F6146">한쪽 귀 끝이 잘림 ✕</div>
+                <div style="padding:8px 14px;border-radius:18px;background:#FFFFFF;border:1.5px dashed #DFD2BF;font-size:14px;color:#6E6055">+ 직접 입력</div>
+              </div>
+            </div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:14px;color:#6E6055">첫 만남 메모</div>
+              <div style="min-height:72px;border-radius:18px;background:#FFFFFF;border:1.5px solid #E6D9C7;padding:14px 16px;font-size:14px;color:#B0A091">골목 담벼락 위에서 졸고 있었다</div>
+            </div>
+          </div>
+          <div style="flex:1"></div>
+          <div style="padding:0 20px 34px">
+            <div style="height:58px;border-radius:29px;background:#E08B4B;color:#FFF8EF;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 3px 0 #C0703A">도감에 등록하기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. COLLECTION -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">05 · COLLECTION (메인 탭)</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#6E6055"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+
+          <div style="margin:14px 18px 0;padding:18px 20px;border-radius:24px;background:#FFF8EF;border:1.5px solid #EADDCB;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="font-size:12px;color:#6E6055">나의 레벨</div>
+                <div style="font-family:'Jua',sans-serif;font-size:25px">골목 스카우터 Lv.3</div>
+              </div>
+              <div style="font-family:'Jua',sans-serif;font-size:30px;color:#C9713C">{{ levelProgress }}<span style="font-size:16px">%</span></div>
+            </div>
+            <div style="height:16px;border-radius:8px;background:#F0E6D8;overflow:hidden">
+              <div style="height:100%;border-radius:8px;background:linear-gradient(90deg,#EFA96A,#E08B4B);width:{{ levelProgressCss }}"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:#6E6055"><span>고양이 12마리 수집</span><span>다음 레벨까지 4마리</span></div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:20px 22px 12px">
+            <div style="font-family:'Jua',sans-serif;font-size:19px">나의 도감</div>
+            <div style="font-size:13px;color:#6E6055">전체 12</div>
+          </div>
+
+          <div style="flex:1;overflow:hidden;padding:0 18px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <sc-for list="{{ cats }}" as="cat" hint-placeholder-count="6">
+                <div style="border-radius:22px;background:#FFFFFF;border:1.5px solid #EADDCB;overflow:hidden;display:flex;flex-direction:column">
+                  <div style="aspect-ratio:1;background:repeating-linear-gradient(135deg,#E7DBC9 0 8px,#F1E7D8 8px 16px);display:flex;align-items:flex-end;justify-content:flex-end;padding:8px">
+                    <div style="padding:4px 9px;border-radius:12px;background:rgba(43,37,33,0.65);color:#FBF4EA;font-size:11px">{{ cat.count }}회</div>
+                  </div>
+                  <div style="padding:10px 12px 13px;display:flex;flex-direction:column;gap:5px">
+                    <div style="font-family:'Jua',sans-serif;font-size:17px">{{ cat.name }}</div>
+                    <div style="font-size:11px;color:#8A4F22;background:#F6E3CF;border-radius:10px;padding:4px 8px;align-self:flex-start">{{ cat.tag }}</div>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-for list="{{ locked }}" as="l" hint-placeholder-count="4">
+                <div style="border-radius:22px;background:#F6EFE4;border:1.5px dashed #DBCDB9;overflow:hidden;display:flex;flex-direction:column">
+                  <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:36px;color:#C6B7A4">???</div>
+                  <div style="padding:10px 12px 13px;font-size:12px;color:#9A8B7B">아직 만나지 못한 친구</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;background:#FFF8EF;border-top:1.5px solid #EADDCB;padding:12px 0 26px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#C9713C;font-size:12px"><span style="font-size:19px">▦</span>도감</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#A79685;font-size:12px"><span style="font-size:19px">◉</span>촬영</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#A79685;font-size:12px"><span style="font-size:19px">★</span>레벨</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. DETAIL -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">06 · CAT DETAIL (지도 고정 + 타임라인 스크롤)</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#6E6055"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+          <div style="padding:14px 22px 0;display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:20px;color:#7A6B5C">←</span>
+            <span style="font-size:18px;color:#7A6B5C">⋯</span>
+          </div>
+
+          <div style="padding:6px 22px 0;display:flex;gap:16px;align-items:center">
+            <div style="width:88px;height:88px;border-radius:24px;background:repeating-linear-gradient(135deg,#E7DBC9 0 8px,#F1E7D8 8px 16px);flex:none"></div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div style="font-family:'Jua',sans-serif;font-size:32px;line-height:1">양말이</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <div style="padding:6px 11px;border-radius:14px;background:#F6E3CF;font-size:13px;color:#8A4F22">턱시도</div>
+                <div style="padding:6px 11px;border-radius:14px;background:#E2EDE1;font-size:13px;color:#3F6146">앞발만 하양</div>
+              </div>
+              <div style="font-size:13px;color:#6E6055">첫 만남 2026.04.02 · 7번 만남</div>
+            </div>
+          </div>
+
+          <div style="flex:none;margin:18px 18px 0;padding:16px;border-radius:24px;background:#FFF8EF;border:1.5px solid #EADDCB;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-family:'Jua',sans-serif;font-size:17px">이 친구를 만난 곳들</div>
+              <div style="font-size:12px;color:#6E6055">핀 7개</div>
+            </div>
+            <div style="position:relative;height:190px;border-radius:18px;overflow:hidden;background:#E9EDE4;background-image:linear-gradient(#DCE3D4 1px,transparent 1px),linear-gradient(90deg,#DCE3D4 1px,transparent 1px);background-size:26px 26px">
+              <div style="position:absolute;left:0;top:64px;width:100%;height:16px;background:#DFE5D8"></div>
+              <div style="position:absolute;left:112px;top:0;width:14px;height:100%;background:#DFE5D8"></div>
+              <div style="position:absolute;left:24px;top:22px;display:flex;align-items:center;gap:4px"><div style="width:16px;height:16px;border-radius:50% 50% 50% 2px;background:#C9713C;transform:rotate(-45deg)"></div><span style="font-size:11px;color:#5F6B58">①</span></div>
+              <div style="position:absolute;left:150px;top:44px;display:flex;align-items:center;gap:4px"><div style="width:16px;height:16px;border-radius:50% 50% 50% 2px;background:#C9713C;transform:rotate(-45deg)"></div><span style="font-size:11px;color:#5F6B58">②</span></div>
+              <div style="position:absolute;left:28px;top:150px;display:flex;align-items:center;gap:4px"><div style="width:16px;height:16px;border-radius:50% 50% 50% 2px;background:#C9713C;transform:rotate(-45deg)"></div><span style="font-size:11px;color:#5F6B58">③</span></div>
+              <div style="position:absolute;left:228px;top:142px;display:flex;align-items:center;gap:4px"><div style="width:16px;height:16px;border-radius:50% 50% 50% 2px;background:#C9713C;transform:rotate(-45deg)"></div><span style="font-size:11px;color:#5F6B58">④</span></div>
+              <div style="position:absolute;left:196px;top:96px;display:flex;align-items:center;gap:4px"><div style="width:20px;height:20px;border-radius:50% 50% 50% 2px;background:#A8552A;transform:rotate(-45deg);border:2px solid #FFF8EF"></div></div>
+              <div style="position:absolute;left:96px;top:112px;display:flex;gap:9px;align-items:center;padding:8px;border-radius:14px;background:#FFF8EF;box-shadow:0 6px 14px rgba(60,45,30,0.18)">
+                <div style="width:40px;height:40px;border-radius:10px;background:repeating-linear-gradient(135deg,#E7DBC9 0 6px,#F1E7D8 6px 12px)"></div>
+                <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:12px">⑤ 2026.09.14</div><div style="font-size:11px;color:#6E6055">놀이터 미끄럼틀 밑</div></div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:#6E6055;line-height:1.6">핀은 만날 때마다 쌓여요. 경로가 아니라 그날의 스냅샷 기록이에요.</div>
+          </div>
+
+          <div style="padding:20px 22px 8px;font-family:'Jua',sans-serif;font-size:18px">목격 타임라인</div>
+          <div style="flex:1;overflow:hidden;padding:0 22px 22px">
+            <sc-for list="{{ sightings }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;gap:14px;align-items:stretch;padding-bottom:14px">
+                <div style="display:flex;flex-direction:column;align-items:center;width:22px;flex:none">
+                  <div style="width:22px;height:22px;border-radius:50%;background:#E08B4B;color:#FFF8EF;font-size:12px;display:flex;align-items:center;justify-content:center">{{ s.n }}</div>
+                  <div style="flex:1;width:2px;background:#EADDCB"></div>
+                </div>
+                <div style="flex:1;display:flex;gap:12px;padding:10px;border-radius:18px;background:#FFFFFF;border:1.5px solid #EADDCB">
+                  <div style="width:62px;height:62px;border-radius:14px;background:repeating-linear-gradient(135deg,#E7DBC9 0 8px,#F1E7D8 8px 16px);flex:none"></div>
+                  <div style="display:flex;flex-direction:column;gap:4px;justify-content:center">
+                    <div style="font-size:14px;color:#3A322C">{{ s.date }}</div>
+                    <div style="font-size:12px;color:#6E6055">{{ s.place }}</div>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. LEVEL UP -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">07 · LEVEL UP MODAL</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA">
+          <div style="position:absolute;inset:0;padding:70px 18px 0;box-sizing:border-box;filter:blur(1px);opacity:0.75">
+            <div style="padding:18px 20px;border-radius:24px;background:#FFF8EF;border:1.5px solid #EADDCB;font-family:'Jua',sans-serif;font-size:25px">골목 스카우터 Lv.3</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px">
+              <div style="height:180px;border-radius:22px;background:#FFFFFF;border:1.5px solid #EADDCB"></div>
+              <div style="height:180px;border-radius:22px;background:#FFFFFF;border:1.5px solid #EADDCB"></div>
+              <div style="height:180px;border-radius:22px;background:#FFFFFF;border:1.5px solid #EADDCB"></div>
+              <div style="height:180px;border-radius:22px;background:#FFFFFF;border:1.5px solid #EADDCB"></div>
+            </div>
+          </div>
+          <div style="position:absolute;inset:0;background:rgba(43,37,33,0.5)"></div>
+          <div style="position:absolute;left:26px;right:26px;top:190px;padding:30px 24px 24px;border-radius:30px;background:#FFF8EF;display:flex;flex-direction:column;align-items:center;gap:16px;box-shadow:0 20px 40px rgba(40,30,20,0.3)">
+            <div style="width:120px;height:120px;border-radius:50%;background:repeating-linear-gradient(135deg,#F6E3CF 0 8px,#FBEEDD 8px 16px);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#A8846A;text-align:center;padding:16px;box-sizing:border-box">일러스트<br>깃발 든 고양이</div>
+            <div style="font-family:'Jua',sans-serif;font-size:15px;color:#C9713C;letter-spacing:0.08em">LEVEL UP!</div>
+            <div style="font-family:'Jua',sans-serif;font-size:27px;text-align:center;line-height:1.35">골목 스카우터가<br>되었습니다</div>
+            <div style="font-size:14px;color:#7A6B5C;text-align:center;line-height:1.7">12마리째 기록 완료.<br>다음 레벨은 <b>동네 관찰자</b>예요.</div>
+            <div style="width:100%;height:14px;border-radius:7px;background:#F0E6D8;overflow:hidden"><div style="height:100%;width:8%;background:#E08B4B;border-radius:7px"></div></div>
+            <div style="width:100%;height:54px;border-radius:27px;background:#E08B4B;color:#FFF8EF;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 0 #C0703A;margin-top:4px">계속 모으기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. LEVEL GUIDE -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">08 · LEVEL GUIDE (레벨 탭)</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#FBF4EA;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#6E6055"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+          <div style="padding:14px 22px 0;display:flex;flex-direction:column;gap:4px">
+            <div style="font-family:'Jua',sans-serif;font-size:22px">레벨</div>
+            <div style="font-size:13px;color:#6E6055">고양이를 만날수록 등급이 올라가요</div>
+          </div>
+
+          <div style="margin:16px 18px 0;padding:18px 20px;border-radius:24px;background:#FFF8EF;border:1.5px solid #EADDCB;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="font-size:12px;color:#6E6055">지금 나의 등급</div>
+                <div style="font-family:'Jua',sans-serif;font-size:25px">골목 스카우터 Lv.3</div>
+              </div>
+              <div style="font-family:'Jua',sans-serif;font-size:30px;color:#C9713C">{{ levelProgress }}<span style="font-size:16px">%</span></div>
+            </div>
+            <div style="height:16px;border-radius:8px;background:#F0E6D8;overflow:hidden">
+              <div style="height:100%;border-radius:8px;background:linear-gradient(90deg,#EFA96A,#E08B4B);width:{{ levelProgressCss }}"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:#6E6055"><span>고양이 12마리 수집</span><span>다음 레벨까지 4마리</span></div>
+          </div>
+
+          <div style="padding:20px 22px 10px;font-family:'Jua',sans-serif;font-size:18px">등급표</div>
+          <div style="flex:1;overflow:hidden;padding:0 18px;display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;background:#FFFFFF;border:1.5px solid #EADDCB">
+                <div style="width:44px;height:44px;border-radius:14px;background:#F6E3CF;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:14px;color:#8A4F22;flex:none">{{ t.lv }}</div>
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0">
+                  <div style="font-family:'Jua',sans-serif;font-size:17px">{{ t.name }}</div>
+                  <div style="font-size:12px;color:#6E6055">{{ t.need }} 수집</div>
+                </div>
+                <div style="font-size:12px;color:#8A4F22;background:#F6E3CF;border-radius:11px;padding:5px 10px;flex:none">{{ t.state }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="padding:12px 22px 6px;font-size:12px;color:#6E6055;line-height:1.7">같은 고양이를 다시 만나도 기록은 쌓이지만, 등급은 새로 만난 고양이 수로 올라가요.</div>
+
+          <div style="display:flex;background:#FFF8EF;border-top:1.5px solid #EADDCB;padding:12px 0 26px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#A79685;font-size:12px"><span style="font-size:19px">▦</span>도감</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#A79685;font-size:12px"><span style="font-size:19px">◉</span>촬영</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#C9713C;font-size:12px"><span style="font-size:19px">★</span>레벨</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. DARK MODE -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:#6E6055">09 · DARK MODE (도감)</div>
+      <div style="background:#2B2521;padding:9px;border-radius:48px;box-shadow:0 18px 40px rgba(60,45,30,0.18)">
+        <div style="width:360px;height:780px;border-radius:40px;overflow:hidden;position:relative;background:#1E1B18;display:flex;flex-direction:column;color:#F0E7DA">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 26px 0;font-size:13px;color:#A79685"><span>9:41</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">▮▮▮ ▲ ▰</span></div>
+          <div style="margin:14px 18px 0;padding:18px 20px;border-radius:24px;background:#2A2521;border:1.5px solid #3A332C;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end">
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="font-size:12px;color:#A79685">나의 레벨</div>
+                <div style="font-family:'Jua',sans-serif;font-size:25px">골목 스카우터 Lv.3</div>
+              </div>
+              <div style="font-family:'Jua',sans-serif;font-size:30px;color:#F0B27A">{{ levelProgress }}<span style="font-size:16px">%</span></div>
+            </div>
+            <div style="height:16px;border-radius:8px;background:#3A332C;overflow:hidden"><div style="height:100%;border-radius:8px;background:linear-gradient(90deg,#F0B27A,#E08B4B);width:{{ levelProgressCss }}"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:#A79685"><span>고양이 12마리 수집</span><span>다음 레벨까지 4마리</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:20px 22px 12px">
+            <div style="font-family:'Jua',sans-serif;font-size:19px">나의 도감</div>
+            <div style="font-size:13px;color:#A79685">전체 12</div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:0 18px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <sc-for list="{{ cats }}" as="cat" hint-placeholder-count="6">
+                <div style="border-radius:22px;background:#2A2521;border:1.5px solid #3A332C;overflow:hidden;display:flex;flex-direction:column">
+                  <div style="aspect-ratio:1;background:repeating-linear-gradient(135deg,#3A332C 0 8px,#443C33 8px 16px);display:flex;align-items:flex-end;justify-content:flex-end;padding:8px">
+                    <div style="padding:4px 9px;border-radius:12px;background:rgba(0,0,0,0.5);color:#F0E7DA;font-size:11px">{{ cat.count }}회</div>
+                  </div>
+                  <div style="padding:10px 12px 13px;display:flex;flex-direction:column;gap:5px">
+                    <div style="font-family:'Jua',sans-serif;font-size:17px">{{ cat.name }}</div>
+                    <div style="font-size:11px;color:#F0B27A;background:#3A2E22;border-radius:10px;padding:4px 8px;align-self:flex-start">{{ cat.tag }}</div>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-for list="{{ locked }}" as="l" hint-placeholder-count="4">
+                <div style="border-radius:22px;background:#241F1B;border:1.5px dashed #443C33;overflow:hidden;display:flex;flex-direction:column">
+                  <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:36px;color:#5C5248">???</div>
+                  <div style="padding:10px 12px 13px;font-size:12px;color:#8B8075">아직 만나지 못한 친구</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;background:#161412;border-top:1.5px solid #302A24;padding:12px 0 26px">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#F0B27A;font-size:12px"><span style="font-size:19px">▦</span>도감</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#8B8075;font-size:12px"><span style="font-size:19px">◉</span>촬영</div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;color:#8B8075;font-size:12px"><span style="font-size:19px">★</span>레벨</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COMPONENT STRUCTURE -->
+  <div style="margin-top:64px;padding:32px 34px;border-radius:26px;background:#FBF4EA;border:1.5px solid #E0D3C0;max-width:900px">
+    <div style="font-family:'Jua',sans-serif;font-size:24px;margin-bottom:6px">React Native (Expo) 컴포넌트 구조 제안</div>
+    <div style="font-size:15px;color:#6E6055;margin-bottom:22px">일치율과 레벨 진행률은 모두 props로 주입되는 값 기준입니다.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:22px;font-size:14px;line-height:1.85">
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6E6055;margin-bottom:8px">NAVIGATION</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#4A4038">AuthStack › LoginScreen<br>RootTabs<br>&nbsp;├ CollectionScreen<br>&nbsp;├ CameraScreen (initial)<br>&nbsp;└ LevelGuideScreen<br>CaptureStack (modal)<br>&nbsp;├ MatchResultScreen<br>&nbsp;└ NamingScreen<br>CatDetailScreen (push)</div>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6E6055;margin-bottom:8px">SHARED COMPONENTS</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#4A4038">&lt;MatchScoreBar score /&gt;<br>&lt;CandidateCard cat score onSelect /&gt;<br>&lt;CandidateList items&nbsp;(0–3) /&gt;<br>&lt;LevelProgressBar level ratio /&gt;<br>&lt;TraitTagList tags editable /&gt;<br>&lt;CatCard cat onPress /&gt;<br>&lt;LockedCatCard /&gt;&nbsp;// ??? 슬롯<br>&lt;LevelTierRow tier state /&gt;<br>&lt;SightingTimelineItem /&gt;<br>&lt;SightingMiniMap pins onPinPress /&gt;<br>&lt;LevelUpModal visible level /&gt;<br>&lt;PrimaryButton / GhostButton /&gt;</div>
+      </div>
+      <div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#6E6055;margin-bottom:8px">DATA SHAPE</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#4A4038">Cat { id, name, tags[], photoUri,<br>&nbsp;&nbsp;sightingCount, firstSeenAt }<br>Sighting { id, catId, photoUri,<br>&nbsp;&nbsp;takenAt, lat, lng, order }<br>MatchResult { candidateCat,<br>&nbsp;&nbsp;score: 0–1, tags[] }<br>UserLevel { level, title,<br>&nbsp;&nbsp;current, needed }</div>
+      </div>
+    </div>
+    <div style="margin-top:22px;font-size:14px;color:#6E6055;line-height:1.8">· 매칭 분기: <span style="font-family:'IBM Plex Mono',monospace;font-size:13px">candidates = results.filter(r =&gt; r.score &gt;= 0.4).sort(desc).slice(0, 3)</span> — 길이 0이면 NewFriendScreen, 1개 이상이면 CandidateList. 색 구간은 <span style="font-family:'IBM Plex Mono',monospace;font-size:13px">score &gt;= 0.7 ? green : amber</span>.<br>· 게이지는 <span style="font-family:'IBM Plex Mono',monospace;font-size:13px">react-native-svg</span> Circle의 strokeDashoffset을 score로 계산, Reanimated로 0 → score 애니메이션.<br>· 미니맵은 <span style="font-family:'IBM Plex Mono',monospace;font-size:13px">react-native-maps</span>를 높이 190 컨테이너에 고정, scrollEnabled=false + 탭 시 확대 시트. 폴리라인 없음.<br>· AI 판정은 제안일 뿐이며 같은 개체 확정은 항상 사용자 버튼 입력으로만 저장됩니다.</div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;matchPercent&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:84,&quot;min&quot;:0,&quot;max&quot;:100,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;unit&quot;:&quot;%&quot;,&quot;section&quot;:&quot;데이터 바인딩&quot;},&quot;levelProgress&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:68,&quot;min&quot;:0,&quot;max&quot;:100,&quot;step&quot;:1,&quot;tsType&quot;:&quot;number&quot;,&quot;unit&quot;:&quot;%&quot;,&quot;section&quot;:&quot;데이터 바인딩&quot;},&quot;candidateName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;양말이&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;데이터 바인딩&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const matchPercent = this.props.matchPercent ?? 84;
+    const rawCandidates = [
+      { name: "양말이", score: 84, meets: 6, tag: "턱시도" },
+      { name: "구름", score: 61, meets: 3, tag: "장모 흰냥" },
+      { name: "까망이", score: 43, meets: 9, tag: "올블랙" }
+    ];
+    const tone = s => s >= 70
+      ? { bar: "#4E8A63", chip: "#E2EDE1", text: "#2F5C41", label: "매우 비슷해요" }
+      : { bar: "#E0913B", chip: "#FBEBD6", text: "#8A4F22", label: "조금 비슷해요" };
+    const candidates = rawCandidates.filter(c => c.score >= 40).slice(0, 3).map((c, i) => {
+      const t = tone(c.score);
+      return {
+        name: c.name, score: c.score, meets: c.meets, tag: c.tag,
+        rank: i + 1, width: c.score + "%",
+        bar: t.bar, chip: t.chip, chipText: t.text, label: t.label,
+        border: i === 0 ? "2px solid #E08B4B" : "1.5px solid #EADDCB"
+      };
+    });
+    const levelProgress = this.props.levelProgress ?? 68;
+    const r = 43, c = 2 * Math.PI * r;
+    return {
+      matchPercent,
+      candidates,
+      candidateCount: candidates.length,
+      levelProgress,
+      levelProgressCss: levelProgress + "%",
+      gaugeDash: (c * matchPercent / 100).toFixed(1) + " " + c.toFixed(1),
+      candidateName: this.props.candidateName ?? "양말이",
+      locked: [1, 2, 3, 4],
+      tiers: [
+        { lv: "Lv.1", name: "산책 초보", need: "고양이 1마리", state: "달성", done: true },
+        { lv: "Lv.2", name: "골목 탐험가", need: "고양이 5마리", state: "달성", done: true },
+        { lv: "Lv.3", name: "골목 스카우터", need: "고양이 12마리", state: "지금 여기", done: true },
+        { lv: "Lv.4", name: "동네 관찰자", need: "고양이 16마리", state: "4마리 남음", done: false },
+        { lv: "Lv.5", name: "고양이 박사", need: "고양이 30마리", state: "18마리 남음", done: false }
+      ],
+      cats: [
+        { name: "양말이", tag: "턱시도", count: 7 },
+        { name: "치즈", tag: "치즈 태비", count: 12 },
+        { name: "구름", tag: "장모 흰냥", count: 3 },
+        { name: "까망이", tag: "올블랙", count: 9 },
+        { name: "삼색이", tag: "삼색 · 짧은 꼬리", count: 5 },
+        { name: "귀돌이", tag: "귀 끝 커팅", count: 2 }
+      ],
+      sightings: [
+        { n: "⑤", date: "2026.09.14 토 18:24", place: "놀이터 미끄럼틀 밑" },
+        { n: "④", date: "2026.08.30 토 07:10", place: "3번 출구 화단" },
+        { n: "③", date: "2026.08.12 수 19:02", place: "빌라 주차장" }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
