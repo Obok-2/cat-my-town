@@ -8,7 +8,7 @@ const TAG_PALETTE = ['peach', 'mint'];
 
 // editable=false: AI가 찾은 특징 등 읽기 전용 표시.
 // editable=true: 이름 짓기 화면 — 제거 ✕ + 점선 테두리 "+ 직접 입력" 칩으로 추가.
-export default function TraitTagList({ tags, editable = false, onRemove, onAdd }) {
+export default function TraitTagList({ tags, editable = false, onRemove, onAdd, centered = false }) {
   const colors = useColors();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
@@ -21,7 +21,7 @@ export default function TraitTagList({ tags, editable = false, onRemove, onAdd }
   }
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, centered && styles.wrapCentered]}>
       {tags.map((tag, i) => {
         const kind = TAG_PALETTE[i % TAG_PALETTE.length];
         const bg = kind === 'peach' ? colors.tagPeachBg : colors.tagMintBg;
@@ -68,6 +68,7 @@ export default function TraitTagList({ tags, editable = false, onRemove, onAdd }
 
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  wrapCentered: { justifyContent: 'center' },
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 8,

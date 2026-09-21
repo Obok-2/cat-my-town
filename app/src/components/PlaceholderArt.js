@@ -8,9 +8,10 @@ let uid = 0;
 
 // 목업 전반에 쓰이는 대각선 스트라이프 placeholder(실제 사진/일러스트 없을 때).
 // "일러스트 손그림 고양이", "방금 찍은 사진", "대표 사진" 등의 자리표시자와 동일한 패턴.
-export default function PlaceholderArt({ label, radius = 0, round = false, style }) {
+export default function PlaceholderArt({ label, radius = 0, round = false, style, colorA, colorB, stripe = 8 }) {
   const colors = useColors();
   const patternId = React.useMemo(() => `stripes-${uid++}`, []);
+  const size = stripe * 2;
 
   return (
     <View style={[styles.wrap, { borderRadius: round ? 9999 : radius }, style]}>
@@ -18,13 +19,13 @@ export default function PlaceholderArt({ label, radius = 0, round = false, style
         <Defs>
           <Pattern
             id={patternId}
-            width={16}
-            height={16}
+            width={size}
+            height={size}
             patternUnits="userSpaceOnUse"
             patternTransform="rotate(135)"
           >
-            <Rect width={16} height={16} fill={colors.placeholderB} />
-            <Rect width={8} height={16} fill={colors.placeholderA} />
+            <Rect width={size} height={size} fill={colorB ?? colors.placeholderB} />
+            <Rect width={stripe} height={size} fill={colorA ?? colors.placeholderA} />
           </Pattern>
         </Defs>
         <Rect width="100%" height="100%" fill={`url(#${patternId})`} />

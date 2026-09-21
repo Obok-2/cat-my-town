@@ -1,5 +1,5 @@
-// design/우리동네고양이 UIUX 목업/우리동네고양이.dc.html 에서 그대로 추출한 헥스값.
-// (PDF 목업은 이 HTML 캔버스를 내보낸 결과물이라 근사치였음 — 이 파일이 정본.)
+// design/우리동네고양이 UIUX 목업/screens/*.dc.html 인라인 스타일에서 추출한 헥스값.
+// 다크 팔레트의 매칭·스플래시 색은 목업(a9는 도감만 있음)에 없어 같은 웜톤으로 새로 정했다.
 export const light = {
   bg: '#FBF4EA',
   card: '#FFFFFF',
@@ -35,6 +35,26 @@ export const light = {
   hintBubbleBg: 'rgba(251,244,234,0.92)',
   hintBubbleText: '#4A4038',
   danger: '#C0524B',
+  matchGood: '#4E8A63',
+  matchGoodBadgeBg: '#E2EDE1',
+  matchGoodBadgeText: '#2F5C41',
+  matchWarn: '#E0913B',
+  matchWarnBadgeBg: '#FBEBD6',
+  matchWarnBadgeText: '#8A4F22',
+  softBtnBg: '#F3EADC',
+  softBtnBorder: '#E0D3C0',
+  lockedBg: '#F6EFE4',
+  lockedBorder: '#DBCDB9',
+  lockedGlyph: '#C6B7A4',
+  lockedText: '#9A8B7B',
+  googleBtnShadow: '#E4D8C6',
+  splashBg: '#F3E6D4',
+  splashCircleA: '#EFDCC4',
+  splashCircleB: '#F7EEE0',
+  splashArtA: '#E3D3BC',
+  splashArtB: '#EFE2CE',
+  splashDotOff: '#DFCDB4',
+  splashSubtle: '#9A8B7B',
 };
 
 export const dark = {
@@ -72,6 +92,26 @@ export const dark = {
   hintBubbleBg: 'rgba(251,244,234,0.92)',
   hintBubbleText: '#4A4038',
   danger: '#E08A83',
+  matchGood: '#7DBE93',
+  matchGoodBadgeBg: '#2A3A2E',
+  matchGoodBadgeText: '#8FBE9C',
+  matchWarn: '#E8A45B',
+  matchWarnBadgeBg: '#3A2E22',
+  matchWarnBadgeText: '#F0B27A',
+  softBtnBg: '#2A2521',
+  softBtnBorder: '#3A332C',
+  lockedBg: '#241F1B',
+  lockedBorder: '#443C33',
+  lockedGlyph: '#5C5248',
+  lockedText: '#8B8075',
+  googleBtnShadow: '#161412',
+  splashBg: '#1E1B18',
+  splashCircleA: '#26211D',
+  splashCircleB: '#221E1A',
+  splashArtA: '#3A332C',
+  splashArtB: '#443C33',
+  splashDotOff: '#3A332C',
+  splashSubtle: '#8B8075',
 };
 
 export function paletteFor(scheme) {

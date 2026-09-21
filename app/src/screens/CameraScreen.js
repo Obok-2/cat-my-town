@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -18,19 +18,12 @@ function formatToday() {
 // 목업 a2 "홈 (카메라)": 앱 실행 시 즉시 카메라, 프레임 가이드 + 단일 셔터.
 export default function CameraScreen({ navigation }) {
   const colors = useColors();
-  const [permission, requestPermission] = useCameraPermissions();
+  // 촬영 탭(앱 시작 시 초기 화면)에 들어오면 버튼 없이 바로 권한을 물어본다(마운트 시 1회).
+  // 웹은 getUserMedia 호출 시 브라우저가 자체 권한 팝업을 띄우므로 우리 쪽에서는 묻지 않는다.
+  const [permission, requestPermission] = useCameraPermissions({ request: Platform.OS !== 'web' });
   const [weekCount, setWeekCount] = useState(0);
   const [capturing, setCapturing] = useState(false);
   const cameraRef = useRef(null);
-
-  // 앱이 켜지고 촬영 탭(초기 화면)에 들어오면 버튼 탭 없이 바로 권한을 물어본다.
-  // 웹은 getUserMedia 호출 시 브라우저가 자체 권한 팝업을 띄우므로 우리 쪽 게이트를 두지 않는다.
-  useEffect(() => {
-    if (Platform.OS === 'web') return;
-    if (permission && !permission.granted && permission.canAskAgain) {
-      requestPermission();
-    }
-  }, [permission, requestPermission]);
 
   useFocusEffect(
     useCallback(() => {
@@ -87,9 +80,13 @@ export default function CameraScreen({ navigation }) {
           <Text style={[styles.dateText, { color: colors.textMuted }]}>{formatToday()}</Text>
           <Text style={[styles.headerTitle, { color: colors.text }]}>오늘은 누굴 만날까요?</Text>
         </View>
-        <View style={[styles.avatar, { backgroundColor: colors.tagPeachBg }]}>
+        <Pressable
+          onPress={() => navigation.navigate('Profile')}
+          accessibilityLabel="내 정보"
+          style={[styles.avatar, { backgroundColor: colors.tagPeachBg }]}
+        >
           <Text style={[styles.avatarGlyph, { color: colors.tagPeachText }]}>☻</Text>
-        </View>
+        </Pressable>
       </View>
 
       <View style={styles.viewfinderWrap}>

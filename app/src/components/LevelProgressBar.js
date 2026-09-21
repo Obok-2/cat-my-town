@@ -4,15 +4,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 
-// 목업 a6 상단 카드: "나의 레벨" 라벨 + Jua 타이틀/퍼센트 + 진행 바 + 캡션 2줄.
-export default function LevelProgressBar({ title, level, ratio, catCount, remainToNext }) {
+// 목업 a6·a10 레벨 카드: 라벨(a6 "나의 레벨" / a10 "지금 나의 등급") + Jua 타이틀/퍼센트 + 진행 바 + 캡션 2줄.
+export default function LevelProgressBar({ title, level, ratio, catCount, remainToNext, eyebrow = '나의 레벨' }) {
   const colors = useColors();
   const percent = Math.round(ratio * 100);
   return (
     <View style={[styles.card, { backgroundColor: colors.cardAlt, borderColor: colors.border }]}>
       <View style={styles.titleRow}>
         <View style={{ gap: 4 }}>
-          <Text style={[styles.eyebrow, { color: colors.textMuted }]}>나의 레벨</Text>
+          <Text style={[styles.eyebrow, { color: colors.textMuted }]}>{eyebrow}</Text>
           <Text style={[styles.title, { color: colors.text }]}>
             {title} {level > 0 ? `Lv.${level}` : ''}
           </Text>

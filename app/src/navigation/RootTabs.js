@@ -5,18 +5,18 @@ import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import CollectionScreen from '../screens/CollectionScreen';
 import CameraScreen from '../screens/CameraScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import LevelScreen from '../screens/LevelScreen';
 
 const Tab = createBottomTabNavigator();
 
 const ICONS = {
   Collection: ['grid-outline', 'grid'],
   Camera: ['radio-button-off-outline', 'radio-button-on'],
-  Profile: ['person-outline', 'person'],
+  Level: ['star-outline', 'star'],
 };
-const LABELS = { Collection: '도감', Camera: '촬영', Profile: '나' };
+const LABELS = { Collection: '도감', Camera: '촬영', Level: '레벨' };
 
-// 목업 a2·a6 하단 탭: 도감 / 촬영(초기 화면) / 나.
+// 목업 a2·a6·a10 하단 탭: 도감 / 촬영(초기 화면) / 레벨.
 export default function RootTabs() {
   const colors = useColors();
   return (
@@ -42,7 +42,7 @@ export default function RootTabs() {
     >
       <Tab.Screen name="Collection" component={CollectionScreen} />
       <Tab.Screen name="Camera" component={CameraScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Level" component={LevelScreen} />
     </Tab.Navigator>
   );
 }

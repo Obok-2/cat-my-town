@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import Svg, { Defs, Pattern, Rect, Line } from 'react-native-svg';
 import { fonts } from '../theme/fonts';
+import { circled } from '../data/circled';
 
 // ⚠️ 자리표시자. 목업 a7은 react-native-maps를 쓰지만, 실제 지도를 그리려면
 // Google Maps API 키 발급이 필요해서(아직 없음) 격자+핀만 흉내낸 정적 뷰다.
@@ -19,20 +20,23 @@ let gridUid = 0;
 const PIN_POSITIONS = [
   { left: 24, top: 22 },
   { left: 150, top: 44 },
-  { left: 76, top: 126 },
+  { left: 28, top: 150 },
   { left: 228, top: 142 },
 ];
 const SELECTED_POS = { left: 196, top: 96 };
-const CARD_POS = { left: 84, top: 106 };
+const CARD_POS = { left: 96, top: 108 };
+const PIN_LABEL = '#5F6B58';
 
 function formatShort(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// sightings: 최신순. 가장 최근 목격은 강조 핀 + 팝업 카드, 그 이전 목격은 번호 핀(최대 4개)으로 보여준다.
 export default function SightingMiniMap({ sightings, height = 190 }) {
   const patternId = React.useMemo(() => `map-grid-${gridUid++}`, []);
-  const pinCount = Math.min(sightings?.length ?? 0, PIN_POSITIONS.length);
+  const total = sightings?.length ?? 0;
+  const previous = (sightings ?? []).slice(1, 1 + PIN_POSITIONS.length);
   const latest = sightings?.[0];
 
   return (
@@ -50,9 +54,10 @@ export default function SightingMiniMap({ sightings, height = 190 }) {
       <View style={styles.road} />
       <View style={styles.roadVertical} />
 
-      {PIN_POSITIONS.slice(0, pinCount).map((pos, i) => (
-        <View key={i} style={[styles.pinRow, { left: pos.left, top: pos.top }]}>
+      {previous.map((s, i) => (
+        <View key={s.id} style={[styles.pinRow, { left: PIN_POSITIONS[i].left, top: PIN_POSITIONS[i].top }]}>
           <View style={styles.pin} />
+          <Text style={styles.pinLabel}>{circled(total - 1 - i)}</Text>
         </View>
       ))}
 
@@ -68,7 +73,9 @@ export default function SightingMiniMap({ sightings, height = 190 }) {
               <View style={[styles.popupThumb, { backgroundColor: MAP_GRID }]} />
             )}
             <View>
-              <Text style={styles.popupDate}>{formatShort(latest.takenAt)}</Text>
+              <Text style={styles.popupDate}>
+                {circled(total)} {formatShort(latest.takenAt)}
+              </Text>
               {!!latest.memo && (
                 <Text style={styles.popupMemo} numberOfLines={1}>
                   {latest.memo}
@@ -88,7 +95,8 @@ const styles = StyleSheet.create({
   wrap: { borderRadius: 18, overflow: 'hidden', backgroundColor: MAP_BG, justifyContent: 'flex-end' },
   road: { position: 'absolute', left: 0, top: 64, width: '100%', height: 16, backgroundColor: MAP_ROAD },
   roadVertical: { position: 'absolute', left: 112, top: 0, width: 14, height: '100%', backgroundColor: MAP_ROAD },
-  pinRow: { position: 'absolute' },
+  pinRow: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 4 },
+  pinLabel: { fontFamily: fonts.body, fontSize: 11, color: PIN_LABEL },
   pin: {
     width: 16,
     height: 16,
@@ -129,7 +137,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#5F6B58',
     textAlign: 'center',
-    paddingVertical: 8,
+    paddingVertical: 5,
     backgroundColor: 'rgba(233,237,228,0.85)',
   },
 });

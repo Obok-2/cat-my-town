@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
+import { circled } from '../data/circled';
 import PlaceholderArt from './PlaceholderArt';
 
 function formatDate(ts) {
@@ -18,7 +19,7 @@ export default function SightingTimelineItem({ sighting, number, isLast }) {
     <View style={styles.row}>
       <View style={styles.railCol}>
         <View style={[styles.numberCircle, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.numberText, { color: colors.onPrimary }]}>{number}</Text>
+          <Text style={[styles.numberText, { color: colors.onPrimary }]}>{circled(number)}</Text>
         </View>
         {!isLast && <View style={[styles.line, { backgroundColor: colors.border }]} />}
       </View>

@@ -18,13 +18,13 @@ export default function LevelUpModal({ visible, levelInfo, onContinue }) {
         <View style={[styles.card, { backgroundColor: colors.cardAlt }]}>
           <PlaceholderArt label={'일러스트\n깃발 든 고양이'} round style={styles.illustration} />
           <Text style={[styles.badge, { color: colors.accent }]}>LEVEL UP!</Text>
-          <Text style={[styles.title, { color: colors.text }]}>{levelInfo.title}가 되었습니다</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{`${levelInfo.title}가\n되었습니다`}</Text>
           <Text style={[styles.desc, { color: colors.textSubtle }]}>
             {levelInfo.catCount}마리째 기록 완료.
             {next ? ` 다음 레벨은 ${next.title}예요.` : ' 최고 레벨을 달성했어요.'}
           </Text>
           <View style={[styles.track, { backgroundColor: colors.trackBg }]}>
-            <View style={[styles.fill, { width: `${Math.round(levelInfo.ratio * 100)}%`, backgroundColor: colors.primary }]} />
+            <View style={[styles.fill, { width: `${Math.max(8, Math.round(levelInfo.ratio * 100))}%`, backgroundColor: colors.primary }]} />
           </View>
           <View style={styles.buttonWrap}>
             <PrimaryButton label="계속 모으기" onPress={onContinue} />
@@ -37,10 +37,10 @@ export default function LevelUpModal({ visible, levelInfo, onContinue }) {
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  card: { width: '100%', maxWidth: 360, borderRadius: 30, padding: 24, alignItems: 'center', gap: 14 },
+  card: { width: '100%', maxWidth: 360, borderRadius: 30, paddingHorizontal: 24, paddingTop: 30, paddingBottom: 24, alignItems: 'center', gap: 16 },
   illustration: { width: 120, height: 120 },
-  badge: { fontFamily: fonts.display, fontSize: 15, letterSpacing: 1 },
-  title: { fontFamily: fonts.display, fontSize: 24, textAlign: 'center', lineHeight: 30 },
+  badge: { fontFamily: fonts.display, fontSize: 15, letterSpacing: 1.2 },
+  title: { fontFamily: fonts.display, fontSize: 27, textAlign: 'center', lineHeight: 36 },
   desc: { fontFamily: fonts.body, fontSize: 14, lineHeight: 22, textAlign: 'center' },
   track: { width: '100%', height: 14, borderRadius: 7, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 7 },
