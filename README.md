@@ -7,6 +7,8 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 - 동네 커뮤니티 공유가 아니라 **철저히 개인용 도감** — 내가 찍은 고양이만 내 기록에 남음
 - 포켓몬 도감처럼, 만난 고양이를 하나씩 모아가는 수집 재미
 
+> **화면 설계**: [시안 디자인 보기](https://github.com/Obok-2/cat-my-town/blob/main/design/%EC%9A%B0%EB%A6%AC%EB%8F%99%EB%84%A4%EA%B3%A0%EC%96%91%EC%9D%B4_%EB%AA%A9%EC%97%85.pdf) — 앱·관리자 웹 화면 시안 (PDF)
+
 ---
 
 ## 핵심 사용자 플로우
@@ -16,6 +18,7 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 2. 앱 실행 시 카메라 화면으로 즉시 진입
 3. 길고양이 사진 촬영
 4. AI 처리
+   ├─ 고양이 여부 판별 (MobileNet) — 고양이가 아니면 여기서 중단
    ├─ 이미지 임베딩 생성 (Voyage AI)
    ├─ 내 기존 등록 고양이들과 유사도 비교 (pgvector, 본인 데이터 내에서만 검색)
    ├─ 무늬 타입 판별 + 매칭 설명 생성 (Claude)
@@ -29,6 +32,12 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 ---
 
 ## 핵심 기능
+
+### 고양이 판별 (사전 필터)
+- 서버에서 **MobileNet**(ImageNet 사전학습 경량 이미지 분류 모델)으로 사진 속 대상이 고양이인지 먼저 확인
+- ImageNet의 고양이 계열 클래스(tabby cat, tiger cat, Persian cat, Siamese cat, Egyptian cat) 확률 합이 기준 이상일 때만 다음 단계로 진행 (기준값은 실제 사진으로 튜닝)
+- 고양이가 아닌 사진은 임베딩 생성·LLM 호출 전에 걸러서 **외부 API 비용과 오등록을 방지**하고, 앱에는 "고양이가 잘 보이게 다시 찍어 주세요"를 안내
+- 경량 모델이라 GPU 없는 서버에서도 빠르게 추론 가능
 
 ### AI 매칭 (RAG 파이프라인)
 - **Retrieval**: Voyage AI 임베딩 + pgvector 코사인 유사도 검색 (본인 소유 데이터로 범위 제한)
@@ -82,6 +91,7 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 - 이미지 저장: MinIO 또는 로컬 디스크
 
 **AI / RAG**
+- 고양이 판별(사전 필터): MobileNet (서버 추론)
 - 이미지 임베딩: Voyage AI (voyage-multimodal-3.5)
 - 벡터 검색: pgvector (사용자별 스코프 제한)
 - 설명·무늬 판별 생성: Claude API
@@ -91,14 +101,21 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 - expo-camera, expo-splash-screen
 - Firebase Authentication (Google)
 
+**관리자 웹**
+- React + Vite (JavaScript)
+- 외부 라우터·차트 라이브러리 없이 해시 라우터와 CSS/SVG 차트를 직접 구현
+- 운영자 로그인, 대시보드(KPI·일별 촬영/신규 등록·AI 매칭 수락률·레벨 분포·최근 활동), CSV 내보내기
+- 현재는 목 데이터로 동작하며 서버 API 연동 예정
+
 ---
 
 ## 프로젝트 구조
 
 ```
 app/     React Native(Expo) 앱
-back/    Spring Boot / MyBatis 백엔드
-web/     관리자 웹 (향후 확장)
+server/  Spring Boot / MyBatis 백엔드
+web/     관리자 웹 (React + Vite)
+infra/   로컬 개발 인프라 (Docker Compose: PostgreSQL + pgvector, MinIO)
 design/  화면 시안 · 목업
 doc/     기획·설계 문서
 ```
@@ -147,6 +164,7 @@ calibrated = Math.max(0, Math.min(100, calibrated));
 - 범용 임베딩 모델은 **동일 무늬 개체 간 미세 구분**에 한계가 있습니다
   (예: 카오스 무늬 고양이 두 마리를 헷갈릴 수 있음)
 - 대응: 자동 확정 대신 **항상 사용자 최종 확인 UX**로 설계해 오매칭 리스크를 사용자 판단으로 보완
+- MobileNet(ImageNet 사전학습)의 고양이 클래스는 5개뿐이라, 무늬가 특이하거나 몸이 많이 가려진 고양이는 판별 확률이 낮게 나올 수 있음 → 기준값 튜닝, 필요하면 길고양이 사진으로 파인튜닝
 - 참고 연구: 동물 개체 재식별 전문 모델 MegaDescriptor(WACV 2024) 대비, 현재는 범용 임베딩(Voyage AI)을 사용 — 향후 전문 모델 도입 검토 가능
 
 ---
@@ -156,6 +174,6 @@ calibrated = Math.max(0, Math.min(100, calibrated));
 - 실종묘 등록 및 자동 매칭 알림 (Whisker Tracker 벤치마킹)
 - 레벨/등급 시스템 (등록 개체 수 기반)
 - 지도 뷰 (개인 목격 기록 시각화, 정밀 좌표는 저장하지 않고 뭉갠 좌표만 사용)
-- 관리자 웹 (React + Vite)
+- 관리자 웹 나머지 메뉴(사용자·등록 고양이·AI 매칭 품질·신고/문의·설정) 구현 및 서버 API 연동
 - 카카오 로그인 추가
 - MegaDescriptor 등 재식별 특화 모델 도입 검토

@@ -467,7 +467,7 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | 사진을 올려 AI 매칭을 시작한다. 서버는 ① 이미지 임베딩 생성(Voyage AI) → ② 내 고양이들과 유사도 검색(pgvector, **내 것만**) → ③ 일치율 보정 → ④ 기준(`matchThreshold`) 이상만 높은 순으로 최대 `maxCandidates`명 선택 → ⑤ 특징 태그 판별(Claude)을 수행한다. **AI 호출이 있어 수 초 걸릴 수 있다**(앱은 로딩 표시) |
+| 설명 | 사진을 올려 AI 매칭을 시작한다. 서버는 ① 고양이 여부 판별(MobileNet — 고양이가 아니면 여기서 중단하고 `422 NO_CAT_DETECTED`) → ② 이미지 임베딩 생성(Voyage AI) → ③ 내 고양이들과 유사도 검색(pgvector, **내 것만**) → ④ 일치율 보정 → ⑤ 기준(`matchThreshold`) 이상만 높은 순으로 최대 `maxCandidates`명 선택 → ⑥ 특징 태그 판별(Claude)을 수행한다. **AI 호출이 있어 수 초 걸릴 수 있다**(앱은 로딩 표시) |
 | Method / URL | `POST /api/v1/matches` |
 | 호출 화면 | 홈 카메라(a2) 셔터 → 매칭 결과(a3·a4) |
 | Content-Type | `multipart/form-data` |
@@ -498,7 +498,7 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 | 400 | `INVALID_REQUEST` | `photo` 누락·형식 오류 |
 | 401 | `UNAUTHORIZED` | 토큰 오류 |
 | 413 | `PAYLOAD_TOO_LARGE` | 사진이 10MB 초과 |
-| 422 | `NO_CAT_DETECTED` | 사진에서 고양이를 찾지 못함 |
+| 422 | `NO_CAT_DETECTED` | MobileNet 판별 결과 사진에 고양이가 없음(AI 매칭·임베딩 호출 전에 중단) |
 | 503 | `MATCH_UNAVAILABLE` | AI 서버(Voyage/Claude) 장애 |
 
 ```json
