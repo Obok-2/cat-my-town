@@ -1,0 +1,19 @@
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+### IDE ###
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+out/
+bin/
+
+### 로컬 설정 (비밀값) ###
+.env
+application-local.properties

@@ -1,0 +1,21 @@
+# 로컬 개발용 인프라 - PostgreSQL + pgvector
+#   cd infra && docker compose up -d
+# DB 계정 등을 바꾸려면 이 폴더에 .env 를 만들어 DB_NAME / DB_USERNAME / DB_PASSWORD 를 지정한다.
+# (서버는 같은 이름의 환경변수로 접속 정보를 읽는다 - server/src/main/resources/application.properties)
+name: cat-my-town
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: cat-my-town-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-catmytown}
+      POSTGRES_USER: ${DB_USERNAME:-catmytown}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-***REMOVED***}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
