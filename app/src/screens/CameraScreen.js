@@ -1,7 +1,8 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
@@ -15,7 +16,16 @@ function formatToday() {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} · ${part} 산책`;
 }
 
+// expo-camera 의 zoom 은 0~1 이고 기기 최대 배율에 대한 비율이다(Android 는 선형, iOS 는 지수).
+// 그래서 배율은 기기마다 다르며 아래 값은 일반적인 폰에서 대략 1x / 2x / 3x 가 되도록 잡은 값이다.
+const ZOOM_STEPS = [
+  { label: '1x', zoom: 0 },
+  { label: '2x', zoom: 0.25 },
+  { label: '3x', zoom: 0.4 },
+];
+
 // 목업 a2 "홈 (카메라)": 앱 실행 시 즉시 카메라, 프레임 가이드 + 단일 셔터.
+// 목업에 없는 손전등 토글(왼쪽 위)과 확대 버튼(셔터 위)을 추가했다. 웹 카메라는 대부분 지원하지 않아 앱에서만 보인다.
 export default function CameraScreen({ navigation }) {
   const colors = useColors();
   // 촬영 탭(앱 시작 시 초기 화면)에 들어오면 버튼 없이 바로 권한을 물어본다(마운트 시 1회).
@@ -23,6 +33,9 @@ export default function CameraScreen({ navigation }) {
   const [permission, requestPermission] = useCameraPermissions({ request: Platform.OS !== 'web' });
   const [weekCount, setWeekCount] = useState(0);
   const [capturing, setCapturing] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
+  const [zoom, setZoom] = useState(0);
+  const isFocused = useIsFocused();
   const cameraRef = useRef(null);
 
   useFocusEffect(
@@ -90,7 +103,7 @@ export default function CameraScreen({ navigation }) {
       </View>
 
       <View style={styles.viewfinderWrap}>
-        <CameraView ref={cameraRef} style={styles.camera} facing="back" />
+        <CameraView ref={cameraRef} style={styles.camera} facing="back" zoom={zoom} enableTorch={torchOn && isFocused} />
         <View pointerEvents="none" style={styles.frameGuide}>
           <View style={[styles.corner, styles.cornerTL, { borderColor: colors.frameGuide }]} />
           <View style={[styles.corner, styles.cornerTR, { borderColor: colors.frameGuide }]} />
@@ -103,6 +116,38 @@ export default function CameraScreen({ navigation }) {
             <Text style={[styles.hintText, { color: colors.hintBubbleText }]}>얼굴이 프레임 안에 들어오면 또렷해요</Text>
           </View>
         </View>
+        {Platform.OS !== 'web' && (
+          <>
+            <Pressable
+              onPress={() => setTorchOn(!torchOn)}
+              accessibilityLabel={torchOn ? '손전등 끄기' : '손전등 켜기'}
+              style={[styles.torchButton, { backgroundColor: torchOn ? colors.primary : colors.hintBubbleBg }]}
+            >
+              <Ionicons
+                name={torchOn ? 'flashlight' : 'flashlight-outline'}
+                size={20}
+                color={torchOn ? colors.onPrimary : colors.hintBubbleText}
+              />
+            </Pressable>
+            <View pointerEvents="box-none" style={styles.zoomRow}>
+              {ZOOM_STEPS.map((step) => {
+                const selected = step.zoom === zoom;
+                return (
+                  <Pressable
+                    key={step.label}
+                    onPress={() => setZoom(step.zoom)}
+                    accessibilityLabel={`확대 ${step.label}`}
+                    style={[styles.zoomChip, { backgroundColor: selected ? colors.primary : colors.hintBubbleBg }]}
+                  >
+                    <Text style={[styles.zoomChipText, { color: selected ? colors.onPrimary : colors.hintBubbleText }]}>
+                      {step.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
         <View style={styles.shutterRow}>
           <Pressable
             onPress={handleShutter}
@@ -147,6 +192,10 @@ const styles = StyleSheet.create({
   hintBubble: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   hintStar: { fontSize: 13 },
   hintText: { fontFamily: fonts.body, fontSize: 13 },
+  torchButton: { position: 'absolute', left: 16, top: 64, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  zoomRow: { position: 'absolute', left: 0, right: 0, bottom: 160, flexDirection: 'row', justifyContent: 'center', gap: 8 },
+  zoomChip: { minWidth: 48, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, alignItems: 'center' },
+  zoomChipText: { fontFamily: fonts.body, fontSize: 13 },
   shutterRow: { position: 'absolute', left: 0, right: 0, bottom: 30, alignItems: 'center' },
   shutterOuter: {
     width: 96,
