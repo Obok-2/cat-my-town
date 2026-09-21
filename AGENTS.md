@@ -31,7 +31,7 @@
 
 ## 코딩 규칙 (Java — server/)
 
-- **앱용 API**는 URL 앞에 `/app`을 붙이고 기능별 패키지로 나눈다: `/app/collection` · `/app/camera` · `/app/level` → `com.catmytown.server.app.{collection,camera,level}`.
+- **앱용 API**는 URL 앞에 `/app`을 붙이되 문자열을 직접 쓰지 않고 상수 `ApiUrl.APP`(`com.catmytown.server.common.ApiUrl`)를 쓴다(`@RequestMapping(ApiUrl.APP + "/collection")`). 기능별 패키지로 나눈다: `/app/collection` · `/app/camera` · `/app/level` → `com.catmytown.server.app.{collection,camera,level}`.
   구조는 `XxxController` → `XxxService` → `XxxDao`(`@Mapper` 인터페이스) → Mapper XML.
 - **MyBatis 설정**은 `application.properties`에 이 형태로 둔다: `mybatis.config-location=classpath:mybatis/mybatis-config.xml` ·
   `mybatis.type-aliases-package=com.catmytown.server.model` · `mybatis.mapper-locations=mybatis/mappers/*.xml`.
