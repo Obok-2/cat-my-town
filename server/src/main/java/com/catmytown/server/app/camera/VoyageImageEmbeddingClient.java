@@ -30,15 +30,11 @@ public class VoyageImageEmbeddingClient {
     @Value("${camera.voyage.url}")
     private String url;
 
-    public List<Double> createQueryEmbedding(byte[] photoBytes, String contentType) {
-        return createEmbedding(photoBytes, contentType, "query");
+    public List<Double> createImageEmbedding(byte[] photoBytes, String contentType) {
+        return createEmbedding(photoBytes, contentType);
     }
 
-    public List<Double> createDocumentEmbedding(byte[] photoBytes, String contentType) {
-        return createEmbedding(photoBytes, contentType, "document");
-    }
-
-    private List<Double> createEmbedding(byte[] photoBytes, String contentType, String inputType) {
+    private List<Double> createEmbedding(byte[] photoBytes, String contentType) {
         if (apiKey == null || apiKey.isBlank()) {
             throw new BusinessException(503, "고양이 개체 매칭 서비스를 사용할 수 없습니다.");
         }
@@ -53,7 +49,6 @@ public class VoyageImageEmbeddingClient {
         Map<String, Object> request = new LinkedHashMap<>();
         request.put("inputs", List.of(input));
         request.put("model", model);
-        request.put("input_type", inputType);
         request.put("truncation", false);
 
         try {

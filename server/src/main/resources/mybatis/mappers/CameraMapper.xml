@@ -8,26 +8,53 @@
          WHERE user_id = #{userId}
     </select>
 
-    <select id="selectEmbeddedCatCount" resultType="int">
-        SELECT COUNT(*)
-          FROM cats
-         WHERE user_id = #{userId}
-           AND representative_embedding IS NOT NULL
+    <select id="selectMatchableCatCount" resultType="int">
+        SELECT COUNT(DISTINCT c.id)
+          FROM cats c
+          JOIN sightings s ON s.cat_id = c.id
+         WHERE c.user_id = #{userId}
+           AND s.embedding IS NOT NULL
     </select>
 
     <select id="selectMatchingCandidates" resultType="CameraCandidateVo">
+        WITH ranked_similarities AS (
+            SELECT c.id AS cat_id,
+                   1 - (s.embedding &lt;=&gt; CAST(#{embedding} AS vector)) AS similarity,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY c.id
+                           ORDER BY s.embedding &lt;=&gt; CAST(#{embedding} AS vector), s.id
+                   ) AS rank_no
+              FROM cats c
+              JOIN sightings s ON s.cat_id = c.id
+             WHERE c.user_id = #{userId}
+               AND s.embedding IS NOT NULL
+        ),
+        cat_scores AS (
+            SELECT cat_id,
+                   AVG(similarity) AS raw_similarity
+              FROM ranked_similarities
+             WHERE rank_no &lt;= 2
+             GROUP BY cat_id
+        )
         SELECT c.id AS cat_id,
                c.name,
-               c.photo_url,
-               COUNT(s.id) AS sighting_count,
-               1 - (c.representative_embedding &lt;=&gt; CAST(#{embedding} AS vector)) AS raw_similarity
+               (
+                   SELECT first_sighting.photo_url
+                     FROM sightings first_sighting
+                    WHERE first_sighting.cat_id = c.id
+                    ORDER BY first_sighting.taken_at, first_sighting.id
+                    LIMIT 1
+               ) AS photo_url,
+               (
+                   SELECT COUNT(*)
+                     FROM sightings counted_sightings
+                    WHERE counted_sightings.cat_id = c.id
+               ) AS sighting_count,
+               scores.raw_similarity
           FROM cats c
-          LEFT JOIN sightings s ON s.cat_id = c.id
-         WHERE c.user_id = #{userId}
-           AND c.representative_embedding IS NOT NULL
-           AND 1 - (c.representative_embedding &lt;=&gt; CAST(#{embedding} AS vector)) &gt;= #{minimumSimilarity}
-         GROUP BY c.id, c.name, c.photo_url, c.representative_embedding
-         ORDER BY c.representative_embedding &lt;=&gt; CAST(#{embedding} AS vector), c.id
+          JOIN cat_scores scores ON scores.cat_id = c.id
+         WHERE scores.raw_similarity &gt;= #{minimumSimilarity}
+         ORDER BY scores.raw_similarity DESC, c.id
          LIMIT #{limit}
     </select>
 

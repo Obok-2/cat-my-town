@@ -1,6 +1,5 @@
 package com.catmytown.server.model;
 
-import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,18 +7,12 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SightingCreateVo {
+public class CatSightingCreateReq {
 
-    private Long id;
+    private String analysisId;
 
     private Long catId;
 
-    private String photoUrl;
-
-    private String embedding;
-
     private String memo;
-
-    private OffsetDateTime takenAt;
 
 }

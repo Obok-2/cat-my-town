@@ -10,7 +10,7 @@ public interface CameraDao {
 
     int selectCatCount(@Param("userId") Long userId);
 
-    int selectEmbeddedCatCount(@Param("userId") Long userId);
+    int selectMatchableCatCount(@Param("userId") Long userId);
 
     List<CameraCandidateVo> selectMatchingCandidates(
             @Param("userId") Long userId,

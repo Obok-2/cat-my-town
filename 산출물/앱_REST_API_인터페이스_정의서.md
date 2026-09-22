@@ -41,7 +41,7 @@
 | 공통 응답 | 모든 API가 `{ result, message, code, data }` 형태(2.4~2.6) | 각 인터페이스 표의 문자열 에러 코드(`MATCH_EXPIRED` 등)는 이름 표기용이며, 응답의 `code`는 숫자다. 업무별 숫자 코드는 확정 시 추가 |
 | URL | 앱용 API는 `/app/{collection\|camera\|level}` 아래에 둔다 | 도감 화면 API 2개만 새 주소로 고쳤고, 나머지 인터페이스는 구현할 때 `/app/...`으로 옮긴다(로그인·내 정보의 위치도 미정) |
 | 레벨 계산 | 서버는 등록 고양이 **개수만** 주고 등급·진행률은 앱이 계산한다(레벨 화면은 IF-LVL-001, 도감 화면은 IF-ME-002) | 등급표 API(IF-CFG-001)는 불필요해졌고, 새 고양이 등록 응답(IF-MATCH-003)의 `levelUp`(등급 정보 객체)은 `catCount`만 주는 방식으로 단순화할 예정 |
-| 대표 사진 | `cats.photo_url` 컬럼을 추가해 대표 사진을 저장한다(ERD·`schema.sql` 반영) | — |
+| 대표 사진 | `cats`에 사진 경로를 중복 저장하지 않고 가장 오래된 `sightings.photo_url`을 대표 사진으로 사용한다 | — |
 
 ---
 
@@ -197,24 +197,26 @@
 | IF-CAT-006 | 지도 마커 조회 | GET | `/app/cat/markers?catId=` | 고양이 상세(a7) | 필수 | **구현** |
 | IF-CAT-004 | 고양이 정보 수정 | PATCH | `/cats/{catId}` | 고양이 상세 ⋯ 메뉴 | 선택(앱 미구현) | 미구현 |
 | IF-CAT-005 | 고양이 삭제 | DELETE | `/cats/{catId}` | 고양이 상세 ⋯ 메뉴 | 선택(앱 미구현) | 미구현 |
+| IF-PHOTO-001 | 고양이 사진 조회 | GET | `/app/photo?catId=` | 매칭 후보 등 사진 표시 | 필수 | **구현** |
 | IF-MATCH-001 | 촬영 이미지 분석 | POST | `/app/camera/analyze` | 홈 카메라(a2) → 매칭 결과(a3·a4) | 필수 | **구현** |
-| IF-MATCH-002 | 기존 고양이로 확정 | POST | `/matches/{matchId}/confirm` | 매칭 결과(a3) | 필수 | 미구현 |
-| IF-MATCH-003 | 새 고양이 등록 | POST | `/matches/{matchId}/register` | 이름 짓기(a5), 레벨업(a8) | 필수 | 미구현 |
+| IF-MATCH-002 | 기존 고양이로 확정 | POST | `/app/cat/sighting` | 매칭 결과(a3) | 필수 | **구현** |
+| IF-MATCH-003 | 새 고양이 등록 | POST | `/app/cat/register` | 이름 짓기(a5), 레벨업(a8) | 필수 | **구현** |
 | IF-DEV-001 | 데모 데이터 채우기 | POST | `/dev/seed` | 내 정보(개발용) | 개발 전용 | 미구현 |
 | IF-DEV-002 | 도감 비우기 | DELETE | `/dev/cats` | 내 정보(개발용) | 개발 전용 | 미구현 |
 
 ### 촬영 흐름 (IF-MATCH-001~003)
 
-현재 IF-MATCH-001은 사진을 받아 판별·후보 조회 결과만 돌려주며 사진이나 매칭 세션을 저장하지 않는다.
-IF-MATCH-002·003을 구현할 때 사진을 한 번만 올리고 `matchId`로 확정 단계를 잇는 구조를 추가한다.
+현재 IF-MATCH-001은 사진을 저장하지 않지만 Voyage 임베딩을 서버 메모리에 30분간 보관하고 `analysisId`를 돌려준다.
+IF-MATCH-002·003은 MinIO 저장을 위해 분석 사진을 multipart로 다시 전송하지만, `analysisId`로 임베딩을 재사용하여
+Voyage API는 한 번만 호출한다. 서버 재시작·30분 만료 후에는 다시 촬영해야 한다.
 
 ```
 POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
                          ├─► NEW_CAT       (신규 고양이)
                          └─► EXISTING_CAT  (기존 후보 최대 3마리)
 
-향후 저장형 매칭 세션 ────┬─► POST /matches/{id}/confirm   (이 고양이예요)
-                         └─► POST /matches/{id}/register  (새로운 고양이예요)
+현재 MVP 확정 ───────┬─► POST /app/cat/sighting  (이 고양이예요)
+                         └─► POST /app/cat/register  (새로운 고양이예요)
 ```
 
 ---
@@ -427,7 +429,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `cats` | Array | N | 고양이 목록(0마리면 빈 배열) |
 | `cats[].id` | Long | N | 고양이 ID |
 | `cats[].name` | String | N | 이름 |
-| `cats[].photoUrl` | String | Y | 대표 사진(`cats.photo_url`). 지금은 저장된 경로 그대로이고, MinIO 연동 후 만료되는 presigned URL로 바꾼다 |
+| `cats[].photoUrl` | String | Y | 대표 사진(가장 오래된 `sightings.photo_url`) |
 | `cats[].sightingCount` | Integer | N | 만난 횟수(목격 기록 수) |
 | `cats[].tags` | Array<String> | N | 특징 태그(추가한 순서, 없으면 빈 배열). 앱 카드는 첫 번째만 표시 |
 
@@ -594,11 +596,38 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 ---
 
+### IF-PHOTO-001 고양이 사진 조회
+
+| 항목 | 내용 |
+|---|---|
+| 설명 | `catId`와 현재 사용자 ID로 고양이를 찾고, 가장 오래된 `sightings.photo_url`의 MinIO 객체를 읽어 대표 사진 바이트를 내려준다 |
+| Method / URL | `GET /app/photo?catId=` |
+| 호출 화면 | 매칭 후보 카드 등 사진을 표시하는 화면 |
+
+**Request**
+
+| 구분 | 항목 | 타입 | 필수 | 설명 |
+|---|---|---|---|---|
+| Header | `X-User-Id` | Long | N | 임시 사용자 ID. 생략 시 `1` |
+| Query | `catId` | Long | Y | 대표 사진을 조회할 고양이 ID |
+
+**Response `200`**: `Content-Type: image/jpeg` 또는 `image/png`, 본문은 이미지 바이트이며 개인 캐시로 1시간 보관한다.
+
+**에러**
+
+| HTTP | code | 발생 조건 |
+|---|---|---|
+| 400 | `400` | `catId` 누락·형식 오류 |
+| 404 | `404` | 고양이가 없거나 현재 사용자 소유가 아니거나 MinIO 객체가 없음 |
+| 503 | `503` | MinIO 사진 저장소를 사용할 수 없음 |
+
+---
+
 ### IF-MATCH-001 촬영 이미지 분석
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | 사진을 올려 고양이 여부와 기존 개체 후보를 분석한다. 서버는 ① DJL ImageNet 분류로 고양이 여부 판별 → ② 등록 고양이가 있으면 Voyage AI 이미지 임베딩 생성 → ③ 내 고양이들과 유사도 검색(pgvector, **내 것만**) → ④ 일치율 보정 → ⑤ 기준 이상만 높은 순으로 최대 3마리를 반환한다. **AI 호출이 있어 수 초 걸릴 수 있다** |
+| 설명 | 사진을 올려 고양이 여부와 기존 개체 후보를 분석한다. 서버는 ① DJL ImageNet 분류로 고양이 여부 판별 → ② 등록 고양이가 있으면 Voyage AI 이미지 임베딩 생성 → ③ 내 고양이별 목격 임베딩 유사도 상위 2개의 평균 검색(pgvector, **내 것만**) → ④ 일치율 보정 → ⑤ 고양이별 하나의 후보만 기준 이상·높은 순으로 최대 3마리를 반환한다. **AI 호출이 있어 수 초 걸릴 수 있다** |
 | Method / URL | `POST /app/camera/analyze` |
 | 호출 화면 | 홈 카메라(a2) 셔터 → 매칭 결과(a3·a4) |
 | Content-Type | `multipart/form-data` |
@@ -617,6 +646,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `cat` | Boolean | N | 고양이 판별 여부 |
 | `detectedLabel` | String | N | ImageNet 최상위 판별 라벨 |
 | `catProbability` | Decimal | N | 고양이 클래스 확률(0~100) |
+| `analysisId` | String(UUID) | Y | 생성된 임베딩을 30분 내 확정·등록에서 재사용하는 ID. `NOT_CAT`·등록 고양이 0마리인 첫 `NEW_CAT`은 `null` |
 | `candidates` | Array<Candidate> | N | `EXISTING_CAT`일 때만 최대 3마리, 나머지는 빈 배열 |
 
 **에러**
@@ -625,7 +655,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 |---|---|---|
 | 400 | `400` | `photo` 누락·형식 오류 |
 | 413 | `413` | 사진이 10MB 초과 |
-| 503 | `503` | DJL 모델·Voyage AI를 사용할 수 없거나 기존 고양이의 대표 임베딩이 준비되지 않음 |
+| 503 | `503` | DJL 모델·Voyage AI를 사용할 수 없거나 기존 고양이의 목격 임베딩이 준비되지 않음 |
 
 ```json
 {
@@ -644,8 +674,8 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 }
 ```
 
-> 현재 분석 API는 사진을 임시 보관하지 않는다. 기존 고양이 확정은 매칭 세션을 도입한 뒤 구현하고,
-> 신규 등록은 아래와 같이 분석 사진을 다시 전송하는 MVP 인터페이스로 구현했다.
+> 현재 분석 API는 사진을 임시 보관하지 않는다. 기존 고양이 확정과 신규 등록 모두
+> 분석 사진을 다시 전송하는 MVP 인터페이스로 구현했다.
 
 ---
 
@@ -653,38 +683,55 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | 후보 카드의 **[이 고양이예요]**. 선택한 고양이에 목격 기록을 추가한다. 기존 고양이의 목격만 늘어나므로 **레벨은 바뀌지 않는다** |
-| Method / URL | `POST /api/v1/matches/{matchId}/confirm` |
+| 설명 | 후보 카드의 **[이 고양이예요]**. 선택한 고양이에 사진·Voyage AI 임베딩·목격 기록을 추가한다. 기존 고양이의 목격만 늘어나므로 **레벨은 바뀌지 않는다** |
+| Method / URL | `POST /app/cat/sighting` (`multipart/form-data`) |
 | 호출 화면 | 매칭 결과(a3) |
 
 **Request**
 
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
-| Path | `matchId` | String(UUID) | Y | IF-MATCH-001의 `matchId` |
-| Body | `catId` | Long | Y | 선택한 고양이. 그 매칭의 `candidates` 안에 있어야 함 |
-| Body | `memo` | String(0~200) | N | 목격 메모 |
+| Header | `X-User-Id` | Long | N | 임시 사용자 ID. 생략 시 `1` |
+| Part | `file` | File[] | Y | 분석에 사용한 JPEG/PNG 사진 정확히 1장 |
+| Part | `contents` | JSON String | Y | `{"analysisId":"UUID","catId":12,"memo":""}`. `catId`는 현재 사용자 소유여야 함 |
 
-**Response `201`**
+**Response `200`** (`ResponseApi.data`)
 
 | 항목 | 타입 | Null | 설명 |
 |---|---|---|---|
-| `cat` | Cat | N | 갱신된 고양이(`sightingCount` 증가) |
-| `sighting` | Sighting | N | 새로 만들어진 목격 기록 |
+| `catId` | Long | N | 선택한 고양이 ID |
+| `sightingId` | Long | N | 새로 만들어진 목격 ID |
+| `name` | String | N | 고양이 이름 |
+| `photoUrl` | String | N | MinIO 객체 키 |
+| `sightingCount` | Integer | N | 추가 후 누적 목격 횟수 |
 
 **에러**
 
 | HTTP | code | 발생 조건 |
 |---|---|---|
-| 400 | `INVALID_CANDIDATE` | `catId`가 그 매칭의 후보에 없음 |
-| 404 | `NOT_FOUND` | 없는 `matchId`(남의 것 포함) |
-| 409 | `MATCH_ALREADY_RESOLVED` | 이미 확정/등록된 매칭(중복 탭·재시도) |
-| 410 | `MATCH_EXPIRED` | 매칭 만료(30분 경과) |
+| 400 | `400` | 사진이 1장이 아니거나 `contents`·`catId`·파일 형식이 잘못됨 |
+| 400 | `400` | `analysisId`가 없거나 만료되었거나 다른 사용자의 것임 |
+| 404 | `404` | 고양이가 없거나 현재 사용자 소유가 아님 |
+| 413 | `413` | 사진이 10MB 초과 |
+| 503 | `503` | Voyage AI 또는 MinIO 사진 저장소를 사용할 수 없음 |
 
 ```json
-{ "cat": { "id": 12, "name": "양말이", "tags": ["턱시도"], "photoUrl": "https://…", "sightingCount": 7, "createdAt": "2026-04-02T09:00:00+09:00" },
-  "sighting": { "id": 302, "seq": 7, "photoUrl": "https://…", "takenAt": "2026-09-21T18:24:00+09:00", "memo": null, "latitude": null, "longitude": null } }
+{
+  "result": "SUCCESS",
+  "message": "SUCCESS",
+  "code": 200,
+  "data": {
+    "catId": 12,
+    "sightingId": 302,
+    "name": "양말이",
+    "photoUrl": "cats/1/12/sightings/7a41....jpg",
+    "sightingCount": 7
+  }
+}
 ```
+
+> 현재 MVP의 `analysisId`는 임베딩만 보관하므로 선택한 `catId`가 방금 분석한 후보였는지는 재검증하지 않고,
+> 현재 사용자 소유인지만 검증한다.
 
 ---
 
@@ -692,7 +739,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | **[새로운 고양이예요]**(또는 후보 없음) → 이름 짓기 화면의 **[도감에 등록하기]**. 사진을 MinIO에 저장하고 새 고양이(`cats`)와 첫 목격(`sightings`), 태그(`cat_tags`)를 만들며 Voyage 임베딩을 **대표 임베딩**으로 저장한다. `users.level` 캐시도 갱신한다 |
+| 설명 | **[새로운 고양이예요]**(또는 후보 없음) → 이름 짓기 화면의 **[도감에 등록하기]**. 사진을 MinIO에 저장하고 새 고양이(`cats`)와 첫 목격(`sightings`), 태그(`cat_tags`)를 만들며 `analysisId`의 Voyage 임베딩을 첫 목격의 `sightings.embedding`으로 저장한다. 등록 후 고양이 수로 레벨을 계산하지만 `users.level` 캐시는 갱신하지 않는다 |
 | Method / URL | `POST /app/cat/register` (`multipart/form-data`) |
 | 호출 화면 | 이름 짓기(a5), 레벨업 팝업(a8) |
 
@@ -702,6 +749,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 |---|---|---|---|---|
 | Part | `file` | File[](JPEG/PNG, 최대 10MB) | Y | 분석에 사용한 촬영 사진. 현재는 정확히 1장만 허용 |
 | Part | `contents` | String(JSON) | Y | 모바일 multipart 호환을 위해 JSON 객체를 문자열로 직렬화한 등록 내용 |
+| `contents.analysisId` | String(UUID) | N | IF-MATCH-001이 반환한 ID. 이미 등록된 고양이가 있으면 필수이며, 첫 고양이 등록은 생략 가능 |
 | `contents.name` | String(1~12) | Y | 고양이 이름. 공백만은 불가 |
 | `contents.tags` | Array<String(1~30)> | N | 최종 특징 태그. 중복은 서버에서 제거 |
 | `contents.memo` | String(0~200) | N | 첫 만남 메모 |
@@ -764,7 +812,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 홈 카메라(a2) | IF-ME-003 | 셔터 → IF-MATCH-001 |
 | 매칭 결과(a3·a4) | (IF-CFG-002는 앱 시작 시 1회 캐시) | [이 고양이예요] → IF-MATCH-002 / [새로운 고양이예요]·[이름 짓기] → 이름 짓기 화면 이동 |
 | 이름 짓기(a5) | — | [도감에 등록하기] → IF-MATCH-003 |
-| 레벨업 팝업(a8) | — | IF-MATCH-003 응답의 `levelUp`으로 표시 |
+| 레벨업 팝업(a8) | — | IF-MATCH-003 응답의 `leveledUp`으로 표시 |
 | 도감(a6) | IF-CAT-001, IF-ME-002 | 카드 탭 → 상세로 이동 |
 | 고양이 상세(a7) | IF-CAT-002, IF-CAT-006, IF-CAT-003(첫 페이지) | 타임라인 스크롤 끝 → IF-CAT-003(다음 page) |
 | 레벨(a10) | IF-LVL-001 (등급표는 앱이 보유) | — |
@@ -789,13 +837,14 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `levels.js`의 `LEVELS` 상수 | 앱에 그대로 유지(IF-CFG-001 불필요) |
 | `matchConfig.js`의 상수 | IF-CFG-002 |
 | `mockMatchAgainstExisting` | IF-MATCH-001의 `status`·`candidates` 응답으로 교체 |
-| `addSightingToCat` | IF-MATCH-002 |
+| `registerCatSighting` | IF-MATCH-002 |
 | `registerNewCat` | IF-MATCH-003 |
 | `seedDemoData` / `clearAllCats` | IF-DEV-001 / IF-DEV-002 |
 
 앱이 바뀌는 부분(현재 코드 대비):
-- **사진 값**: 지금은 기기 파일 경로(`photoUri`)를 화면들이 넘긴다. 분석 API 연결 시 촬영 직후 IF-MATCH-001로 올리되,
-  현재 API는 사진을 저장하지 않으므로 화면 간에는 기존 `photoUri`를 유지한다. 확정·등록 API를 구현할 때 `matchId` 방식으로 바꾼다.
+- **사진 값**: 기기 파일 경로(`photoUri`)를 화면들이 넘긴다. 촬영 직후 IF-MATCH-001로 올리고,
+  현재 분석 API는 사진을 저장하지 않으므로 MinIO 저장을 위해 확정·등록할 때 같은 `photoUri`를 IF-MATCH-002·003으로 다시 전송한다.
+  임베딩은 `analysisId`로 재사용하므로 Voyage API는 한 번만 호출한다.
 - **일치율 단위**: 앱 `score`(0~1) → API `score`(0~100). `MatchCandidateCard`의 `score >= MATCH_HIGH` 비교를 `matchHigh`(70) 기준으로 맞춘다.
 - **`selectCandidates`**: 후보 걸러내기·정렬·최대 3명은 서버가 하므로 앱의 `selectCandidates`는 필요 없어진다.
 
@@ -805,8 +854,8 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | # | 항목 | 내용 |
 |---|---|---|
-| 1 | 대표 사진 | `cats` 테이블에는 사진 컬럼이 없다. 이 문서는 **첫 목격 사진 = 대표 사진**으로 가정했다(현재 앱 동작과 같음). "대표 사진 바꾸기"를 넣으려면 `cats`에 컬럼이 필요하다 |
-| 2 | `matchId` 임시 보관 | 사진·임베딩·후보를 30분간 들고 있어야 한다. 메모리(단일 서버면 충분) / DB 임시 테이블 / Redis 중 구현 때 결정. `match_logs`·`match_candidates`는 **통계용이라 이 흐름에 필수가 아니며**(삭제 여부는 별도 논의), 통계를 남긴다면 `confirm`/`register` 시점에 서버 안에서 기록하고 API에는 나타나지 않는다 |
+| 1 | 대표 사진 | `cats`에는 사진 컬럼이 없고 **첫 목격 사진 = 대표 사진**으로 사용한다. "대표 사진 바꾸기"를 넣으면 URL을 중복 저장하지 말고 `cats.representative_sighting_id`로 목격 기록을 참조한다 |
+| 2 | `analysisId` 임시 보관 | 임베딩을 단일 서버 메모리에 30분간 보관한다. 서버 다중화 시 Redis 등 공유 저장소로 옮겨야 하며, 후보 목록까지 저장해 확정 대상을 재검증할지는 추가 검토한다 |
 | 3 | 사진 접근 방식 | presigned URL(이 문서 기준) vs 서버가 대신 내려주는 `GET /photos/{id}`(매번 인증). 로컬 개발에서는 폰이 MinIO(`9000`)에 직접 접근할 수 있어야 presigned URL이 동작한다(같은 Wi-Fi + 호스트 IP 필요) |
 | 4 | "이번 주 N마리" | 목격 횟수와 서로 다른 고양이 수 중 무엇을 보여줄지. 문구는 "마리"라 `catCount`가 맞다(현재 앱은 횟수를 셈) |
 | 5 | Claude 매칭 설명 | README의 Claude "매칭 설명" 자연어 문장은 새 목업에 표시할 자리가 없어 응답에서 뺐다. 필요하면 `candidates[].explanation` 필드를 추가한다 |

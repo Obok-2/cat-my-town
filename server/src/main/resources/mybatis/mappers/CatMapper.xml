@@ -5,14 +5,10 @@
     <insert id="insertCat" parameterType="CatCreateVo" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO cats (
             user_id,
-            name,
-            representative_embedding,
-            photo_url
+            name
         ) VALUES (
             #{userId},
-            #{name},
-            CAST(#{representativeEmbedding} AS vector),
-            #{photoUrl}
+            #{name}
         )
     </insert>
 
@@ -20,11 +16,13 @@
         INSERT INTO sightings (
             cat_id,
             photo_url,
+            embedding,
             memo,
             taken_at
         ) VALUES (
             #{catId},
             #{photoUrl},
+            CAST(#{embedding} AS vector),
             #{memo},
             #{takenAt}
         )
@@ -56,11 +54,14 @@
     <select id="selectCatBasic" resultType="CatDetailRes">
         SELECT c.id,
                c.name,
-               c.photo_url,
+               s.photo_url,
                c.created_at AS first_seen_at
           FROM cats c
+          JOIN sightings s ON s.cat_id = c.id
          WHERE c.id = #{catId}
            AND c.user_id = #{userId}
+         ORDER BY s.taken_at, s.id
+         LIMIT 1
     </select>
 
     <select id="selectCatOwnerExists" resultType="int">

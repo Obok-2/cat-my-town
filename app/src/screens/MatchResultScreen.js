@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, ActivityIndicator, ScrollView, Pressable, Alert } from 'react-native';
+import { StackActions } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { analyzeCameraPhoto } from '../api/cameraApi';
+import { registerCatSighting } from '../api/catApi';
+import { getCatPhotoSource } from '../api/photoApi';
 import MatchCandidateCard from '../components/MatchCandidateCard';
 import TraitTagList from '../components/TraitTagList';
 import PrimaryButton from '../components/PrimaryButton';
@@ -24,6 +27,7 @@ export default function MatchResultScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [confirmingCatId, setConfirmingCatId] = useState(null);
   const [timeLabel] = useState(formatNow);
 
   useEffect(() => {
@@ -37,7 +41,7 @@ export default function MatchResultScreen({ route, navigation }) {
           cat: {
             id: candidate.catId,
             name: candidate.name,
-            photoUri: candidate.photoUrl,
+            photoSource: getCatPhotoSource(candidate.catId),
             sightingCount: candidate.sightingCount,
             tags: candidate.tags ?? [],
           },
@@ -64,12 +68,35 @@ export default function MatchResultScreen({ route, navigation }) {
     navigation.getParent()?.goBack();
   }
 
-  function handleConfirm() {
-    Alert.alert('확정 기능 준비 중', '기존 고양이로 확정하는 서버 API를 연결한 뒤 사용할 수 있어요.');
+  async function handleConfirm(cat) {
+    if (confirmingCatId !== null) return;
+    setConfirmingCatId(cat.id);
+    try {
+      const response = await registerCatSighting(photoUri, {
+        analysisId: result.analysisId,
+        catId: cat.id,
+        memo: '',
+      });
+      const sighting = response.data.data;
+      navigation.getParent()?.dispatch(
+        StackActions.replace('Completion', {
+          type: 'SIGHTING',
+          catName: sighting.name,
+        })
+      );
+    } catch (error) {
+      Alert.alert('기록하지 못했어요', error.response?.data?.message || error.message || '잠시 후 다시 시도해주세요.');
+      setConfirmingCatId(null);
+    }
   }
 
   function handleNewCat() {
-    navigation.navigate('Naming', { photoUri, suggestedTags: result?.tags ?? [] });
+    if (confirmingCatId !== null) return;
+    navigation.navigate('Naming', {
+      photoUri,
+      analysisId: result?.analysisId,
+      suggestedTags: result?.tags ?? [],
+    });
   }
 
   if (loading) {
@@ -162,7 +189,9 @@ export default function MatchResultScreen({ route, navigation }) {
               cat={cat}
               score={score}
               top={i === 0}
-              onConfirm={handleConfirm}
+              busy={confirmingCatId === cat.id}
+              disabled={confirmingCatId !== null}
+              onConfirm={() => handleConfirm(cat)}
             />
           ))}
         </View>
@@ -171,9 +200,14 @@ export default function MatchResultScreen({ route, navigation }) {
       <View style={styles.bottom}>
         <Pressable
           onPress={handleNewCat}
+          disabled={confirmingCatId !== null}
           style={({ pressed }) => [
             styles.softButton,
-            { backgroundColor: colors.softBtnBg, borderColor: colors.softBtnBorder, opacity: pressed ? 0.8 : 1 },
+            {
+              backgroundColor: colors.softBtnBg,
+              borderColor: colors.softBtnBorder,
+              opacity: confirmingCatId !== null ? 0.5 : pressed ? 0.8 : 1,
+            },
           ]}
         >
           <Text style={[styles.softButtonText, { color: colors.textMuted }]}>

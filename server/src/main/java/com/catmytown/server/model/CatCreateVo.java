@@ -15,8 +15,4 @@ public class CatCreateVo {
 
     private String name;
 
-    private String representativeEmbedding;
-
-    private String photoUrl;
-
 }

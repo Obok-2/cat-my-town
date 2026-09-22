@@ -24,8 +24,8 @@ export default function MatchCandidateCard({ cat, score, top, busy, disabled, on
           : { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1.5 },
       ]}
     >
-      {cat.photoUri ? (
-        <Image source={{ uri: cat.photoUri }} style={styles.photo} />
+      {cat.photoSource || cat.photoUri ? (
+        <Image source={cat.photoSource ?? { uri: cat.photoUri }} style={styles.photo} />
       ) : (
         <PlaceholderArt radius={15} style={styles.photo} />
       )}

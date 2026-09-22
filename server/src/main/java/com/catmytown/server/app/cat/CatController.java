@@ -50,4 +50,12 @@ public class CatController {
         return catService.register(file, contents, userId);
     }
 
+    @PostMapping(value = "/sighting", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseApi addSighting(
+            @RequestPart("file") MultipartFile[] file,
+            @RequestPart("contents") String contents,
+            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
+        return catService.addSighting(file, contents, userId);
+    }
+
 }

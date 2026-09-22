@@ -26,6 +26,9 @@ public class CameraService {
     @Autowired
     private VoyageImageEmbeddingClient voyageImageEmbeddingClient;
 
+    @Autowired
+    private AnalysisEmbeddingStore analysisEmbeddingStore;
+
     @Value("${camera.match.threshold}")
     private double matchThreshold;
 
@@ -59,18 +62,21 @@ public class CameraService {
             return ResponseApi.success(CameraAnalysisRes.newCat(
                     detection.getLabel(), toPercent(detection.getCatProbability())));
         }
-        if (cameraDao.selectEmbeddedCatCount(userId) != catCount) {
+        if (cameraDao.selectMatchableCatCount(userId) != catCount) {
             throw new BusinessException(503, "등록된 고양이의 비교 데이터가 준비되지 않았습니다.");
         }
 
-        List<Double> embedding = voyageImageEmbeddingClient.createQueryEmbedding(photoBytes, photo.getContentType());
+        List<Double> embedding = voyageImageEmbeddingClient.createImageEmbedding(photoBytes, photo.getContentType());
+        String analysisId = analysisEmbeddingStore.save(userId, embedding);
         double minimumSimilarity = lowerBound + matchThreshold / 100.0 * (upperBound - lowerBound);
         List<CameraCandidateVo> matched = cameraDao.selectMatchingCandidates(
                 userId, toVectorLiteral(embedding), minimumSimilarity, maxCandidates);
 
         if (matched.isEmpty()) {
-            return ResponseApi.success(CameraAnalysisRes.newCat(
-                    detection.getLabel(), toPercent(detection.getCatProbability())));
+            CameraAnalysisRes response = CameraAnalysisRes.newCat(
+                    detection.getLabel(), toPercent(detection.getCatProbability()));
+            response.setAnalysisId(analysisId);
+            return ResponseApi.success(response);
         }
 
         List<CameraCandidateRes> candidates = new ArrayList<>();
@@ -90,6 +96,7 @@ public class CameraService {
         response.setCat(true);
         response.setDetectedLabel(detection.getLabel());
         response.setCatProbability(toPercent(detection.getCatProbability()));
+        response.setAnalysisId(analysisId);
         response.setCandidates(candidates);
         return ResponseApi.success(response);
     }

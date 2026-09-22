@@ -18,13 +18,9 @@ CREATE TABLE cats (
     id                        BIGSERIAL     PRIMARY KEY,
     user_id                   BIGINT        NOT NULL REFERENCES users (id) ON DELETE CASCADE,  -- 이 고양이를 등록한 사용자
     name                      VARCHAR(50)   NOT NULL,
-    representative_embedding  VECTOR(1024),                 -- 대표 임베딩 (Voyage AI voyage-multimodal-3.5, 1024차원)
-    created_at                TIMESTAMPTZ   NOT NULL DEFAULT now(),  -- 첫 만남 시각
-    photo_url                 VARCHAR(500)  NOT NULL                    -- 도감 카드의 대표 사진 저장 경로 (새 고양이 등록 시 첫 목격 사진)
+    created_at                TIMESTAMPTZ   NOT NULL DEFAULT now()   -- 첫 만남 시각
 );
 CREATE INDEX idx_cats_user_id ON cats (user_id);
--- 검색은 항상 "본인 소유 고양이"로 범위를 제한(WHERE user_id = ?)한 뒤 코사인 유사도로 비교한다.
-CREATE INDEX idx_cats_embedding ON cats USING hnsw (representative_embedding vector_cosine_ops);
 
 -- 특징 태그 (자유 텍스트, 고정 카테고리 아님) — README 는 cats.feature_tag 한 칸이지만
 -- 앱 목업이 태그를 여러 개(예: 턱시도, 코 옆 흰 점) 다루므로 별도 테이블로 뺐다.
@@ -40,12 +36,14 @@ CREATE TABLE sightings (
     id          BIGSERIAL     PRIMARY KEY,
     cat_id      BIGINT        NOT NULL REFERENCES cats (id) ON DELETE CASCADE,
     photo_url   VARCHAR(500)  NOT NULL,                     -- MinIO 또는 로컬 디스크 경로
+    embedding   VECTOR(1024)  NOT NULL,                     -- 목격 사진 임베딩 (Voyage AI voyage-multimodal-3.5)
     memo        VARCHAR(200),                               -- 예: "놀이터 미끄럼틀 밑"
     latitude    NUMERIC(8, 5),                              -- 정밀 좌표는 저장하지 않고 뭉갠 좌표만 (소수 5자리 미만으로 절삭)
     longitude   NUMERIC(8, 5),
     taken_at    TIMESTAMPTZ   NOT NULL                      -- 촬영일시
 );
 CREATE INDEX idx_sightings_cat_id_taken_at ON sightings (cat_id, taken_at DESC);
+CREATE INDEX idx_sightings_embedding ON sightings USING hnsw (embedding vector_cosine_ops);
 
 -- AI 매칭 결과 로그 — 관리자 대시보드의 수락률·일치율 집계용 (촬영 1건 = 1행)
 -- 앱은 일치율 40% 이상 후보를 최대 3명 보여주고 사용자가 하나를 고르거나 "새로운 고양이"를 고른다.

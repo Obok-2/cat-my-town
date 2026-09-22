@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.catmytown.server.app.photo.PhotoDao">
+
+    <select id="selectCatPhotoObjectName" resultType="string">
+        SELECT s.photo_url
+          FROM cats c
+          JOIN sightings s ON s.cat_id = c.id
+         WHERE c.id = #{catId}
+           AND c.user_id = #{userId}
+         ORDER BY s.taken_at, s.id
+         LIMIT 1
+    </select>
+
+</mapper>

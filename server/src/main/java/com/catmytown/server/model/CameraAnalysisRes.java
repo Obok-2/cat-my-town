@@ -19,6 +19,8 @@ public class CameraAnalysisRes {
 
     private double catProbability;
 
+    private String analysisId;
+
     private List<CameraCandidateRes> candidates = Collections.emptyList();
 
     public static CameraAnalysisRes notCat(String detectedLabel, double catProbability) {

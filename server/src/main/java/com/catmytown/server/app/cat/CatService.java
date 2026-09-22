@@ -1,6 +1,7 @@
 package com.catmytown.server.app.cat;
 
 import com.catmytown.server.app.camera.VoyageImageEmbeddingClient;
+import com.catmytown.server.app.camera.AnalysisEmbeddingStore;
 import com.catmytown.server.common.BusinessException;
 import com.catmytown.server.common.PhotoStorageService;
 import com.catmytown.server.common.ResponseApi;
@@ -11,6 +12,8 @@ import com.catmytown.server.model.CatMarkerRes;
 import com.catmytown.server.model.CatRegisterRes;
 import com.catmytown.server.model.CatRegisterReq;
 import com.catmytown.server.model.CatSightingPageRes;
+import com.catmytown.server.model.CatSightingCreateReq;
+import com.catmytown.server.model.CatSightingCreateRes;
 import com.catmytown.server.model.CatSightingRes;
 import com.catmytown.server.model.SightingCreateVo;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,6 +41,9 @@ public class CatService {
     private VoyageImageEmbeddingClient voyageImageEmbeddingClient;
 
     @Autowired
+    private AnalysisEmbeddingStore analysisEmbeddingStore;
+
+    @Autowired
     private PhotoStorageService photoStorageService;
 
     @Autowired
@@ -56,22 +62,26 @@ public class CatService {
         String normalizedMemo = normalizeOptional(
                 contents.getMemo(), 200, "첫 만남 메모는 200자 이하로 입력해주세요.");
         List<String> normalizedTags = normalizeTags(contents.getTags());
+        if ((contents.getAnalysisId() == null || contents.getAnalysisId().isBlank())
+                && catDao.selectCatCountByUser(userId) > 0) {
+            throw new BusinessException(400, "사진 분석 결과가 필요합니다. 다시 촬영해주세요.");
+        }
 
         byte[] photoBytes = readPhoto(photo);
-        List<Double> embedding = voyageImageEmbeddingClient.createDocumentEmbedding(photoBytes, photo.getContentType());
+        List<Double> embedding = resolveEmbedding(
+                contents.getAnalysisId(), userId, photoBytes, photo.getContentType());
         String objectName = photoStorageService.uploadCatPhoto(photoBytes, photo.getContentType(), userId);
 
         try {
             CatCreateVo cat = new CatCreateVo();
             cat.setUserId(userId);
             cat.setName(normalizedName);
-            cat.setRepresentativeEmbedding(toVectorLiteral(embedding));
-            cat.setPhotoUrl(objectName);
             catDao.insertCat(cat);
 
             SightingCreateVo sighting = new SightingCreateVo();
             sighting.setCatId(cat.getId());
             sighting.setPhotoUrl(objectName);
+            sighting.setEmbedding(toVectorLiteral(embedding));
             sighting.setMemo(normalizedMemo);
             sighting.setTakenAt(OffsetDateTime.now());
             catDao.insertSighting(sighting);
@@ -95,6 +105,59 @@ public class CatService {
             response.setCatCount(catCount);
             response.setLevel(level);
             response.setLeveledUp(level > previousLevel);
+            analysisEmbeddingStore.remove(contents.getAnalysisId(), userId);
+            return ResponseApi.success(response);
+        } catch (RuntimeException e) {
+            photoStorageService.deleteQuietly(objectName);
+            throw e;
+        }
+    }
+
+    @Transactional
+    public ResponseApi addSighting(MultipartFile[] file, String contentsJson, Long userId) {
+        if (file == null || file.length != 1) {
+            throw new BusinessException(400, "사진 파일을 1장만 보내주세요.");
+        }
+
+        MultipartFile photo = file[0];
+        CatSightingCreateReq contents = readSightingContents(contentsJson);
+        validatePhoto(photo);
+        if (contents.getCatId() == null) {
+            throw new BusinessException(400, "고양이 ID가 필요합니다.");
+        }
+        if (contents.getAnalysisId() == null || contents.getAnalysisId().isBlank()) {
+            throw new BusinessException(400, "사진 분석 결과가 필요합니다. 다시 촬영해주세요.");
+        }
+
+        CatDetailRes cat = catDao.selectCatBasic(contents.getCatId(), userId);
+        if (cat == null) {
+            throw new BusinessException(404, "고양이를 찾을 수 없습니다.");
+        }
+        String normalizedMemo = normalizeOptional(
+                contents.getMemo(), 200, "목격 메모는 200자 이하로 입력해주세요.");
+
+        byte[] photoBytes = readPhoto(photo);
+        List<Double> embedding = resolveEmbedding(
+                contents.getAnalysisId(), userId, photoBytes, photo.getContentType());
+        String objectName = photoStorageService.uploadSightingPhoto(
+                photoBytes, photo.getContentType(), userId, contents.getCatId());
+
+        try {
+            SightingCreateVo sighting = new SightingCreateVo();
+            sighting.setCatId(contents.getCatId());
+            sighting.setPhotoUrl(objectName);
+            sighting.setEmbedding(toVectorLiteral(embedding));
+            sighting.setMemo(normalizedMemo);
+            sighting.setTakenAt(OffsetDateTime.now());
+            catDao.insertSighting(sighting);
+
+            CatSightingCreateRes response = new CatSightingCreateRes();
+            response.setCatId(contents.getCatId());
+            response.setSightingId(sighting.getId());
+            response.setName(cat.getName());
+            response.setPhotoUrl(objectName);
+            response.setSightingCount(catDao.selectSightingCountByCat(contents.getCatId()));
+            analysisEmbeddingStore.remove(contents.getAnalysisId(), userId);
             return ResponseApi.success(response);
         } catch (RuntimeException e) {
             photoStorageService.deleteQuietly(objectName);
@@ -168,6 +231,25 @@ public class CatService {
         } catch (JsonProcessingException e) {
             throw new BusinessException(400, "등록 내용 형식이 올바르지 않습니다.");
         }
+    }
+
+    private CatSightingCreateReq readSightingContents(String contentsJson) {
+        if (contentsJson == null || contentsJson.isBlank()) {
+            throw new BusinessException(400, "목격 내용이 필요합니다.");
+        }
+        try {
+            return objectMapper.readValue(contentsJson, CatSightingCreateReq.class);
+        } catch (JsonProcessingException e) {
+            throw new BusinessException(400, "목격 내용 형식이 올바르지 않습니다.");
+        }
+    }
+
+    private List<Double> resolveEmbedding(
+            String analysisId, Long userId, byte[] photoBytes, String contentType) {
+        if (analysisId != null && !analysisId.isBlank()) {
+            return analysisEmbeddingStore.get(analysisId, userId);
+        }
+        return voyageImageEmbeddingClient.createImageEmbedding(photoBytes, contentType);
     }
 
     private String normalizeRequired(String value, int maxLength, String message) {

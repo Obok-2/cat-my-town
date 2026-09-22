@@ -1,6 +1,5 @@
 package com.catmytown.server.model;
 
-import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,14 +7,16 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class CatRegisterReq {
+public class CatSightingCreateRes {
 
-    private String analysisId;
+    private Long catId;
+
+    private Long sightingId;
 
     private String name;
 
-    private List<String> tags;
+    private String photoUrl;
 
-    private String memo;
+    private int sightingCount;
 
 }

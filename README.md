@@ -136,12 +136,12 @@ cats
 - user_id (FK, 이 고양이를 등록한 사용자)
 - name
 - feature_tag (자유 텍스트, 고정 카테고리 아님)
-- 대표_embedding
 
 sightings
 - id
 - cat_id (FK)
 - photo_url
+- embedding (목격 사진별 Voyage AI 임베딩)
 - 촬영일시
 ```
 

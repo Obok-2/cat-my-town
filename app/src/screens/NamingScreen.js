@@ -15,7 +15,7 @@ const NAME_MAX = 12;
 
 // 목업 a5 "이름 짓기": 이름 · 태그(수정 가능) · 첫 만남 메모 → 도감 등록.
 export default function NamingScreen({ route, navigation }) {
-  const { photoUri, suggestedTags = [] } = route.params;
+  const { photoUri, analysisId, suggestedTags = [] } = route.params;
   const colors = useColors();
   const [name, setName] = useState('');
   const [tags, setTags] = useState(suggestedTags);
@@ -35,6 +35,7 @@ export default function NamingScreen({ route, navigation }) {
     setSaving(true);
     try {
       const contents = {
+        analysisId,
         name: trimmed,
         tags,
         memo: memo.trim(),
