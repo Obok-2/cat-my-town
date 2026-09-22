@@ -1,11 +1,12 @@
 {
+  "_comment": "개발용 가라 데이터. lat·lng는 지도 확인용 데모 좌표(서울 마포구 연남동 근처)이며 실제 목격 위치가 아니다.",
   "cats": [
-    { "name": "양말이", "tags": ["턱시도", "코 옆 흰 점"], "sightingCount": 7, "firstSeenDaysAgo": 170 },
-    { "name": "치즈", "tags": ["치즈 태비"], "sightingCount": 12, "firstSeenDaysAgo": 210 },
-    { "name": "구름", "tags": ["장모 흰냥"], "sightingCount": 3, "firstSeenDaysAgo": 40 },
-    { "name": "까망이", "tags": ["올블랙"], "sightingCount": 9, "firstSeenDaysAgo": 150 },
-    { "name": "삼색이", "tags": ["삼색", "짧은 꼬리"], "sightingCount": 5, "firstSeenDaysAgo": 60 },
-    { "name": "귀돌이", "tags": ["귀 끝 커팅"], "sightingCount": 2, "firstSeenDaysAgo": 15 }
+    { "name": "양말이", "tags": ["턱시도", "코 옆 흰 점"], "sightingCount": 7, "firstSeenDaysAgo": 170, "lat": 37.5607, "lng": 126.9255 },
+    { "name": "치즈", "tags": ["치즈 태비"], "sightingCount": 12, "firstSeenDaysAgo": 210, "lat": 37.5588, "lng": 126.9269 },
+    { "name": "구름", "tags": ["장모 흰냥"], "sightingCount": 3, "firstSeenDaysAgo": 40, "lat": 37.5631, "lng": 126.9241 },
+    { "name": "까망이", "tags": ["올블랙"], "sightingCount": 9, "firstSeenDaysAgo": 150, "lat": 37.5575, "lng": 126.9228 },
+    { "name": "삼색이", "tags": ["삼색", "짧은 꼬리"], "sightingCount": 5, "firstSeenDaysAgo": 60, "lat": 37.5619, "lng": 126.9283 },
+    { "name": "귀돌이", "tags": ["귀 끝 커팅"], "sightingCount": 2, "firstSeenDaysAgo": 15, "lat": 37.5596, "lng": 126.9214 }
   ],
   "sightingsByCatName": {
     "양말이": [

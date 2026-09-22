@@ -12,6 +12,12 @@ const KEYS = {
   sightings: '@cat-my-town/sightings',
 };
 
+// 기획안 §위치: 정밀 좌표는 저장하지 않고 뭉갠 좌표만 쓴다. 소수점 5자리(약 1m)까지만 남긴다.
+// (schema.sql의 sightings.latitude/longitude NUMERIC(8,5)와 같은 자릿수)
+function roundCoord(value) {
+  return Math.round(value * 1e5) / 1e5;
+}
+
 function newId(prefix) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -150,13 +156,15 @@ export async function seedDemoData() {
     entries.sort((a, b) => b.daysAgo - a.daysAgo);
 
     entries.forEach((entry, i) => {
+      // 고양이별 기준 좌표에서 조금씩 흩어서 핀이 겹치지 않게 한다(약 ±250m).
+      const spreadDeg = 0.0022;
       sightings.push({
         id: newId('sighting'),
         catId,
         photoUri: null,
         takenAt: now - entry.daysAgo * DAY_MS,
-        lat: null,
-        lng: null,
+        lat: roundCoord(seedCat.lat + (Math.random() - 0.5) * spreadDeg),
+        lng: roundCoord(seedCat.lng + (Math.random() - 0.5) * spreadDeg),
         order: i + 1,
         memo: entry.memo ?? '',
       });
