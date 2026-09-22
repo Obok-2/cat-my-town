@@ -8,4 +8,6 @@ public interface PhotoDao {
 
     String selectCatPhotoObjectName(@Param("catId") Long catId, @Param("userId") Long userId);
 
+    String selectSightingPhotoObjectName(@Param("sightingId") Long sightingId, @Param("userId") Long userId);
+
 }

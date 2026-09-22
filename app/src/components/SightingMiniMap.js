@@ -52,8 +52,8 @@ function toMapPoints(sightings) {
     points.push({
       lat: s.lat,
       lng: s.lng,
-      number: total - i,
-      label: circled(total - i),
+      number: s.seq ?? total - i,
+      label: circled(s.seq ?? total - i),
       date: formatShort(s.takenAt),
       memo: s.memo || '',
       latest: i === 0,
@@ -103,7 +103,7 @@ export default function SightingMiniMap({ sightings, height = 190 }) {
       {previous.map((s, i) => (
         <View key={s.id} style={[styles.pinRow, { left: PIN_POSITIONS[i].left, top: PIN_POSITIONS[i].top }]}>
           <View style={styles.pin} />
-          <Text style={styles.pinLabel}>{circled(total - 1 - i)}</Text>
+          <Text style={styles.pinLabel}>{circled(s.seq ?? total - 1 - i)}</Text>
         </View>
       ))}
 
@@ -113,14 +113,14 @@ export default function SightingMiniMap({ sightings, height = 190 }) {
             <View style={styles.pinSelected} />
           </View>
           <View style={[styles.popupCard, { left: CARD_POS.left, top: CARD_POS.top, backgroundColor: CARD_BG }]}>
-            {latest.photoUri ? (
-              <Image source={{ uri: latest.photoUri }} style={styles.popupThumb} />
+            {latest.photoSource || latest.photoUri ? (
+              <Image source={latest.photoSource ?? { uri: latest.photoUri }} style={styles.popupThumb} />
             ) : (
               <View style={[styles.popupThumb, { backgroundColor: MAP_GRID }]} />
             )}
             <View>
               <Text style={styles.popupDate}>
-                {circled(total)} {formatShort(latest.takenAt)}
+                {circled(latest.seq ?? total)} {formatShort(latest.takenAt)}
               </Text>
               {!!latest.memo && (
                 <Text style={styles.popupMemo} numberOfLines={1}>

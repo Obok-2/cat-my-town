@@ -5,7 +5,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { getCollectionCats, getCollectionCount } from '../api/collectionApi';
-import { getCatPhotoSource } from '../api/photoApi';
 import { computeLevel } from '../data/levels';
 import LevelProgressBar from '../components/LevelProgressBar';
 import CatCard from '../components/CatCard';
@@ -23,7 +22,7 @@ async function requestCollection() {
   return {
     cats: collectionCats.map((cat) => ({
       ...cat,
-      photoSource: getCatPhotoSource(cat.id, cat.photoUrl),
+      photoSource: cat.photoUrl ? { uri: cat.photoUrl } : null,
     })),
     levelInfo: computeLevel(catCount),
   };

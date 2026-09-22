@@ -1,5 +1,6 @@
 package com.catmytown.server.app.camera;
 
+import com.catmytown.server.app.photo.PhotoUrlService;
 import com.catmytown.server.common.BusinessException;
 import com.catmytown.server.common.ResponseApi;
 import com.catmytown.server.common.TagParser;
@@ -29,6 +30,9 @@ public class CameraService {
 
     @Autowired
     private AnalysisEmbeddingStore analysisEmbeddingStore;
+
+    @Autowired
+    private PhotoUrlService photoUrlService;
 
     @Value("${camera.match.threshold}")
     private double matchThreshold;
@@ -85,7 +89,7 @@ public class CameraService {
             CameraCandidateRes candidate = new CameraCandidateRes();
             candidate.setCatId(item.getCatId());
             candidate.setName(item.getName());
-            candidate.setPhotoUrl(item.getPhotoUrl());
+            candidate.setPhotoUrl(photoUrlService.createCatPhotoUrl(item.getCatId()));
             candidate.setSightingCount(item.getSightingCount());
             candidate.setScore(calibrate(item.getRawSimilarity()));
             candidate.setTags(TagParser.parse(cameraDao.selectCatTags(item.getCatId())));

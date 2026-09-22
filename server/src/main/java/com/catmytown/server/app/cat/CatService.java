@@ -2,6 +2,7 @@ package com.catmytown.server.app.cat;
 
 import com.catmytown.server.app.camera.VoyageImageEmbeddingClient;
 import com.catmytown.server.app.camera.AnalysisEmbeddingStore;
+import com.catmytown.server.app.photo.PhotoUrlService;
 import com.catmytown.server.common.BusinessException;
 import com.catmytown.server.common.PhotoStorageService;
 import com.catmytown.server.common.ResponseApi;
@@ -48,6 +49,9 @@ public class CatService {
 
     @Autowired
     private PhotoStorageService photoStorageService;
+
+    @Autowired
+    private PhotoUrlService photoUrlService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -103,7 +107,7 @@ public class CatService {
             response.setCatId(cat.getId());
             response.setSightingId(sighting.getId());
             response.setName(normalizedName);
-            response.setPhotoUrl(objectName);
+            response.setPhotoUrl(photoUrlService.createCatPhotoUrl(cat.getId()));
             response.setTags(normalizedTags);
             response.setCatCount(catCount);
             response.setLevel(level);
@@ -163,7 +167,7 @@ public class CatService {
             response.setCatId(contents.getCatId());
             response.setSightingId(sighting.getId());
             response.setName(cat.getName());
-            response.setPhotoUrl(objectName);
+            response.setPhotoUrl(photoUrlService.createSightingPhotoUrl(sighting.getId()));
             response.setSightingCount(catDao.selectSightingCountByCat(contents.getCatId()));
             analysisEmbeddingStore.remove(contents.getAnalysisId(), userId);
             return ResponseApi.success(response);
@@ -182,6 +186,7 @@ public class CatService {
         }
         detail.setSightingCount(catDao.selectSightingCountByCat(catId));
         detail.setTags(TagParser.parse(catDao.selectCatTagsByCat(catId)));
+        detail.setPhotoUrl(photoUrlService.createCatPhotoUrl(catId));
         return ResponseApi.success(detail);
     }
 
@@ -189,6 +194,9 @@ public class CatService {
     public ResponseApi getCatMarkers(Long catId, Long userId) {
         ensureCatOwned(catId, userId);
         List<CatMarkerRes> markers = catDao.selectMarkers(catId);
+        for (CatMarkerRes marker : markers) {
+            marker.setPhotoUrl(photoUrlService.createSightingPhotoUrl(marker.getId()));
+        }
         return ResponseApi.success(new CatMarkerListRes(markers));
     }
 
@@ -201,6 +209,7 @@ public class CatService {
         List<CatSightingRes> sightings = catDao.selectSightingsPage(catId, offset, SIGHTING_PAGE_SIZE + 1);
         for (CatSightingRes sighting : sightings) {
             sighting.setTags(TagParser.parse(sighting.getTagValue()));
+            sighting.setPhotoUrl(photoUrlService.createSightingPhotoUrl(sighting.getId()));
         }
         boolean hasMore = sightings.size() > SIGHTING_PAGE_SIZE;
         if (hasMore) {

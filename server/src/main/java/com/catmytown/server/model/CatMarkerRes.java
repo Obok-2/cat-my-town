@@ -25,4 +25,6 @@ public class CatMarkerRes {
 
     private String memo;
 
+    private String photoUrl;
+
 }

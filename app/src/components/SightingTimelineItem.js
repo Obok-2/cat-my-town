@@ -16,6 +16,8 @@ function formatDate(ts) {
 // 목업 a7 목격 타임라인 한 줄: 좌측 번호 원(주황) + 연결선 + 썸네일/날짜/장소 카드.
 export default function SightingTimelineItem({ sighting, number, isLast }) {
   const colors = useColors();
+  const photoSource = sighting.photoSource ?? (sighting.photoUri ? { uri: sighting.photoUri } : null);
+
   return (
     <View style={styles.row}>
       <View style={styles.railCol}>
@@ -26,8 +28,8 @@ export default function SightingTimelineItem({ sighting, number, isLast }) {
       </View>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.thumbWrap}>
-          {sighting.photoUri ? (
-            <Image source={{ uri: sighting.photoUri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          {photoSource ? (
+            <Image source={photoSource} style={StyleSheet.absoluteFill} resizeMode="cover" />
           ) : (
             <PlaceholderArt style={StyleSheet.absoluteFill} radius={14} />
           )}

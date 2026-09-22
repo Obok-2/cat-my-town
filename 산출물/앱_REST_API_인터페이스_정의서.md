@@ -82,7 +82,7 @@
 |---|---|
 | 응답 형태 | 성공·실패 모두 공통 형태 `ResponseApi`(2.5)로 응답하고, 실제 데이터는 `data`에 담는다 |
 | 일치율(`score`) | **0~100** 숫자(소수 2자리). 앱 목데이터는 0~1이라 연동 시 ×100 기준으로 통일 |
-| 사진 URL(`photoUrl`) | 사진은 **비공개 버킷(MinIO)** 에 있고, `photoUrl`은 **만료되는 presigned URL**(예: 1시간). 앱은 그대로 이미지 주소로 쓴다 |
+| 사진 URL(`photoUrl`) | 사진은 **비공개 버킷(MinIO)** 에 있고, `photoUrl`은 소유권을 확인해 이미지를 내려주는 `/app/photo`의 완전한 URL이다. 앱은 그대로 이미지 주소로 쓴다 |
 | 좌표 | 정밀 좌표는 저장·응답하지 않는다. **뭉갠 좌표**(소수 5자리 미만으로 절삭)만 다룬다 |
 | 목록 | 페이징 없음(MVP, 개인 도감이라 수가 적음). 정렬은 각 인터페이스에 명시 |
 
@@ -197,7 +197,7 @@
 | IF-CAT-006 | 지도 마커 조회 | GET | `/app/cat/markers?catId=` | 고양이 상세(a7) | 필수 | **구현** |
 | IF-CAT-004 | 고양이 정보 수정 | PATCH | `/cats/{catId}` | 고양이 상세 ⋯ 메뉴 | 선택(앱 미구현) | 미구현 |
 | IF-CAT-005 | 고양이 삭제 | DELETE | `/cats/{catId}` | 고양이 상세 ⋯ 메뉴 | 선택(앱 미구현) | 미구현 |
-| IF-PHOTO-001 | 고양이 사진 조회 | GET | `/app/photo?catId=` | 매칭 후보 등 사진 표시 | 필수 | **구현** |
+| IF-PHOTO-001 | 사진 조회 | GET | `/app/photo?catId=` 또는 `/app/photo?sightingId=` | 대표 사진·목격 타임라인 | 필수 | **구현** |
 | IF-MATCH-001 | 촬영 이미지 분석 | POST | `/app/camera/analyze` | 홈 카메라(a2) → 매칭 결과(a3·a4) | 필수 | **구현** |
 | IF-MATCH-002 | 기존 고양이로 확정 | POST | `/app/cat/sighting` | 매칭 결과(a3) | 필수 | **구현** |
 | IF-MATCH-003 | 새 고양이 등록 | POST | `/app/cat/register` | 이름 짓기(a5), 레벨업(a8) | 필수 | **구현** |
@@ -429,7 +429,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `cats` | Array | N | 고양이 목록(0마리면 빈 배열) |
 | `cats[].id` | Long | N | 고양이 ID |
 | `cats[].name` | String | N | 이름 |
-| `cats[].photoUrl` | String | Y | 대표 사진(가장 오래된 `sightings.photo_url`) |
+| `cats[].photoUrl` | String | Y | 대표 사진을 바로 표시할 수 있는 `/app/photo?catId=` URL |
 | `cats[].sightingCount` | Integer | N | 만난 횟수(목격 기록 수) |
 | `cats[].tags` | Array<String> | N | 특징 태그(추가한 순서, 없으면 빈 배열). 앱 카드는 첫 번째만 표시 |
 
@@ -437,8 +437,8 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 ```json
 { "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "cats": [
-  { "id": 2, "name": "치즈", "photoUrl": "cats/2/first.jpg", "sightingCount": 12, "tags": ["치즈 태비"] },
-  { "id": 1, "name": "양말이", "photoUrl": "cats/1/first.jpg", "sightingCount": 7, "tags": ["턱시도", "코 옆 흰 점"] }
+  { "id": 2, "name": "치즈", "photoUrl": "http://192.168.0.4:8080/app/photo?catId=2", "sightingCount": 12, "tags": ["치즈 태비"] },
+  { "id": 1, "name": "양말이", "photoUrl": "http://192.168.0.4:8080/app/photo?catId=1", "sightingCount": 7, "tags": ["턱시도", "코 옆 흰 점"] }
 ] } }
 ```
 
@@ -465,7 +465,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 |---|---|---|---|
 | `id` | Long | N | 고양이 ID |
 | `name` | String | N | 이름 |
-| `photoUrl` | String | N | 대표 사진 경로 |
+| `photoUrl` | String | N | 앱에서 바로 표시할 수 있는 대표 사진 URL |
 | `tags` | Array<String> | N | 특징 태그 |
 | `sightingCount` | Integer | N | 목격 횟수 |
 | `firstSeenAt` | DateTime | N | 첫 만남(등록) 일시 |
@@ -474,7 +474,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 ```json
 { "result": "SUCCESS", "message": "SUCCESS", "code": 200,
-  "data": { "id": 12, "name": "양말이", "photoUrl": "cats/12/first.jpg",
+  "data": { "id": 12, "name": "양말이", "photoUrl": "http://192.168.0.4:8080/app/photo?catId=12",
     "tags": ["턱시도", "코 옆 흰 점"], "sightingCount": 7, "firstSeenAt": "2026-04-05T09:00:00+09:00" } }
 ```
 
@@ -504,7 +504,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `sightings` | Array<Object> | N | 목격 기록 최대 10건(최신순) |
 | `sightings[].id` | Long | N | 목격 ID |
 | `sightings[].seq` | Integer | N | 몇 번째 만남(오래된 순 1부터) |
-| `sightings[].photoUrl` | String | N | 사진 경로 |
+| `sightings[].photoUrl` | String | N | 앱에서 바로 표시할 수 있는 목격 사진 URL |
 | `sightings[].takenAt` | DateTime | N | 촬영일시 |
 | `sightings[].memo` | String | Y | 메모 |
 | `sightings[].tags` | Array<String> | N | 해당 목격에서 기록한 특징 태그(최대 5개) |
@@ -548,6 +548,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `markers[].longitude` | Decimal | N | 경도(뭉갠 좌표) |
 | `markers[].takenAt` | DateTime | N | 촬영일시 |
 | `markers[].memo` | String | Y | 메모 |
+| `markers[].photoUrl` | String | N | 앱에서 바로 표시할 수 있는 목격 사진 URL |
 
 **에러**: `400 FAIL`(`catId` 누락), `404 FAIL`(없거나 내 고양이가 아님)
 
@@ -555,7 +556,8 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 { "result": "SUCCESS", "message": "SUCCESS", "code": 200,
   "data": { "markers": [
     { "id": 301, "seq": 7, "latitude": 37.56512, "longitude": 126.97831,
-      "takenAt": "2026-09-14T18:24:00+09:00", "memo": "놀이터 미끄럼틀 밑" }
+      "takenAt": "2026-09-14T18:24:00+09:00", "memo": "놀이터 미끄럼틀 밑",
+      "photoUrl": "http://192.168.0.4:8080/app/photo?sightingId=301" }
   ] } }
 ```
 
@@ -597,29 +599,32 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 ---
 
-### IF-PHOTO-001 고양이 사진 조회
+### IF-PHOTO-001 사진 조회
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | `catId`와 현재 사용자 ID로 고양이를 찾고, 가장 오래된 `sightings.photo_url`의 MinIO 객체를 읽어 대표 사진 바이트를 내려준다 |
-| Method / URL | `GET /app/photo?catId=` |
-| 호출 화면 | 매칭 후보 카드 등 사진을 표시하는 화면 |
+| 설명 | `catId`이면 첫 목격의 대표 사진을, `sightingId`이면 해당 목격 사진을 조회한다. 사용자 소유권을 확인한 뒤 MinIO 객체를 이미지 리소스로 내려준다 |
+| Method / URL | `GET /app/photo?catId=` 또는 `GET /app/photo?sightingId=` |
+| 호출 화면 | 도감 카드·매칭 후보·고양이 상세·지도 팝업·목격 타임라인 |
 
 **Request**
 
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
 | Header | `X-User-Id` | Long | N | 임시 사용자 ID. 생략 시 `1` |
-| Query | `catId` | Long | Y | 대표 사진을 조회할 고양이 ID |
+| Query | `catId` | Long | 조건부 | 대표 사진을 조회할 고양이 ID |
+| Query | `sightingId` | Long | 조건부 | 개별 사진을 조회할 목격 ID |
 
-**Response `200`**: `Content-Type: image/jpeg` 또는 `image/png`, 본문은 이미지 바이트이며 개인 캐시로 1시간 보관한다.
+`catId`와 `sightingId` 중 정확히 하나만 보낸다. 목록·상세·타임라인 API의 `photoUrl`은 이 API의 완전한 URL을 반환하므로 앱은 그대로 이미지 source에 사용한다.
+
+**Response `200`**: `Content-Type: image/jpeg` 또는 `image/png`, `Content-Disposition: inline`, 본문은 이미지 리소스이며 개인 캐시로 1시간 보관한다.
 
 **에러**
 
 | HTTP | code | 발생 조건 |
 |---|---|---|
-| 400 | `400` | `catId` 누락·형식 오류 |
-| 404 | `404` | 고양이가 없거나 현재 사용자 소유가 아니거나 MinIO 객체가 없음 |
+| 400 | `400` | 두 ID가 모두 없거나 모두 전달됨·형식 오류 |
+| 404 | `404` | 고양이·목격·사진이 없거나 현재 사용자 소유가 아니거나 MinIO 객체가 없음 |
 | 503 | `503` | MinIO 사진 저장소를 사용할 수 없음 |
 
 ---
@@ -707,7 +712,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `catId` | Long | N | 선택한 고양이 ID |
 | `sightingId` | Long | N | 새로 만들어진 목격 ID |
 | `name` | String | N | 고양이 이름 |
-| `photoUrl` | String | N | MinIO 객체 키 |
+| `photoUrl` | String | N | 앱에서 바로 표시할 수 있는 목격 사진 URL |
 | `sightingCount` | Integer | N | 추가 후 누적 목격 횟수 |
 
 **에러**
@@ -729,7 +734,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
     "catId": 12,
     "sightingId": 302,
     "name": "양말이",
-    "photoUrl": "cats/1/12/sightings/7a41....jpg",
+    "photoUrl": "http://192.168.0.4:8080/app/photo?sightingId=302",
     "sightingCount": 7
   }
 }
@@ -768,7 +773,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `catId` | Long | N | 새 고양이 ID |
 | `sightingId` | Long | N | 첫 목격 ID |
 | `name` | String | N | 등록된 이름 |
-| `photoUrl` | String | N | 현재는 MinIO 객체 경로. 사진 조회 URL 처리는 후속 구현 |
+| `photoUrl` | String | N | 앱에서 바로 표시할 수 있는 대표 사진 URL |
 | `tags` | Array<String> | N | 중복 제거된 태그 |
 | `catCount` | Integer | N | 등록 후 사용자의 고양이 수 |
 | `level` | Integer | N | 등록 후 레벨(0~5) |
@@ -785,7 +790,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
     "catId": 21,
     "sightingId": 303,
     "name": "양말이",
-    "photoUrl": "cats/1/550e8400-e29b-41d4-a716-446655440000.jpg",
+    "photoUrl": "http://192.168.0.4:8080/app/photo?catId=21",
     "tags": ["턱시도", "한쪽 귀 끝이 잘림"],
     "catCount": 5,
     "level": 2,
@@ -864,7 +869,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 |---|---|---|
 | 1 | 대표 사진 | `cats`에는 사진 컬럼이 없고 **첫 목격 사진 = 대표 사진**으로 사용한다. "대표 사진 바꾸기"를 넣으면 URL을 중복 저장하지 말고 `cats.representative_sighting_id`로 목격 기록을 참조한다 |
 | 2 | `analysisId` 임시 보관 | 임베딩을 단일 서버 메모리에 30분간 보관한다. 서버 다중화 시 Redis 등 공유 저장소로 옮겨야 하며, 후보 목록까지 저장해 확정 대상을 재검증할지는 추가 검토한다 |
-| 3 | 사진 접근 방식 | presigned URL(이 문서 기준) vs 서버가 대신 내려주는 `GET /photos/{id}`(매번 인증). 로컬 개발에서는 폰이 MinIO(`9000`)에 직접 접근할 수 있어야 presigned URL이 동작한다(같은 Wi-Fi + 호스트 IP 필요) |
+| 3 | 사진 접근 방식 | 비공개 MinIO 객체를 `/app/photo?catId=` 또는 `/app/photo?sightingId=`가 `inline` 리소스로 대신 내려주며, 다른 API는 이 완전한 URL을 `photoUrl`로 반환한다 |
 | 4 | "이번 주 N마리" | 목격 횟수와 서로 다른 고양이 수 중 무엇을 보여줄지. 문구는 "마리"라 `catCount`가 맞다(현재 앱은 횟수를 셈) |
 | 5 | Claude 매칭 설명 | README의 Claude "매칭 설명" 자연어 문장은 새 목업에 표시할 자리가 없어 응답에서 뺐다. 필요하면 `candidates[].explanation` 필드를 추가한다 |
 | 6 | 일치율 보정 | README의 min-max 보정 `LOWER_BOUND`/`UPPER_BOUND`는 실제 테스트로 정해야 한다. 기준값(40/70)은 IF-CFG-002만 고치면 앱 수정 없이 바뀐다 |

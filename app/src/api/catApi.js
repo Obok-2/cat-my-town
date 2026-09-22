@@ -3,6 +3,39 @@ import { Platform } from 'react-native';
 
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
 
+export const getCatDetail = async (catId) => {
+  const data = await axios.get(`${API_URL}/app/cat/detail`, {
+    params: { catId },
+    headers: {
+      'X-User-Id': '1',
+    },
+  });
+
+  return data;
+};
+
+export const getCatMarkers = async (catId) => {
+  const data = await axios.get(`${API_URL}/app/cat/markers`, {
+    params: { catId },
+    headers: {
+      'X-User-Id': '1',
+    },
+  });
+
+  return data;
+};
+
+export const getCatSightings = async (catId, page) => {
+  const data = await axios.get(`${API_URL}/app/cat/sightings`, {
+    params: { catId, page },
+    headers: {
+      'X-User-Id': '1',
+    },
+  });
+
+  return data;
+};
+
 export const registerNewCat = async (photoUri, contents) => {
   const body = new FormData();
 

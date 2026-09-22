@@ -15,8 +15,20 @@ public class PhotoService {
     @Autowired
     private PhotoStorageService photoStorageService;
 
-    public PhotoData getCatPhoto(Long catId, Long userId) {
-        String objectName = photoDao.selectCatPhotoObjectName(catId, userId);
+    public PhotoData getPhoto(Long catId, Long sightingId, Long userId) {
+        if ((catId == null && sightingId == null) || (catId != null && sightingId != null)) {
+            throw new BusinessException(400, "catId 또는 sightingId 중 하나만 보내주세요.");
+        }
+        String objectName;
+        if (catId != null) {
+            objectName = photoDao.selectCatPhotoObjectName(catId, userId);
+        } else {
+            objectName = photoDao.selectSightingPhotoObjectName(sightingId, userId);
+        }
+        return readPhoto(objectName);
+    }
+
+    private PhotoData readPhoto(String objectName) {
         if (objectName == null || objectName.isBlank()) {
             throw new BusinessException(404, "사진을 찾을 수 없습니다.");
         }

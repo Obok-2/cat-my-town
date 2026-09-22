@@ -1,5 +1,6 @@
 package com.catmytown.server.app.collection;
 
+import com.catmytown.server.app.photo.PhotoUrlService;
 import com.catmytown.server.common.ResponseApi;
 import com.catmytown.server.common.TagParser;
 import com.catmytown.server.model.CollectionCatListRes;
@@ -18,6 +19,9 @@ public class CollectionService {
 
     @Autowired
     private CollectionDao collectionDao;
+
+    @Autowired
+    private PhotoUrlService photoUrlService;
 
     public ResponseApi getCatCount(Long userId) {
         return ResponseApi.success(new CollectionCountRes(collectionDao.selectCatCount(userId)));
@@ -38,6 +42,7 @@ public class CollectionService {
                 tags = new ArrayList<>();
             }
             cat.setTags(tags);
+            cat.setPhotoUrl(photoUrlService.createCatPhotoUrl(cat.getId()));
         }
         return ResponseApi.success(new CollectionCatListRes(cats));
     }

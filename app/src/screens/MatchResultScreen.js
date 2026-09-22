@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { analyzeCameraPhoto } from '../api/cameraApi';
-import { getCatPhotoSource } from '../api/photoApi';
 import MatchCandidateCard from '../components/MatchCandidateCard';
 import TraitTagList from '../components/TraitTagList';
 import PrimaryButton from '../components/PrimaryButton';
@@ -38,7 +37,7 @@ export default function MatchResultScreen({ route, navigation }) {
           cat: {
             id: candidate.catId,
             name: candidate.name,
-            photoSource: getCatPhotoSource(candidate.catId),
+            photoSource: candidate.photoUrl ? { uri: candidate.photoUrl } : null,
             sightingCount: candidate.sightingCount,
             tags: candidate.tags ?? [],
           },

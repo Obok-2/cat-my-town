@@ -89,14 +89,16 @@
                latitude,
                longitude,
                taken_at,
-               memo
+               memo,
+               photo_url
           FROM (
                    SELECT id,
                           ROW_NUMBER() OVER (ORDER BY taken_at ASC) AS seq,
                           latitude,
                           longitude,
                           taken_at,
-                          memo
+                          memo,
+                          photo_url
                      FROM sightings
                     WHERE cat_id = #{catId}
                ) t
