@@ -13,7 +13,7 @@ public class BusinessException extends RuntimeException {
     }
 
     public int getHttpStatus() {
-        return code >= 400 && code < 500 ? code : 400;
+        return code >= 400 && code < 600 ? code : 400;
     }
 
 }

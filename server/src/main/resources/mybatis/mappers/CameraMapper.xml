@@ -2,4 +2,40 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.catmytown.server.app.camera.CameraDao">
 
+    <select id="selectCatCount" resultType="int">
+        SELECT COUNT(*)
+          FROM cats
+         WHERE user_id = #{userId}
+    </select>
+
+    <select id="selectEmbeddedCatCount" resultType="int">
+        SELECT COUNT(*)
+          FROM cats
+         WHERE user_id = #{userId}
+           AND representative_embedding IS NOT NULL
+    </select>
+
+    <select id="selectMatchingCandidates" resultType="CameraCandidateVo">
+        SELECT c.id AS cat_id,
+               c.name,
+               c.photo_url,
+               COUNT(s.id) AS sighting_count,
+               1 - (c.representative_embedding &lt;=&gt; CAST(#{embedding} AS vector)) AS raw_similarity
+          FROM cats c
+          LEFT JOIN sightings s ON s.cat_id = c.id
+         WHERE c.user_id = #{userId}
+           AND c.representative_embedding IS NOT NULL
+           AND 1 - (c.representative_embedding &lt;=&gt; CAST(#{embedding} AS vector)) &gt;= #{minimumSimilarity}
+         GROUP BY c.id, c.name, c.photo_url, c.representative_embedding
+         ORDER BY c.representative_embedding &lt;=&gt; CAST(#{embedding} AS vector), c.id
+         LIMIT #{limit}
+    </select>
+
+    <select id="selectCatTags" resultType="string">
+        SELECT tag
+          FROM cat_tags
+         WHERE cat_id = #{catId}
+         ORDER BY id
+    </select>
+
 </mapper>

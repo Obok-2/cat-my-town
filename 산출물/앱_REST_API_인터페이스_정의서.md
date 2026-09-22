@@ -197,7 +197,7 @@
 | IF-CAT-006 | 지도 마커 조회 | GET | `/app/cat/markers?catId=` | 고양이 상세(a7) | 필수 | **구현** |
 | IF-CAT-004 | 고양이 정보 수정 | PATCH | `/cats/{catId}` | 고양이 상세 ⋯ 메뉴 | 선택(앱 미구현) | 미구현 |
 | IF-CAT-005 | 고양이 삭제 | DELETE | `/cats/{catId}` | 고양이 상세 ⋯ 메뉴 | 선택(앱 미구현) | 미구현 |
-| IF-MATCH-001 | AI 매칭 요청 | POST | `/matches` | 홈 카메라(a2) → 매칭 결과(a3·a4) | 필수 | 미구현 |
+| IF-MATCH-001 | 촬영 이미지 분석 | POST | `/app/camera/analyze` | 홈 카메라(a2) → 매칭 결과(a3·a4) | 필수 | **구현** |
 | IF-MATCH-002 | 기존 고양이로 확정 | POST | `/matches/{matchId}/confirm` | 매칭 결과(a3) | 필수 | 미구현 |
 | IF-MATCH-003 | 새 고양이 등록 | POST | `/matches/{matchId}/register` | 이름 짓기(a5), 레벨업(a8) | 필수 | 미구현 |
 | IF-DEV-001 | 데모 데이터 채우기 | POST | `/dev/seed` | 내 정보(개발용) | 개발 전용 | 미구현 |
@@ -205,12 +205,16 @@
 
 ### 촬영 흐름 (IF-MATCH-001~003)
 
-사진은 IF-MATCH-001에서 **한 번만** 올린다. 서버가 `matchId`로 사진·임베딩·후보·AI 태그를 임시 보관(30분)하고, 이후 단계는 `matchId`만 보낸다.
+현재 IF-MATCH-001은 사진을 받아 판별·후보 조회 결과만 돌려주며 사진이나 매칭 세션을 저장하지 않는다.
+IF-MATCH-002·003을 구현할 때 사진을 한 번만 올리고 `matchId`로 확정 단계를 잇는 구조를 추가한다.
 
 ```
-POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confirm   (이 고양이예요)
-               │                     └─ POST /matches/{id}/register  (새로운 고양이예요 → 이름 짓기)
-               └─► candidates 비어 있음 ── POST /matches/{id}/register (새로운 친구를 발견했어요!)
+POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
+                         ├─► NEW_CAT       (신규 고양이)
+                         └─► EXISTING_CAT  (기존 후보 최대 3마리)
+
+향후 저장형 매칭 세션 ────┬─► POST /matches/{id}/confirm   (이 고양이예요)
+                         └─► POST /matches/{id}/register  (새로운 고양이예요)
 ```
 
 ---
@@ -590,12 +594,12 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 
 ---
 
-### IF-MATCH-001 AI 매칭 요청
+### IF-MATCH-001 촬영 이미지 분석
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | 사진을 올려 AI 매칭을 시작한다. 서버는 ① 고양이 여부 판별(MobileNet — 고양이가 아니면 여기서 중단하고 `422 NO_CAT_DETECTED`) → ② 이미지 임베딩 생성(Voyage AI) → ③ 내 고양이들과 유사도 검색(pgvector, **내 것만**) → ④ 일치율 보정 → ⑤ 기준(`matchThreshold`) 이상만 높은 순으로 최대 `maxCandidates`명 선택 → ⑥ 특징 태그 판별(Claude)을 수행한다. **AI 호출이 있어 수 초 걸릴 수 있다**(앱은 로딩 표시) |
-| Method / URL | `POST /api/v1/matches` |
+| 설명 | 사진을 올려 고양이 여부와 기존 개체 후보를 분석한다. 서버는 ① DJL ImageNet 분류로 고양이 여부 판별 → ② 등록 고양이가 있으면 Voyage AI 이미지 임베딩 생성 → ③ 내 고양이들과 유사도 검색(pgvector, **내 것만**) → ④ 일치율 보정 → ⑤ 기준 이상만 높은 순으로 최대 3마리를 반환한다. **AI 호출이 있어 수 초 걸릴 수 있다** |
+| Method / URL | `POST /app/camera/analyze` |
 | 호출 화면 | 홈 카메라(a2) 셔터 → 매칭 결과(a3·a4) |
 | Content-Type | `multipart/form-data` |
 
@@ -603,43 +607,44 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 
 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|
-| `photo` | File(JPEG, 최대 10MB) | Y | 촬영 사진(앱은 `expo-camera` quality 0.7) |
-| `takenAt` | DateTime | N | 촬영 시각. 없으면 서버 시각 |
-| `latitude` | Decimal | N | 촬영 위도. 서버가 뭉개서 저장 |
-| `longitude` | Decimal | N | 촬영 경도. 서버가 뭉개서 저장 |
+| `photo` | File(JPEG/PNG, 최대 10MB) | Y | 판별할 촬영 사진 |
 
-**Response `201`**
+**Response `200`** (`ResponseApi.data`)
 
 | 항목 | 타입 | Null | 설명 |
 |---|---|---|---|
-| `matchId` | String(UUID) | N | 매칭 ID. 이후 단계에서 사용, **한 번만 확정 가능** |
-| `expiresAt` | DateTime | N | 만료 시각(생성 후 30분) |
-| `photoUrl` | String | N | 올린 사진 |
-| `tags` | Array<String> | N | AI가 찾은 특징 태그(없으면 빈 배열) |
-| `candidates` | Array<Candidate> | N | 후보(일치율 높은 순). **빈 배열이면 "새로운 친구를 발견했어요!"(a4)** |
+| `status` | String | N | `NOT_CAT` / `NEW_CAT` / `EXISTING_CAT` |
+| `cat` | Boolean | N | 고양이 판별 여부 |
+| `detectedLabel` | String | N | ImageNet 최상위 판별 라벨 |
+| `catProbability` | Decimal | N | 고양이 클래스 확률(0~100) |
+| `candidates` | Array<Candidate> | N | `EXISTING_CAT`일 때만 최대 3마리, 나머지는 빈 배열 |
 
 **에러**
 
 | HTTP | code | 발생 조건 |
 |---|---|---|
-| 400 | `INVALID_REQUEST` | `photo` 누락·형식 오류 |
-| 401 | `UNAUTHORIZED` | 토큰 오류 |
-| 413 | `PAYLOAD_TOO_LARGE` | 사진이 10MB 초과 |
-| 422 | `NO_CAT_DETECTED` | MobileNet 판별 결과 사진에 고양이가 없음(AI 매칭·임베딩 호출 전에 중단) |
-| 503 | `MATCH_UNAVAILABLE` | AI 서버(Voyage/Claude) 장애 |
+| 400 | `400` | `photo` 누락·형식 오류 |
+| 413 | `413` | 사진이 10MB 초과 |
+| 503 | `503` | DJL 모델·Voyage AI를 사용할 수 없거나 기존 고양이의 대표 임베딩이 준비되지 않음 |
 
 ```json
 {
-  "matchId": "b1f0c6a2-7d3e-4c1a-9a55-0d6f2f4c9e11",
-  "expiresAt": "2026-09-21T18:54:00+09:00",
-  "photoUrl": "https://…",
-  "tags": ["턱시도 무늬", "코 옆 흰 점", "스코티시폴드로 추정"],
-  "candidates": [
-    { "catId": 12, "name": "양말이", "photoUrl": "https://…", "tags": ["턱시도"], "sightingCount": 6, "score": 84.0 },
-    { "catId": 15, "name": "구름",   "photoUrl": "https://…", "tags": ["장모 흰냥"], "sightingCount": 3, "score": 61.0 }
-  ]
+  "result": "SUCCESS",
+  "message": "SUCCESS",
+  "code": 200,
+  "data": {
+    "status": "EXISTING_CAT",
+    "cat": true,
+    "detectedLabel": "n02123045 tabby, tabby cat",
+    "catProbability": 78.4,
+    "candidates": [
+      { "catId": 12, "name": "양말이", "photoUrl": "https://…", "tags": ["턱시도"], "sightingCount": 6, "score": 84.0 }
+    ]
+  }
 }
 ```
+
+> 현재 구현 범위는 위 분석 API까지다. 아래 매칭 확정·신규 등록 API는 사진 저장과 만료되는 매칭 세션을 추가한 뒤 구현한다.
 
 ---
 
@@ -767,13 +772,14 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 | `getUserLevelInfo`(개수만 서버에서 받아 앱이 `computeLevel`로 계산) | IF-LVL-001 (`catCount`) |
 | `levels.js`의 `LEVELS` 상수 | 앱에 그대로 유지(IF-CFG-001 불필요) |
 | `matchConfig.js`의 상수 | IF-CFG-002 |
-| `mockMatchAgainstExisting` | IF-MATCH-001 |
+| `mockMatchAgainstExisting` | IF-MATCH-001의 `status`·`candidates` 응답으로 교체 |
 | `addSightingToCat` | IF-MATCH-002 |
 | `registerNewCat` | IF-MATCH-003 |
 | `seedDemoData` / `clearAllCats` | IF-DEV-001 / IF-DEV-002 |
 
 앱이 바뀌는 부분(현재 코드 대비):
-- **사진 값**: 지금은 기기 파일 경로(`photoUri`)를 화면들이 넘기지만, 서버 연동 후에는 촬영 직후 IF-MATCH-001로 올리고 이후 화면은 **`matchId`만** 넘긴다(사진 재업로드 없음). 결과 화면은 응답의 `photoUrl`로 사진을 표시한다.
+- **사진 값**: 지금은 기기 파일 경로(`photoUri`)를 화면들이 넘긴다. 분석 API 연결 시 촬영 직후 IF-MATCH-001로 올리되,
+  현재 API는 사진을 저장하지 않으므로 화면 간에는 기존 `photoUri`를 유지한다. 확정·등록 API를 구현할 때 `matchId` 방식으로 바꾼다.
 - **일치율 단위**: 앱 `score`(0~1) → API `score`(0~100). `MatchCandidateCard`의 `score >= MATCH_HIGH` 비교를 `matchHigh`(70) 기준으로 맞춘다.
 - **`selectCandidates`**: 후보 걸러내기·정렬·최대 3명은 서버가 하므로 앱의 `selectCandidates`는 필요 없어진다.
 
