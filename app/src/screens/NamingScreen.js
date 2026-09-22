@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Image, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { Alert, View, Text, TextInput, Image, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { StackActions } from '@react-navigation/native';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
-import { registerNewCat } from '../data/store';
+import { registerNewCat } from '../api/catApi';
+import { computeLevel } from '../data/levels';
 import TraitTagList from '../components/TraitTagList';
 import PrimaryButton from '../components/PrimaryButton';
-import LevelUpModal from '../components/LevelUpModal';
 import PlaceholderArt from '../components/PlaceholderArt';
 
 const NAME_MAX = 12;
@@ -20,7 +21,6 @@ export default function NamingScreen({ route, navigation }) {
   const [tags, setTags] = useState(suggestedTags);
   const [memo, setMemo] = useState('');
   const [saving, setSaving] = useState(false);
-  const [levelUpInfo, setLevelUpInfo] = useState(null);
 
   function addTag(tag) {
     if (!tags.includes(tag)) setTags((prev) => [...prev, tag]);
@@ -34,20 +34,29 @@ export default function NamingScreen({ route, navigation }) {
     if (!trimmed || saving) return;
     setSaving(true);
     try {
-      const { leveledUp, levelInfo } = await registerNewCat({ name: trimmed, tags, photoUri, memo });
-      if (leveledUp) {
-        setLevelUpInfo(levelInfo);
+      const contents = {
+        name: trimmed,
+        tags,
+        memo: memo.trim(),
+      };
+      const response = await registerNewCat(photoUri, contents);
+      const registration = response.data.data;
+      const rootNavigation = navigation.getParent();
+
+      if (registration.leveledUp) {
+        rootNavigation?.dispatch(
+          StackActions.replace('LevelUp', {
+            levelInfo: computeLevel(registration.catCount),
+          })
+        );
       } else {
-        navigation.navigate('Tabs', { screen: 'Collection' });
+        rootNavigation?.dispatch(StackActions.popTo('Tabs', { screen: 'Collection' }));
       }
+    } catch (error) {
+      Alert.alert('등록하지 못했어요', error.response?.data?.message || error.message || '잠시 후 다시 시도해주세요.');
     } finally {
       setSaving(false);
     }
-  }
-
-  function handleLevelUpContinue() {
-    setLevelUpInfo(null);
-    navigation.navigate('Tabs', { screen: 'Collection' });
   }
 
   return (
@@ -107,8 +116,6 @@ export default function NamingScreen({ route, navigation }) {
         <View style={{ height: 24 }} />
         <PrimaryButton label="도감에 등록하기" onPress={handleRegister} disabled={!name.trim()} loading={saving} />
       </ScrollView>
-
-      <LevelUpModal visible={!!levelUpInfo} levelInfo={levelUpInfo} onContinue={handleLevelUpContinue} />
     </SafeAreaView>
   );
 }

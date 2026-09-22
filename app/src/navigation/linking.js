@@ -42,6 +42,7 @@ const TITLES = {
   Profile: '내 정보',
   MatchResult: '매칭 결과',
   Naming: '이름 짓기',
+  LevelUp: '레벨업',
 };
 
 // 웹 탭 제목: "도감 · 우리동네고양이". 뒤로 가기·팝업 닫기 뒤에도 갱신되도록 App.js가 내비게이션 상태가 바뀔 때마다 호출한다.

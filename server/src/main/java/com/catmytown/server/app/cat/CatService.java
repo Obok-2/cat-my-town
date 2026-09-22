@@ -13,6 +13,8 @@ import com.catmytown.server.model.CatRegisterReq;
 import com.catmytown.server.model.CatSightingPageRes;
 import com.catmytown.server.model.CatSightingRes;
 import com.catmytown.server.model.SightingCreateVo;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -38,16 +40,17 @@ public class CatService {
     @Autowired
     private PhotoStorageService photoStorageService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Transactional
-    public ResponseApi register(MultipartFile[] file, CatRegisterReq contents, Long userId) {
+    public ResponseApi register(MultipartFile[] file, String contentsJson, Long userId) {
         if (file == null || file.length != 1) {
             throw new BusinessException(400, "사진 파일을 1장만 보내주세요.");
         }
-        if (contents == null) {
-            throw new BusinessException(400, "등록 내용이 필요합니다.");
-        }
 
         MultipartFile photo = file[0];
+        CatRegisterReq contents = readContents(contentsJson);
         validatePhoto(photo);
         String normalizedName = normalizeRequired(contents.getName(), 12, "고양이 이름은 1~12자로 입력해주세요.");
         String normalizedMemo = normalizeOptional(
@@ -153,6 +156,17 @@ public class CatService {
             return photo.getBytes();
         } catch (IOException e) {
             throw new BusinessException(400, "사진을 읽을 수 없습니다.");
+        }
+    }
+
+    private CatRegisterReq readContents(String contentsJson) {
+        if (contentsJson == null || contentsJson.isBlank()) {
+            throw new BusinessException(400, "등록 내용이 필요합니다.");
+        }
+        try {
+            return objectMapper.readValue(contentsJson, CatRegisterReq.class);
+        } catch (JsonProcessingException e) {
+            throw new BusinessException(400, "등록 내용 형식이 올바르지 않습니다.");
         }
     }
 

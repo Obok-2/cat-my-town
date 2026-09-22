@@ -2,7 +2,6 @@ package com.catmytown.server.app.cat;
 
 import com.catmytown.server.common.ApiUrl;
 import com.catmytown.server.common.ResponseApi;
-import com.catmytown.server.model.CatRegisterReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +45,7 @@ public class CatController {
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseApi register(
             @RequestPart("file") MultipartFile[] file,
-            @RequestPart("contents") CatRegisterReq contents,
+            @RequestPart("contents") String contents,
             @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
         return catService.register(file, contents, userId);
     }

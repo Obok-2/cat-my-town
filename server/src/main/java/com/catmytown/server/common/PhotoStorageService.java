@@ -33,7 +33,7 @@ public class PhotoStorageService {
                     .bucket(bucket)
                     .object(objectName)
                     .contentType(contentType)
-                    .stream(new ByteArrayInputStream(photoBytes), photoBytes.length, -1)
+                    .stream(new ByteArrayInputStream(photoBytes), (long) photoBytes.length, -1L)
                     .build());
             return objectName;
         } catch (Exception e) {

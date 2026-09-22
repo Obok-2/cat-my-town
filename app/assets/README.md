@@ -4,3 +4,6 @@
 It does not use a third-party logo, character, stock image, or trademark.
 
 The launcher icon, Android adaptive icon layers, monochrome icon, splash icon, and favicon are mechanically derived from that master mark.
+
+`level-up-cat.png` is an original flag-holding cat illustration generated specifically for the app's level-up modal.
+It does not use a third-party character or stock image.

@@ -701,7 +701,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
 | Part | `file` | File[](JPEG/PNG, 최대 10MB) | Y | 분석에 사용한 촬영 사진. 현재는 정확히 1장만 허용 |
-| Part | `contents` | JSON | Y | `application/json` 형식의 등록 내용 |
+| Part | `contents` | String(JSON) | Y | 모바일 multipart 호환을 위해 JSON 객체를 문자열로 직렬화한 등록 내용 |
 | `contents.name` | String(1~12) | Y | 고양이 이름. 공백만은 불가 |
 | `contents.tags` | Array<String(1~30)> | N | 최종 특징 태그. 중복은 서버에서 제거 |
 | `contents.memo` | String(0~200) | N | 첫 만남 메모 |
