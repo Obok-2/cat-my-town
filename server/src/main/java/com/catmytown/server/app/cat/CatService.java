@@ -5,6 +5,7 @@ import com.catmytown.server.app.camera.AnalysisEmbeddingStore;
 import com.catmytown.server.common.BusinessException;
 import com.catmytown.server.common.PhotoStorageService;
 import com.catmytown.server.common.ResponseApi;
+import com.catmytown.server.common.TagParser;
 import com.catmytown.server.model.CatCreateVo;
 import com.catmytown.server.model.CatDetailRes;
 import com.catmytown.server.model.CatMarkerListRes;
@@ -19,6 +20,8 @@ import com.catmytown.server.model.SightingCreateVo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -62,6 +65,7 @@ public class CatService {
         String normalizedMemo = normalizeOptional(
                 contents.getMemo(), 200, "첫 만남 메모는 200자 이하로 입력해주세요.");
         List<String> normalizedTags = normalizeTags(contents.getTags());
+        BigDecimal[] coordinates = normalizeCoordinates(contents.getLatitude(), contents.getLongitude());
         if ((contents.getAnalysisId() == null || contents.getAnalysisId().isBlank())
                 && catDao.selectCatCountByUser(userId) > 0) {
             throw new BusinessException(400, "사진 분석 결과가 필요합니다. 다시 촬영해주세요.");
@@ -83,12 +87,11 @@ public class CatService {
             sighting.setPhotoUrl(objectName);
             sighting.setEmbedding(toVectorLiteral(embedding));
             sighting.setMemo(normalizedMemo);
+            sighting.setTags(toTagValue(normalizedTags));
+            sighting.setLatitude(coordinates[0]);
+            sighting.setLongitude(coordinates[1]);
             sighting.setTakenAt(OffsetDateTime.now());
             catDao.insertSighting(sighting);
-
-            for (String tag : normalizedTags) {
-                catDao.insertCatTag(cat.getId(), tag);
-            }
 
             int catCount = catDao.selectCatCountByUser(userId);
             int level = calculateLevel(catCount);
@@ -135,6 +138,8 @@ public class CatService {
         }
         String normalizedMemo = normalizeOptional(
                 contents.getMemo(), 200, "목격 메모는 200자 이하로 입력해주세요.");
+        List<String> normalizedTags = normalizeTags(contents.getTags());
+        BigDecimal[] coordinates = normalizeCoordinates(contents.getLatitude(), contents.getLongitude());
 
         byte[] photoBytes = readPhoto(photo);
         List<Double> embedding = resolveEmbedding(
@@ -148,6 +153,9 @@ public class CatService {
             sighting.setPhotoUrl(objectName);
             sighting.setEmbedding(toVectorLiteral(embedding));
             sighting.setMemo(normalizedMemo);
+            sighting.setTags(toTagValue(normalizedTags));
+            sighting.setLatitude(coordinates[0]);
+            sighting.setLongitude(coordinates[1]);
             sighting.setTakenAt(OffsetDateTime.now());
             catDao.insertSighting(sighting);
 
@@ -173,7 +181,7 @@ public class CatService {
             throw new BusinessException(404, "고양이를 찾을 수 없습니다.");
         }
         detail.setSightingCount(catDao.selectSightingCountByCat(catId));
-        detail.setTags(catDao.selectCatTagsByCat(catId));
+        detail.setTags(TagParser.parse(catDao.selectCatTagsByCat(catId)));
         return ResponseApi.success(detail);
     }
 
@@ -191,6 +199,9 @@ public class CatService {
         int offset = safePage * SIGHTING_PAGE_SIZE;
 
         List<CatSightingRes> sightings = catDao.selectSightingsPage(catId, offset, SIGHTING_PAGE_SIZE + 1);
+        for (CatSightingRes sighting : sightings) {
+            sighting.setTags(TagParser.parse(sighting.getTagValue()));
+        }
         boolean hasMore = sightings.size() > SIGHTING_PAGE_SIZE;
         if (hasMore) {
             sightings.remove(sightings.size() - 1);
@@ -278,9 +289,38 @@ public class CatService {
         }
         for (String tag : tags) {
             String normalized = normalizeRequired(tag, 30, "특징 태그는 각각 1~30자로 입력해주세요.");
+            if (normalized.contains(",")) {
+                throw new BusinessException(400, "특징 태그에는 쉼표를 사용할 수 없습니다.");
+            }
             uniqueTags.add(normalized);
         }
+        if (uniqueTags.size() > 5) {
+            throw new BusinessException(400, "특징 태그는 최대 5개까지 입력할 수 있습니다.");
+        }
         return new ArrayList<>(uniqueTags);
+    }
+
+    private BigDecimal[] normalizeCoordinates(BigDecimal latitude, BigDecimal longitude) {
+        if (latitude == null && longitude == null) {
+            return new BigDecimal[] {null, null};
+        }
+        if (latitude == null || longitude == null) {
+            throw new BusinessException(400, "위도와 경도를 함께 보내주세요.");
+        }
+        if (latitude.compareTo(BigDecimal.valueOf(-90)) < 0
+                || latitude.compareTo(BigDecimal.valueOf(90)) > 0
+                || longitude.compareTo(BigDecimal.valueOf(-180)) < 0
+                || longitude.compareTo(BigDecimal.valueOf(180)) > 0) {
+            throw new BusinessException(400, "위치 좌표가 올바르지 않습니다.");
+        }
+        return new BigDecimal[] {
+            latitude.setScale(5, RoundingMode.HALF_UP),
+            longitude.setScale(5, RoundingMode.HALF_UP)
+        };
+    }
+
+    private String toTagValue(List<String> tags) {
+        return String.join(",", tags);
     }
 
     private int calculateLevel(int catCount) {

@@ -507,6 +507,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `sightings[].photoUrl` | String | N | 사진 경로 |
 | `sightings[].takenAt` | DateTime | N | 촬영일시 |
 | `sightings[].memo` | String | Y | 메모 |
+| `sightings[].tags` | Array<String> | N | 해당 목격에서 기록한 특징 태그(최대 5개) |
 | `hasMore` | Boolean | N | `true`면 다음 페이지(`page+1`)를 더 불러올 수 있음 |
 
 **에러**: `400 FAIL`(`catId` 누락), `404 FAIL`(없거나 내 고양이가 아님)
@@ -514,7 +515,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 ```json
 { "result": "SUCCESS", "message": "SUCCESS", "code": 200,
   "data": { "sightings": [
-    { "id": 301, "seq": 7, "photoUrl": "https://…", "takenAt": "2026-09-14T18:24:00+09:00", "memo": "놀이터 미끄럼틀 밑" }
+    { "id": 301, "seq": 7, "photoUrl": "https://…", "takenAt": "2026-09-14T18:24:00+09:00", "memo": "놀이터 미끄럼틀 밑", "tags": ["졸고 있음", "빨간 목줄"] }
   ], "hasMore": true } }
 ```
 
@@ -683,9 +684,9 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | 후보 카드의 **[이 고양이예요]**. 선택한 고양이에 사진·Voyage AI 임베딩·목격 기록을 추가한다. 기존 고양이의 목격만 늘어나므로 **레벨은 바뀌지 않는다** |
+| 설명 | 후보 카드의 **[이 고양이예요]**를 누른 뒤 목격 기록 작성 화면에서 메모·특징·위치를 확인하고 저장한다. 선택한 고양이에 사진·Voyage AI 임베딩·목격 기록을 추가하며 **레벨은 바뀌지 않는다** |
 | Method / URL | `POST /app/cat/sighting` (`multipart/form-data`) |
-| 호출 화면 | 매칭 결과(a3) |
+| 호출 화면 | 목격 기록 작성 |
 
 **Request**
 
@@ -693,7 +694,11 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 |---|---|---|---|---|
 | Header | `X-User-Id` | Long | N | 임시 사용자 ID. 생략 시 `1` |
 | Part | `file` | File[] | Y | 분석에 사용한 JPEG/PNG 사진 정확히 1장 |
-| Part | `contents` | JSON String | Y | `{"analysisId":"UUID","catId":12,"memo":""}`. `catId`는 현재 사용자 소유여야 함 |
+| Part | `contents` | JSON String | Y | `{"analysisId":"UUID","catId":12,"tags":["턱시도"],"memo":"","latitude":37.12345,"longitude":127.12345}`. `catId`는 현재 사용자 소유여야 함 |
+| `contents.tags` | Array<String(1~30)> | N | 해당 목격에서 관찰한 특징. 중복 제거, 최대 5개, 쉼표 사용 불가 |
+| `contents.memo` | String(0~200) | N | 목격 당시 메모 |
+| `contents.latitude` | Decimal(-90~90) | N | 촬영 위치 위도. 경도와 함께 보내며 소수점 5자리로 저장 |
+| `contents.longitude` | Decimal(-180~180) | N | 촬영 위치 경도. 위도와 함께 보내며 소수점 5자리로 저장 |
 
 **Response `200`** (`ResponseApi.data`)
 
@@ -739,7 +744,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | **[새로운 고양이예요]**(또는 후보 없음) → 이름 짓기 화면의 **[도감에 등록하기]**. 사진을 MinIO에 저장하고 새 고양이(`cats`)와 첫 목격(`sightings`), 태그(`cat_tags`)를 만들며 `analysisId`의 Voyage 임베딩을 첫 목격의 `sightings.embedding`으로 저장한다. 등록 후 고양이 수로 레벨을 계산하지만 `users.level` 캐시는 갱신하지 않는다 |
+| 설명 | **[새로운 고양이예요]**(또는 후보 없음) → 이름 짓기 화면의 **[도감에 등록하기]**. 사진을 MinIO에 저장하고 새 고양이(`cats`)와 첫 목격(`sightings`)을 만들며, 태그·메모·촬영 위치와 `analysisId`의 Voyage 임베딩을 첫 목격에 함께 저장한다. 등록 후 고양이 수로 레벨을 계산하지만 `users.level` 캐시는 갱신하지 않는다 |
 | Method / URL | `POST /app/cat/register` (`multipart/form-data`) |
 | 호출 화면 | 이름 짓기(a5), 레벨업 팝업(a8) |
 
@@ -751,8 +756,10 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | Part | `contents` | String(JSON) | Y | 모바일 multipart 호환을 위해 JSON 객체를 문자열로 직렬화한 등록 내용 |
 | `contents.analysisId` | String(UUID) | N | IF-MATCH-001이 반환한 ID. 이미 등록된 고양이가 있으면 필수이며, 첫 고양이 등록은 생략 가능 |
 | `contents.name` | String(1~12) | Y | 고양이 이름. 공백만은 불가 |
-| `contents.tags` | Array<String(1~30)> | N | 최종 특징 태그. 중복은 서버에서 제거 |
+| `contents.tags` | Array<String(1~30)> | N | 첫 목격 특징 태그. 중복 제거, 최대 5개, 쉼표 사용 불가 |
 | `contents.memo` | String(0~200) | N | 첫 만남 메모 |
+| `contents.latitude` | Decimal(-90~90) | N | 촬영 위치 위도. 경도와 함께 보내며 소수점 5자리로 저장 |
+| `contents.longitude` | Decimal(-180~180) | N | 촬영 위치 경도. 위도와 함께 보내며 소수점 5자리로 저장 |
 
 **Response `200` (`ResponseApi.data`)**
 
@@ -810,7 +817,8 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 스플래시(a0) | — | (Firebase 로그인 상태만 확인) |
 | 로그인(a1) | — | Firebase 구글 로그인 → IF-AUTH-001 |
 | 홈 카메라(a2) | IF-ME-003 | 셔터 → IF-MATCH-001 |
-| 매칭 결과(a3·a4) | (IF-CFG-002는 앱 시작 시 1회 캐시) | [이 고양이예요] → IF-MATCH-002 / [새로운 고양이예요]·[이름 짓기] → 이름 짓기 화면 이동 |
+| 매칭 결과(a3·a4) | (IF-CFG-002는 앱 시작 시 1회 캐시) | [이 고양이예요] → 목격 기록 작성 / [새로운 고양이예요]·[이름 짓기] → 이름 짓기 화면 이동 |
+| 목격 기록 작성 | — | [목격 기록 저장하기] → IF-MATCH-002 |
 | 이름 짓기(a5) | — | [도감에 등록하기] → IF-MATCH-003 |
 | 레벨업 팝업(a8) | — | IF-MATCH-003 응답의 `leveledUp`으로 표시 |
 | 도감(a6) | IF-CAT-001, IF-ME-002 | 카드 탭 → 상세로 이동 |
@@ -861,5 +869,5 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 5 | Claude 매칭 설명 | README의 Claude "매칭 설명" 자연어 문장은 새 목업에 표시할 자리가 없어 응답에서 뺐다. 필요하면 `candidates[].explanation` 필드를 추가한다 |
 | 6 | 일치율 보정 | README의 min-max 보정 `LOWER_BOUND`/`UPPER_BOUND`는 실제 테스트로 정해야 한다. 기준값(40/70)은 IF-CFG-002만 고치면 앱 수정 없이 바뀐다 |
 | 7 | 직접 고르기 | 후보가 하나도 없을 때 도감에서 수동으로 고양이를 고르는 진입점은 목업에도 없다. 필요해지면 `POST /cats/{catId}/sightings`(사진 직접 업로드) 같은 인터페이스가 추가된다 |
-| 8 | 태그 개수 제한 | 고양이 한 마리당 태그 최대 개수는 정하지 않았다(글자 수는 1~30자) |
+| 8 | 태그 저장 | 태그는 목격 시점의 특징이므로 `sightings.tags`에 쉼표 구분 문자열로 최대 5개를 저장한다 |
 | 9 | 오프라인 | 촬영·매칭은 항상 온라인 전제. 오프라인 촬영 후 나중에 올리는 기능은 고려하지 않았다 |

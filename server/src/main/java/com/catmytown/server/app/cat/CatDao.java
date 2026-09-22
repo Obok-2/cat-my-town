@@ -16,8 +16,6 @@ public interface CatDao {
 
     void insertSighting(SightingCreateVo sighting);
 
-    void insertCatTag(@Param("catId") Long catId, @Param("tag") String tag);
-
     int selectCatCountByUser(@Param("userId") Long userId);
 
     void updateUserLevel(@Param("userId") Long userId, @Param("level") int level);
@@ -28,7 +26,7 @@ public interface CatDao {
 
     int selectSightingCountByCat(@Param("catId") Long catId);
 
-    List<String> selectCatTagsByCat(@Param("catId") Long catId);
+    String selectCatTagsByCat(@Param("catId") Long catId);
 
     List<CatMarkerRes> selectMarkers(@Param("catId") Long catId);
 

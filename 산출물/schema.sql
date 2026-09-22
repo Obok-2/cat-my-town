@@ -22,15 +22,6 @@ CREATE TABLE cats (
 );
 CREATE INDEX idx_cats_user_id ON cats (user_id);
 
--- 특징 태그 (자유 텍스트, 고정 카테고리 아님) — README 는 cats.feature_tag 한 칸이지만
--- 앱 목업이 태그를 여러 개(예: 턱시도, 코 옆 흰 점) 다루므로 별도 테이블로 뺐다.
-CREATE TABLE cat_tags (
-    id      BIGSERIAL    PRIMARY KEY,
-    cat_id  BIGINT       NOT NULL REFERENCES cats (id) ON DELETE CASCADE,
-    tag     VARCHAR(30)  NOT NULL,
-    UNIQUE (cat_id, tag)
-);
-
 -- 목격 기록 (촬영 1건 = 1행)
 CREATE TABLE sightings (
     id          BIGSERIAL     PRIMARY KEY,
@@ -38,7 +29,8 @@ CREATE TABLE sightings (
     photo_url   VARCHAR(500)  NOT NULL,                     -- MinIO 또는 로컬 디스크 경로
     embedding   VECTOR(1024)  NOT NULL,                     -- 목격 사진 임베딩 (Voyage AI voyage-multimodal-3.5)
     memo        VARCHAR(200),                               -- 예: "놀이터 미끄럼틀 밑"
-    latitude    NUMERIC(8, 5),                              -- 정밀 좌표는 저장하지 않고 뭉갠 좌표만 (소수 5자리 미만으로 절삭)
+    tags        VARCHAR(154)  NOT NULL DEFAULT '',          -- 목격 당시 특징 태그, 쉼표 구분 최대 5개(태그당 30자)
+    latitude    NUMERIC(8, 5),                              -- 정밀 좌표는 저장하지 않고 소수 5자리로 반올림
     longitude   NUMERIC(8, 5),
     taken_at    TIMESTAMPTZ   NOT NULL                      -- 촬영일시
 );

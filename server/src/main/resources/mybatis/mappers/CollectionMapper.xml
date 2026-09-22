@@ -21,12 +21,14 @@
     </select>
 
     <select id="selectCatTagList" resultType="CollectionCatTagVo">
-        SELECT t.cat_id,
-               t.tag
-          FROM cat_tags t
-          JOIN cats c ON c.id = t.cat_id
+        SELECT DISTINCT ON (c.id)
+               c.id AS cat_id,
+               s.tags AS tag
+          FROM cats c
+          JOIN sightings s ON s.cat_id = c.id
          WHERE c.user_id = #{userId}
-         ORDER BY t.cat_id, t.id
+           AND s.tags != ''
+         ORDER BY c.id, s.taken_at DESC, s.id DESC
     </select>
 
 </mapper>

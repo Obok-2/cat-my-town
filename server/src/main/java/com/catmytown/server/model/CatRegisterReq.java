@@ -1,5 +1,6 @@
 package com.catmytown.server.model;
 
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,5 +18,9 @@ public class CatRegisterReq {
     private List<String> tags;
 
     private String memo;
+
+    private BigDecimal latitude;
+
+    private BigDecimal longitude;
 
 }

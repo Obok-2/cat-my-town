@@ -9,7 +9,7 @@ const TAG_PALETTE = ['peach', 'mint'];
 
 // editable=false: AI가 찾은 특징 등 읽기 전용 표시.
 // editable=true: 이름 짓기 화면 — 닫기·추가 아이콘이 있는 편집용 칩.
-export default function TraitTagList({ tags, editable = false, onRemove, onAdd, centered = false }) {
+export default function TraitTagList({ tags, editable = false, onRemove, onAdd, centered = false, maxTags = 5 }) {
   const colors = useColors();
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
@@ -38,12 +38,13 @@ export default function TraitTagList({ tags, editable = false, onRemove, onAdd, 
           </View>
         );
       })}
-      {editable &&
+      {editable && tags.length < maxTags &&
         (adding ? (
           <TextInput
             autoFocus
             value={draft}
             onChangeText={setDraft}
+            maxLength={30}
             onSubmitEditing={commitDraft}
             onBlur={commitDraft}
             placeholder="태그 입력"

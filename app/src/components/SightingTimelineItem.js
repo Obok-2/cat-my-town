@@ -4,6 +4,7 @@ import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { circled } from '../data/circled';
 import PlaceholderArt from './PlaceholderArt';
+import TraitTagList from './TraitTagList';
 
 function formatDate(ts) {
   const d = new Date(ts);
@@ -36,6 +37,7 @@ export default function SightingTimelineItem({ sighting, number, isLast }) {
           <Text style={[styles.memo, { color: colors.textMuted }]} numberOfLines={2}>
             {sighting.memo || '메모 없음'}
           </Text>
+          {sighting.tags?.length > 0 && <TraitTagList tags={sighting.tags} editable={false} />}
         </View>
       </View>
     </View>

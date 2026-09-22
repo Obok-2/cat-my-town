@@ -1,6 +1,7 @@
 package com.catmytown.server.app.collection;
 
 import com.catmytown.server.common.ResponseApi;
+import com.catmytown.server.common.TagParser;
 import com.catmytown.server.model.CollectionCatListRes;
 import com.catmytown.server.model.CollectionCatRes;
 import com.catmytown.server.model.CollectionCatTagVo;
@@ -28,12 +29,7 @@ public class CollectionService {
 
         Map<Long, List<String>> tagsByCatId = new HashMap<>();
         for (CollectionCatTagVo tagVo : tagList) {
-            List<String> tags = tagsByCatId.get(tagVo.getCatId());
-            if (tags == null) {
-                tags = new ArrayList<>();
-                tagsByCatId.put(tagVo.getCatId(), tags);
-            }
-            tags.add(tagVo.getTag());
+            tagsByCatId.put(tagVo.getCatId(), TagParser.parse(tagVo.getTag()));
         }
 
         for (CollectionCatRes cat : cats) {

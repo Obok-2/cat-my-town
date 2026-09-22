@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ActivityIndicator, ScrollView, Pressable, Alert } from 'react-native';
-import { StackActions } from '@react-navigation/native';
+import { View, Text, Image, StyleSheet, ActivityIndicator, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { analyzeCameraPhoto } from '../api/cameraApi';
-import { registerCatSighting } from '../api/catApi';
 import { getCatPhotoSource } from '../api/photoApi';
 import MatchCandidateCard from '../components/MatchCandidateCard';
 import TraitTagList from '../components/TraitTagList';
@@ -22,12 +20,11 @@ function formatNow() {
 // 촬영 후 서버의 /app/camera/analyze 결과로 화면을 나눈다.
 // NOT_CAT은 재촬영, NEW_CAT은 이름 짓기, EXISTING_CAT은 최대 3개의 후보를 보여준다.
 export default function MatchResultScreen({ route, navigation }) {
-  const { photoUri } = route.params;
+  const { photoUri, latitude = null, longitude = null } = route.params;
   const colors = useColors();
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const [confirmingCatId, setConfirmingCatId] = useState(null);
   const [timeLabel] = useState(formatNow);
 
   useEffect(() => {
@@ -68,34 +65,23 @@ export default function MatchResultScreen({ route, navigation }) {
     navigation.getParent()?.goBack();
   }
 
-  async function handleConfirm(cat) {
-    if (confirmingCatId !== null) return;
-    setConfirmingCatId(cat.id);
-    try {
-      const response = await registerCatSighting(photoUri, {
-        analysisId: result.analysisId,
-        catId: cat.id,
-        memo: '',
-      });
-      const sighting = response.data.data;
-      navigation.getParent()?.dispatch(
-        StackActions.replace('Completion', {
-          type: 'SIGHTING',
-          catName: sighting.name,
-        })
-      );
-    } catch (error) {
-      Alert.alert('기록하지 못했어요', error.response?.data?.message || error.message || '잠시 후 다시 시도해주세요.');
-      setConfirmingCatId(null);
-    }
+  function handleConfirm(cat) {
+    navigation.navigate('SightingEntry', {
+      photoUri,
+      analysisId: result.analysisId,
+      cat,
+      latitude,
+      longitude,
+    });
   }
 
   function handleNewCat() {
-    if (confirmingCatId !== null) return;
     navigation.navigate('Naming', {
       photoUri,
       analysisId: result?.analysisId,
       suggestedTags: result?.tags ?? [],
+      latitude,
+      longitude,
     });
   }
 
@@ -189,8 +175,6 @@ export default function MatchResultScreen({ route, navigation }) {
               cat={cat}
               score={score}
               top={i === 0}
-              busy={confirmingCatId === cat.id}
-              disabled={confirmingCatId !== null}
               onConfirm={() => handleConfirm(cat)}
             />
           ))}
@@ -200,13 +184,12 @@ export default function MatchResultScreen({ route, navigation }) {
       <View style={styles.bottom}>
         <Pressable
           onPress={handleNewCat}
-          disabled={confirmingCatId !== null}
           style={({ pressed }) => [
             styles.softButton,
             {
               backgroundColor: colors.softBtnBg,
               borderColor: colors.softBtnBorder,
-              opacity: confirmingCatId !== null ? 0.5 : pressed ? 0.8 : 1,
+              opacity: pressed ? 0.8 : 1,
             },
           ]}
         >

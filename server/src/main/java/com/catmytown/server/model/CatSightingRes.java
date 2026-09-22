@@ -1,6 +1,8 @@
 package com.catmytown.server.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.OffsetDateTime;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,5 +22,10 @@ public class CatSightingRes {
     private OffsetDateTime takenAt;
 
     private String memo;
+
+    private List<String> tags;
+
+    @JsonIgnore
+    private String tagValue;
 
 }

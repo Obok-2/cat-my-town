@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Location from 'expo-location';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { getSightings } from '../data/store';
@@ -58,12 +59,30 @@ export default function CameraScreen({ navigation }) {
     setCapturing(true);
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.9 });
-      const preparedPhoto = await prepareCameraPhoto(photo);
-      navigation.navigate('Capture', { screen: 'MatchResult', params: { photoUri: preparedPhoto.uri } });
+      const [preparedPhoto, location] = await Promise.all([prepareCameraPhoto(photo), getCaptureLocation()]);
+      navigation.navigate('Capture', {
+        screen: 'MatchResult',
+        params: {
+          photoUri: preparedPhoto.uri,
+          latitude: location?.coords.latitude ?? null,
+          longitude: location?.coords.longitude ?? null,
+        },
+      });
     } catch (error) {
       Alert.alert('사진 처리 실패', '사진을 준비하지 못했어요. 다시 촬영해주세요.');
     } finally {
       setCapturing(false);
+    }
+  }
+
+  async function getCaptureLocation() {
+    if (Platform.OS === 'web') return null;
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (!permission.granted) return null;
+      return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    } catch {
+      return null;
     }
   }
 

@@ -2,6 +2,7 @@ package com.catmytown.server.app.camera;
 
 import com.catmytown.server.common.BusinessException;
 import com.catmytown.server.common.ResponseApi;
+import com.catmytown.server.common.TagParser;
 import com.catmytown.server.model.CameraAnalysisRes;
 import com.catmytown.server.model.CameraAnalysisStatus;
 import com.catmytown.server.model.CameraCandidateRes;
@@ -87,7 +88,7 @@ public class CameraService {
             candidate.setPhotoUrl(item.getPhotoUrl());
             candidate.setSightingCount(item.getSightingCount());
             candidate.setScore(calibrate(item.getRawSimilarity()));
-            candidate.setTags(cameraDao.selectCatTags(item.getCatId()));
+            candidate.setTags(TagParser.parse(cameraDao.selectCatTags(item.getCatId())));
             candidates.add(candidate);
         }
 

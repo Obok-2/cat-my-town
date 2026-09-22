@@ -1,5 +1,6 @@
 package com.catmytown.server.model;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,12 @@ public class SightingCreateVo {
     private String embedding;
 
     private String memo;
+
+    private String tags;
+
+    private BigDecimal latitude;
+
+    private BigDecimal longitude;
 
     private OffsetDateTime takenAt;
 

@@ -18,23 +18,19 @@
             photo_url,
             embedding,
             memo,
+            tags,
+            latitude,
+            longitude,
             taken_at
         ) VALUES (
             #{catId},
             #{photoUrl},
             CAST(#{embedding} AS vector),
             #{memo},
+            #{tags},
+            #{latitude},
+            #{longitude},
             #{takenAt}
-        )
-    </insert>
-
-    <insert id="insertCatTag">
-        INSERT INTO cat_tags (
-            cat_id,
-            tag
-        ) VALUES (
-            #{catId},
-            #{tag}
         )
     </insert>
 
@@ -78,10 +74,12 @@
     </select>
 
     <select id="selectCatTagsByCat" resultType="string">
-        SELECT tag
-          FROM cat_tags
+        SELECT tags
+          FROM sightings
          WHERE cat_id = #{catId}
-         ORDER BY id
+           AND tags != ''
+         ORDER BY taken_at DESC, id DESC
+         LIMIT 1
     </select>
 
     <!-- seq: 이 고양이의 전체 목격 기록 중 몇 번째 만남인지(오래된 순 1부터) — 페이지네이션·좌표 유무와 무관하게 항상 전체 기준 -->
@@ -113,13 +111,15 @@
                seq,
                photo_url,
                taken_at,
-               memo
+               memo,
+               tags AS tag_value
           FROM (
                    SELECT id,
                           ROW_NUMBER() OVER (ORDER BY taken_at ASC) AS seq,
                           photo_url,
                           taken_at,
-                          memo
+                          memo,
+                          tags
                      FROM sightings
                     WHERE cat_id = #{catId}
                ) t

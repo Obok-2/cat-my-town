@@ -18,6 +18,6 @@ public interface CameraDao {
             @Param("minimumSimilarity") double minimumSimilarity,
             @Param("limit") int limit);
 
-    List<String> selectCatTags(@Param("catId") Long catId);
+    String selectCatTags(@Param("catId") Long catId);
 
 }

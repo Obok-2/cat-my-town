@@ -15,15 +15,15 @@ const NAME_MAX = 12;
 
 // 목업 a5 "이름 짓기": 이름 · 태그(수정 가능) · 첫 만남 메모 → 도감 등록.
 export default function NamingScreen({ route, navigation }) {
-  const { photoUri, analysisId, suggestedTags = [] } = route.params;
+  const { photoUri, analysisId, suggestedTags = [], latitude = null, longitude = null } = route.params;
   const colors = useColors();
   const [name, setName] = useState('');
-  const [tags, setTags] = useState(suggestedTags);
+  const [tags, setTags] = useState(suggestedTags.slice(0, 5));
   const [memo, setMemo] = useState('');
   const [saving, setSaving] = useState(false);
 
   function addTag(tag) {
-    if (!tags.includes(tag)) setTags((prev) => [...prev, tag]);
+    if (tags.length < 5 && !tags.includes(tag)) setTags((prev) => [...prev, tag]);
   }
   function removeTag(tag) {
     setTags((prev) => prev.filter((t) => t !== tag));
@@ -39,6 +39,8 @@ export default function NamingScreen({ route, navigation }) {
         name: trimmed,
         tags,
         memo: memo.trim(),
+        latitude,
+        longitude,
       };
       const response = await registerNewCat(photoUri, contents);
       const registration = response.data.data;
@@ -96,14 +98,15 @@ export default function NamingScreen({ route, navigation }) {
           </Text>
         </View>
 
-        <Text style={[styles.label, { color: colors.textMuted, marginTop: 18 }]}>특징 태그 (수정 가능)</Text>
-        <TraitTagList tags={tags} editable onAdd={addTag} onRemove={removeTag} />
+        <Text style={[styles.label, { color: colors.textMuted, marginTop: 18 }]}>특징 태그 ({tags.length}/5)</Text>
+        <TraitTagList tags={tags} editable maxTags={5} onAdd={addTag} onRemove={removeTag} />
 
         <Text style={[styles.label, { color: colors.textMuted, marginTop: 18 }]}>첫 만남 메모</Text>
         <View style={[styles.inputWrap, styles.memoWrap, { borderColor: colors.inputBorder, backgroundColor: colors.card }]}>
           <TextInput
             value={memo}
             onChangeText={setMemo}
+            maxLength={200}
             placeholder="골목 담벼락 위에서 졸고 있었다"
             placeholderTextColor="#B0A091"
             multiline

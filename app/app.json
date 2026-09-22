@@ -27,6 +27,12 @@
           "cameraPermission": "산책하다 마주친 길고양이를 촬영해서 도감에 기록하려면 카메라 접근이 필요해요."
         }
       ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "우리동네고양이가 목격 위치를 기록하도록 허용해주세요."
+        }
+      ],
       "expo-font",
       [
         "expo-splash-screen",

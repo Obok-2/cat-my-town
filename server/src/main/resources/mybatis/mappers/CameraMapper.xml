@@ -59,10 +59,12 @@
     </select>
 
     <select id="selectCatTags" resultType="string">
-        SELECT tag
-          FROM cat_tags
+        SELECT tags
+          FROM sightings
          WHERE cat_id = #{catId}
-         ORDER BY id
+           AND tags != ''
+         ORDER BY taken_at DESC, id DESC
+         LIMIT 1
     </select>
 
 </mapper>
