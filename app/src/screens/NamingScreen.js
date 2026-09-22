@@ -43,15 +43,12 @@ export default function NamingScreen({ route, navigation }) {
       const registration = response.data.data;
       const rootNavigation = navigation.getParent();
 
-      if (registration.leveledUp) {
-        rootNavigation?.dispatch(
-          StackActions.replace('LevelUp', {
-            levelInfo: computeLevel(registration.catCount),
-          })
-        );
-      } else {
-        rootNavigation?.dispatch(StackActions.popTo('Tabs', { screen: 'Collection' }));
-      }
+      rootNavigation?.dispatch(
+        StackActions.replace('Completion', {
+          type: registration.leveledUp ? 'LEVEL_UP' : 'NEW_CAT',
+          levelInfo: computeLevel(registration.catCount),
+        })
+      );
     } catch (error) {
       Alert.alert('등록하지 못했어요', error.response?.data?.message || error.message || '잠시 후 다시 시도해주세요.');
     } finally {
