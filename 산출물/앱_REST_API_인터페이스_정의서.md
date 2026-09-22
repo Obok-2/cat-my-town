@@ -8,7 +8,7 @@
 |---|---|
 | 문서명 | 우리동네고양이 앱 REST API 인터페이스 정의서 |
 | 대상 | 모바일 앱(`app/`) ↔ 백엔드(`server/`) |
-| 버전 / 상태 | v0.2 / **초안(검토 전)** — 도감 화면 API 2개(IF-ME-002, IF-CAT-001)만 구현, 나머지는 **미구현** |
+| 버전 / 상태 | v0.2 / **초안(검토 전)** — API 3개(IF-ME-002, IF-CAT-001, IF-LVL-001)만 구현, 나머지는 **미구현** |
 | 작성일 | 2026-09-21 |
 | 기준 자료 | 앱 코드(`app/src/data/store.js`·`levels.js`·`matchConfig.js`), 새 UIUX 목업(a0~a10), `산출물/schema.sql`, `README.md` |
 | 제외 범위 | 관리자 웹(`web/`)용 API — 관리자 인증·통계는 별도 문서 |
@@ -40,7 +40,7 @@
 |---|---|---|
 | 공통 응답 | 모든 API가 `{ result, message, code, data }` 형태(2.4~2.6) | 각 인터페이스 표의 문자열 에러 코드(`MATCH_EXPIRED` 등)는 이름 표기용이며, 응답의 `code`는 숫자다. 업무별 숫자 코드는 확정 시 추가 |
 | URL | 앱용 API는 `/app/{collection\|camera\|level}` 아래에 둔다 | 도감 화면 API 2개만 새 주소로 고쳤고, 나머지 인터페이스는 구현할 때 `/app/...`으로 옮긴다(로그인·내 정보의 위치도 미정) |
-| 레벨 계산 | 서버는 등록 고양이 **개수만** 주고 등급·진행률은 앱이 계산한다(IF-ME-002) | 등급표 API(IF-CFG-001)는 불필요해졌고, 새 고양이 등록 응답(IF-MATCH-003)의 `levelUp`(등급 정보 객체)은 `catCount`만 주는 방식으로 단순화할 예정 |
+| 레벨 계산 | 서버는 등록 고양이 **개수만** 주고 등급·진행률은 앱이 계산한다(레벨 화면은 IF-LVL-001, 도감 화면은 IF-ME-002) | 등급표 API(IF-CFG-001)는 불필요해졌고, 새 고양이 등록 응답(IF-MATCH-003)의 `levelUp`(등급 정보 객체)은 `catCount`만 주는 방식으로 단순화할 예정 |
 | 대표 사진 | `cats.photo_url` 컬럼을 추가해 대표 사진을 저장한다(ERD·`schema.sql` 반영) | — |
 
 ---
@@ -185,7 +185,8 @@
 |---|---|---|---|---|---|---|
 | IF-AUTH-001 | 로그인/가입 처리 | POST | `/auth/login` | 로그인(a1) | 필수 | 미구현 |
 | IF-ME-001 | 내 정보 조회 | GET | `/me` | 앱 시작, 내 정보 | 필수 | 미구현 |
-| IF-ME-002 | 수집 수 조회 | GET | `/app/collection/count` | 도감(a6), 레벨(a10) | 필수 | **구현** |
+| IF-ME-002 | 수집 수 조회 | GET | `/app/collection/count` | 도감(a6) | 필수 | **구현** |
+| IF-LVL-001 | 레벨용 수집 수 조회 | GET | `/app/level/count` | 레벨(a10) | 필수 | **구현** |
 | IF-ME-003 | 이번 주 만난 수 조회 | GET | `/me/stats/week` | 홈 카메라(a2) | 필수 | 미구현 |
 | IF-ME-004 | 회원 탈퇴 | DELETE | `/me` | 내 정보 | 후순위 | 미구현 |
 | IF-CFG-001 | 등급표 조회 | GET | `/levels` | 레벨(a10) | ~~필수~~ 불필요(앱이 등급표 보유, 1.4) | — |
@@ -262,7 +263,7 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 |---|---|
 | 설명 | 내가 등록한 고양이 수. 앱이 이 값으로 등급(레벨)·진행률·다음 등급까지 남은 수를 **직접 계산**한다(등급 기준 1·5·12·16·30마리는 앱 `levels.js`). 등급은 **새로 등록한 고양이 수** 기준이라 같은 고양이를 다시 만나도 오르지 않는다 |
 | Method / URL | `GET /app/collection/count` |
-| 호출 화면 | 도감(a6), 레벨(a10) — 화면에 돌아올 때마다 다시 호출 |
+| 호출 화면 | 도감(a6) — 화면에 돌아올 때마다 다시 호출. 레벨 화면은 별도 API(IF-LVL-001)를 쓴다 |
 | 구현 상태 | **구현·검증 완료**(단위 테스트 + 로컬 DB 실제 호출) |
 
 **Request** — 헤더 `X-User-Id`(임시 사용자 식별, 기본 1. Firebase 인증을 붙이면 토큰으로 대체). 파라미터·본문 없음
@@ -278,6 +279,33 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 ```json
 { "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "catCount": 12 } }
 ```
+
+---
+
+### IF-LVL-001 레벨용 수집 수 조회
+
+| 항목 | 내용 |
+|---|---|
+| 설명 | 레벨 탭(a10) 전용. 내가 등록한 고양이 수만 준다. 앱이 이 값과 `levels.js`의 등급표(1·5·12·16·30마리)로 현재 등급·진행률·"N마리 남음"·등급표 뱃지(달성/지금 여기)를 **모두 계산**한다. 등급은 **새로 등록한 고양이 수** 기준이라 같은 고양이를 다시 만나도 오르지 않는다 |
+| Method / URL | `GET /app/level/count` |
+| 호출 화면 | 레벨(a10) — 탭에 돌아올 때마다 다시 호출 |
+| 구현 상태 | **구현**(단위 테스트 5개 통과). 실제 DB 호출은 미확인(Docker가 꺼져 있었음) — 쿼리는 IF-ME-002와 동일 |
+
+**Request** — 헤더 `X-User-Id`(임시 사용자 식별, 기본 1). 파라미터·본문 없음
+
+**Response `200`** — `data`
+
+| 항목 | 타입 | Null | 설명 |
+|---|---|---|---|
+| `catCount` | Integer | N | 등록한 고양이 수(없으면 0) |
+
+**에러**: `400 FAIL`(`X-User-Id` 형식 오류)
+
+```json
+{ "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "catCount": 12 } }
+```
+
+- IF-ME-002와 응답·쿼리가 같지만, 화면별로 API를 나누기로 해서 따로 둔다(도감은 `/app/collection`, 레벨은 `/app/level`).
 
 ---
 
@@ -652,7 +680,7 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 | 레벨업 팝업(a8) | — | IF-MATCH-003 응답의 `levelUp`으로 표시 |
 | 도감(a6) | IF-CAT-001, IF-ME-002 | 카드 탭 → 상세로 이동 |
 | 고양이 상세(a7) | IF-CAT-002, IF-CAT-003 | — |
-| 레벨(a10) | IF-ME-002 (등급표는 앱이 보유) | — |
+| 레벨(a10) | IF-LVL-001 (등급표는 앱이 보유) | — |
 | 내 정보 | IF-ME-001 | 로그아웃(Firebase만) / (개발) IF-DEV-001·002 |
 
 ---
@@ -669,7 +697,7 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 | `getCatById` | IF-CAT-002 |
 | `getSightings`(이번 주 계산) | IF-ME-003 |
 | `getSightingsByCat` | IF-CAT-003 |
-| `getUserLevelInfo`(개수만 서버에서 받아 앱이 `computeLevel`로 계산) | IF-ME-002 (`catCount`) |
+| `getUserLevelInfo`(개수만 서버에서 받아 앱이 `computeLevel`로 계산) | IF-LVL-001 (`catCount`) |
 | `levels.js`의 `LEVELS` 상수 | 앱에 그대로 유지(IF-CFG-001 불필요) |
 | `matchConfig.js`의 상수 | IF-CFG-002 |
 | `mockMatchAgainstExisting` | IF-MATCH-001 |
