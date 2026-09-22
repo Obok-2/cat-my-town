@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ActivityIndicator, ScrollView, Pressable } from 'react-native';
+import { View, Text, Image, StyleSheet, ActivityIndicator, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
-import { getCats, addSightingToCat } from '../data/store';
-import { mockMatchAgainstExisting } from '../data/mockMatch';
-import { MATCH_THRESHOLD } from '../data/matchConfig';
+import { analyzeCameraPhoto } from '../api/cameraApi';
 import MatchCandidateCard from '../components/MatchCandidateCard';
 import TraitTagList from '../components/TraitTagList';
 import PrimaryButton from '../components/PrimaryButton';
@@ -18,46 +16,63 @@ function formatNow() {
   return `오늘 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-// 촬영 후 매칭 결과. 일치율 기준(MATCH_THRESHOLD, 40%)으로 화면이 갈린다.
-//  - 기준 이상 후보가 1~3마리 → 후보 카드 목록(목업 a3). 카드마다 [이 고양이예요], 아래에 [새로운 고양이예요]
-//  - 기준 이상 후보가 없음 → "새로운 친구를 발견했어요!" + [이름 짓기] (목업 a4)
-// ⚠️ mockMatchAgainstExisting은 진짜 AI 매칭이 아니라 화면 흐름 검증용 목데이터다.
+// 촬영 후 서버의 /app/camera/analyze 결과로 화면을 나눈다.
+// NOT_CAT은 재촬영, NEW_CAT은 이름 짓기, EXISTING_CAT은 최대 3개의 후보를 보여준다.
 export default function MatchResultScreen({ route, navigation }) {
   const { photoUri } = route.params;
   const colors = useColors();
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
-  const [confirmingId, setConfirmingId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const [timeLabel] = useState(formatNow);
 
   useEffect(() => {
     let mounted = true;
-    getCats().then((cats) => {
-      if (!mounted) return;
-      setResult(mockMatchAgainstExisting(cats));
-      setLoading(false);
-    });
+
+    async function loadAnalysis() {
+      try {
+        const response = await analyzeCameraPhoto(photoUri);
+        const analysis = response.data.data;
+        const candidates = analysis.candidates.map((candidate) => ({
+          cat: {
+            id: candidate.catId,
+            name: candidate.name,
+            photoUri: candidate.photoUrl,
+            sightingCount: candidate.sightingCount,
+            tags: candidate.tags ?? [],
+          },
+          score: candidate.score / 100,
+        }));
+
+        if (!mounted) return;
+        setResult({ ...analysis, candidates, tags: [] });
+      } catch (error) {
+        if (!mounted) return;
+        setErrorMessage(error.response?.data?.message || error.message || '사진을 분석하지 못했어요.');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadAnalysis();
     return () => {
       mounted = false;
     };
   }, []);
 
-  async function handleConfirm(catId) {
-    if (confirmingId) return;
-    setConfirmingId(catId);
-    try {
-      await addSightingToCat(catId, { photoUri });
-      navigation.navigate('Tabs', { screen: 'Collection' });
-    } finally {
-      setConfirmingId(null);
-    }
+  function closeCapture() {
+    navigation.getParent()?.goBack();
+  }
+
+  function handleConfirm() {
+    Alert.alert('확정 기능 준비 중', '기존 고양이로 확정하는 서버 API를 연결한 뒤 사용할 수 있어요.');
   }
 
   function handleNewCat() {
     navigation.navigate('Naming', { photoUri, suggestedTags: result?.tags ?? [] });
   }
 
-  if (loading || !result) {
+  if (loading) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' }]}>
         <ActivityIndicator color={colors.primary} />
@@ -65,7 +80,36 @@ export default function MatchResultScreen({ route, navigation }) {
     );
   }
 
-  if (result.candidates.length === 0) {
+  if (errorMessage || !result) {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+        <View style={styles.messageContent}>
+          <Text style={[styles.bigTitle, { color: colors.text }]}>사진을 분석하지 못했어요</Text>
+          <Text style={[styles.desc, { color: colors.textSubtle }]}>{errorMessage || '잠시 후 다시 시도해주세요.'}</Text>
+        </View>
+        <View style={styles.bottomButton}>
+          <PrimaryButton label="다시 촬영하기" onPress={closeCapture} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (result.status === 'NOT_CAT') {
+    return (
+      <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+        <View style={styles.messageContent}>
+          <Image source={{ uri: photoUri }} style={styles.bigPhoto} />
+          <Text style={[styles.bigTitle, { color: colors.text }]}>고양이를 찾지 못했어요</Text>
+          <Text style={[styles.desc, { color: colors.textSubtle }]}>고양이 얼굴과 몸이 프레임 안에 잘 보이도록 다시 촬영해주세요.</Text>
+        </View>
+        <View style={styles.bottomButton}>
+          <PrimaryButton label="다시 촬영하기" onPress={closeCapture} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (result.status === 'NEW_CAT') {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
         <View style={styles.noCandidateContent}>
@@ -76,9 +120,9 @@ export default function MatchResultScreen({ route, navigation }) {
           )}
           <Text style={[styles.bigTitle, { color: colors.text }]}>새로운 친구를{'\n'}발견했어요!</Text>
           <Text style={[styles.desc, { color: colors.textSubtle }]}>
-            일치율 {Math.round(MATCH_THRESHOLD * 100)}% 이상인 후보가 없어요.{'\n'}이 친구의 이름을 지어줄까요?
+            등록된 고양이 중 비슷한 친구가 없어요.{'\n'}이 친구의 이름을 지어줄까요?
           </Text>
-          <TraitTagList tags={result.tags} editable={false} centered />
+          {result.tags.length > 0 && <TraitTagList tags={result.tags} editable={false} centered />}
         </View>
         <View style={styles.bottomButton}>
           <PrimaryButton label="이름 짓기" onPress={handleNewCat} />
@@ -104,8 +148,12 @@ export default function MatchResultScreen({ route, navigation }) {
           </View>
         </View>
 
-        <Text style={[styles.label, { color: colors.textMuted }]}>AI가 찾은 특징</Text>
-        <TraitTagList tags={result.tags} editable={false} />
+        {result.tags.length > 0 && (
+          <>
+            <Text style={[styles.label, { color: colors.textMuted }]}>AI가 찾은 특징</Text>
+            <TraitTagList tags={result.tags} editable={false} />
+          </>
+        )}
 
         <View style={styles.list}>
           {candidates.map(({ cat, score }, i) => (
@@ -114,9 +162,7 @@ export default function MatchResultScreen({ route, navigation }) {
               cat={cat}
               score={score}
               top={i === 0}
-              busy={confirmingId === cat.id}
-              disabled={!!confirmingId && confirmingId !== cat.id}
-              onConfirm={() => handleConfirm(cat.id)}
+              onConfirm={handleConfirm}
             />
           ))}
         </View>
@@ -125,7 +171,6 @@ export default function MatchResultScreen({ route, navigation }) {
       <View style={styles.bottom}>
         <Pressable
           onPress={handleNewCat}
-          disabled={!!confirmingId}
           style={({ pressed }) => [
             styles.softButton,
             { backgroundColor: colors.softBtnBg, borderColor: colors.softBtnBorder, opacity: pressed ? 0.8 : 1 },
@@ -156,6 +201,7 @@ const styles = StyleSheet.create({
   softButtonText: { fontFamily: fonts.body, fontSize: 15 },
   footer: { fontFamily: fonts.body, fontSize: 12, textAlign: 'center' },
   noCandidateContent: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24, paddingHorizontal: 30 },
+  messageContent: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24, paddingHorizontal: 30 },
   bigPhoto: { width: 230, height: 230, borderRadius: 30 },
   bigTitle: { fontFamily: fonts.display, fontSize: 30, textAlign: 'center', lineHeight: 40 },
   desc: { fontFamily: fonts.body, fontSize: 15, lineHeight: 26, textAlign: 'center' },
