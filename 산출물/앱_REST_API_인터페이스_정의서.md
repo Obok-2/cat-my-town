@@ -8,7 +8,7 @@
 |---|---|
 | 문서명 | 우리동네고양이 앱 REST API 인터페이스 정의서 |
 | 대상 | 모바일 앱(`app/`) ↔ 백엔드(`server/`) |
-| 버전 / 상태 | v0.2 / **초안(검토 전)** — API 3개(IF-ME-002, IF-CAT-001, IF-LVL-001)만 구현, 나머지는 **미구현** |
+| 버전 / 상태 | v0.3 / **초안(검토 전)** — API 6개(IF-ME-002, IF-CAT-001, IF-LVL-001, IF-CAT-002, IF-CAT-003, IF-CAT-006)만 구현, 나머지는 **미구현** |
 | 작성일 | 2026-09-21 |
 | 기준 자료 | 앱 코드(`app/src/data/store.js`·`levels.js`·`matchConfig.js`), 새 UIUX 목업(a0~a10), `산출물/schema.sql`, `README.md` |
 | 제외 범위 | 관리자 웹(`web/`)용 API — 관리자 인증·통계는 별도 문서 |
@@ -192,8 +192,9 @@
 | IF-CFG-001 | 등급표 조회 | GET | `/levels` | 레벨(a10) | ~~필수~~ 불필요(앱이 등급표 보유, 1.4) | — |
 | IF-CFG-002 | 앱 설정 조회 | GET | `/config/app` | 매칭 결과(a3·a4), 이름 짓기(a5) | 필수 | 미구현 |
 | IF-CAT-001 | 도감 목록 조회 | GET | `/app/collection/cats` | 도감(a6) | 필수 | **구현** |
-| IF-CAT-002 | 고양이 상세 조회 | GET | `/cats/{catId}` | 고양이 상세(a7) | 필수 | 미구현 |
-| IF-CAT-003 | 목격 기록 목록 조회 | GET | `/cats/{catId}/sightings` | 고양이 상세(a7) | 필수 | 미구현 |
+| IF-CAT-002 | 고양이 정보 조회 | GET | `/app/cat/detail?catId=` | 고양이 상세(a7) | 필수 | **구현** |
+| IF-CAT-003 | 목격 타임라인 조회(페이지네이션) | GET | `/app/cat/sightings?catId=&page=` | 고양이 상세(a7) | 필수 | **구현** |
+| IF-CAT-006 | 지도 마커 조회 | GET | `/app/cat/markers?catId=` | 고양이 상세(a7) | 필수 | **구현** |
 | IF-CAT-004 | 고양이 정보 수정 | PATCH | `/cats/{catId}` | 고양이 상세 ⋯ 메뉴 | 선택(앱 미구현) | 미구현 |
 | IF-CAT-005 | 고양이 삭제 | DELETE | `/cats/{catId}` | 고양이 상세 ⋯ 메뉴 | 선택(앱 미구현) | 미구현 |
 | IF-MATCH-001 | AI 매칭 요청 | POST | `/matches` | 홈 카메라(a2) → 매칭 결과(a3·a4) | 필수 | 미구현 |
@@ -437,53 +438,118 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 
 ---
 
-### IF-CAT-002 고양이 상세 조회
+### IF-CAT-002 고양이 정보 조회
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | 고양이 한 마리의 기본 정보 |
-| Method / URL | `GET /api/v1/cats/{catId}` |
+| 설명 | 고양이 상세(a7) 상단의 기본 정보. `catId`가 이 사용자 소유가 아니면(존재 자체도) **404** — 다른 사용자 고양이인지 여부를 알려주지 않는다 |
+| Method / URL | `GET /app/cat/detail` |
 | 호출 화면 | 고양이 상세(a7) |
+| 구현 상태 | **구현**(단위 테스트 + 로컬 DB 실제 호출로 검증) |
 
-**Request**
+**Request** — 헤더 `X-User-Id`(임시, 기본 1)
 
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
-| Path | `catId` | Long | Y | 고양이 ID |
+| Query | `catId` | Long | Y | 고양이 ID |
 
-**Response `200`**: `Cat`(2.7)
-
-**에러**: `401 UNAUTHORIZED`, `404 NOT_FOUND`
-
----
-
-### IF-CAT-003 목격 기록 목록 조회
-
-| 항목 | 내용 |
-|---|---|
-| 설명 | 목격 타임라인과 미니맵 핀이 함께 쓴다. **최신순** |
-| Method / URL | `GET /api/v1/cats/{catId}/sightings` |
-| 호출 화면 | 고양이 상세(a7) |
-
-**Request**
-
-| 구분 | 항목 | 타입 | 필수 | 설명 |
-|---|---|---|---|---|
-| Path | `catId` | Long | Y | 고양이 ID |
-
-**Response `200`**
+**Response `200`** — `data`
 
 | 항목 | 타입 | Null | 설명 |
 |---|---|---|---|
-| `sightings` | Array<Sighting> | N | 목격 기록(최신순) |
+| `id` | Long | N | 고양이 ID |
+| `name` | String | N | 이름 |
+| `photoUrl` | String | N | 대표 사진 경로 |
+| `tags` | Array<String> | N | 특징 태그 |
+| `sightingCount` | Integer | N | 목격 횟수 |
+| `firstSeenAt` | DateTime | N | 첫 만남(등록) 일시 |
 
-**에러**: `401 UNAUTHORIZED`, `404 NOT_FOUND`
+**에러**: `400 FAIL`(`catId` 누락), `404 FAIL`(없거나 내 고양이가 아님)
 
 ```json
-{ "sightings": [
-  { "id": 301, "seq": 7, "photoUrl": "https://…", "takenAt": "2026-09-14T18:24:00+09:00",
-    "memo": "놀이터 미끄럼틀 밑", "latitude": 37.56512, "longitude": 126.97831 }
-] }
+{ "result": "SUCCESS", "message": "SUCCESS", "code": 200,
+  "data": { "id": 12, "name": "양말이", "photoUrl": "cats/12/first.jpg",
+    "tags": ["턱시도", "코 옆 흰 점"], "sightingCount": 7, "firstSeenAt": "2026-04-05T09:00:00+09:00" } }
+```
+
+---
+
+### IF-CAT-003 목격 타임라인 조회 (페이지네이션)
+
+| 항목 | 내용 |
+|---|---|
+| 설명 | 목격 타임라인 전용(무한스크롤). 최신순, **한 번에 10건**. `seq`는 이 고양이의 전체 목격 기록 중 몇 번째 만남인지(오래된 순 1부터) —
+  IF-CAT-006(지도 마커)의 `seq`와 채번 기준이 같아서 지도·타임라인 번호가 서로 맞는다. `catId`가 있어도 소유자가 아니면 404, 소유자인데 목격이 0건이면 200 + 빈 배열 |
+| Method / URL | `GET /app/cat/sightings` |
+| 호출 화면 | 고양이 상세(a7) |
+| 구현 상태 | **구현**(단위 테스트 + 로컬 DB 실제 호출로 검증) |
+
+**Request** — 헤더 `X-User-Id`(임시, 기본 1)
+
+| 구분 | 항목 | 타입 | 필수 | 설명 |
+|---|---|---|---|---|
+| Query | `catId` | Long | Y | 고양이 ID |
+| Query | `page` | Integer | N | 0부터. 생략하면 0. 음수는 0으로 처리 |
+
+**Response `200`** — `data`
+
+| 항목 | 타입 | Null | 설명 |
+|---|---|---|---|
+| `sightings` | Array<Object> | N | 목격 기록 최대 10건(최신순) |
+| `sightings[].id` | Long | N | 목격 ID |
+| `sightings[].seq` | Integer | N | 몇 번째 만남(오래된 순 1부터) |
+| `sightings[].photoUrl` | String | N | 사진 경로 |
+| `sightings[].takenAt` | DateTime | N | 촬영일시 |
+| `sightings[].memo` | String | Y | 메모 |
+| `hasMore` | Boolean | N | `true`면 다음 페이지(`page+1`)를 더 불러올 수 있음 |
+
+**에러**: `400 FAIL`(`catId` 누락), `404 FAIL`(없거나 내 고양이가 아님)
+
+```json
+{ "result": "SUCCESS", "message": "SUCCESS", "code": 200,
+  "data": { "sightings": [
+    { "id": 301, "seq": 7, "photoUrl": "https://…", "takenAt": "2026-09-14T18:24:00+09:00", "memo": "놀이터 미끄럼틀 밑" }
+  ], "hasMore": true } }
+```
+
+---
+
+### IF-CAT-006 지도 마커 조회
+
+| 항목 | 내용 |
+|---|---|
+| 설명 | 고양이 상세(a7) 미니맵 핀 전용. **좌표가 있는 목격만** 전부 준다(페이지네이션 없음 — 지도는 한 번에 그린다). `seq`는 IF-CAT-003과 같은
+  채번 기준(전체 목격 중 몇 번째, 좌표 없는 것도 순번에 포함되지만 결과에는 안 나옴). 최신순 정렬이라 `markers[0]`이 최근 목격 |
+| Method / URL | `GET /app/cat/markers` |
+| 호출 화면 | 고양이 상세(a7) |
+| 구현 상태 | **구현**(단위 테스트 + 로컬 DB 실제 호출로 검증) |
+
+**Request** — 헤더 `X-User-Id`(임시, 기본 1)
+
+| 구분 | 항목 | 타입 | 필수 | 설명 |
+|---|---|---|---|---|
+| Query | `catId` | Long | Y | 고양이 ID |
+
+**Response `200`** — `data`
+
+| 항목 | 타입 | Null | 설명 |
+|---|---|---|---|
+| `markers` | Array<Object> | N | 좌표 있는 목격만(최신순) |
+| `markers[].id` | Long | N | 목격 ID |
+| `markers[].seq` | Integer | N | 몇 번째 만남(오래된 순 1부터) |
+| `markers[].latitude` | Decimal | N | 위도(뭉갠 좌표) |
+| `markers[].longitude` | Decimal | N | 경도(뭉갠 좌표) |
+| `markers[].takenAt` | DateTime | N | 촬영일시 |
+| `markers[].memo` | String | Y | 메모 |
+
+**에러**: `400 FAIL`(`catId` 누락), `404 FAIL`(없거나 내 고양이가 아님)
+
+```json
+{ "result": "SUCCESS", "message": "SUCCESS", "code": 200,
+  "data": { "markers": [
+    { "id": 301, "seq": 7, "latitude": 37.56512, "longitude": 126.97831,
+      "takenAt": "2026-09-14T18:24:00+09:00", "memo": "놀이터 미끄럼틀 밑" }
+  ] } }
 ```
 
 ---
@@ -679,7 +745,7 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 | 이름 짓기(a5) | — | [도감에 등록하기] → IF-MATCH-003 |
 | 레벨업 팝업(a8) | — | IF-MATCH-003 응답의 `levelUp`으로 표시 |
 | 도감(a6) | IF-CAT-001, IF-ME-002 | 카드 탭 → 상세로 이동 |
-| 고양이 상세(a7) | IF-CAT-002, IF-CAT-003 | — |
+| 고양이 상세(a7) | IF-CAT-002, IF-CAT-006, IF-CAT-003(첫 페이지) | 타임라인 스크롤 끝 → IF-CAT-003(다음 page) |
 | 레벨(a10) | IF-LVL-001 (등급표는 앱이 보유) | — |
 | 내 정보 | IF-ME-001 | 로그아웃(Firebase만) / (개발) IF-DEV-001·002 |
 
@@ -696,7 +762,8 @@ POST /matches ─┬─► candidates 1~3명 ─┬─ POST /matches/{id}/confir
 | `getCats` | IF-CAT-001 |
 | `getCatById` | IF-CAT-002 |
 | `getSightings`(이번 주 계산) | IF-ME-003 |
-| `getSightingsByCat` | IF-CAT-003 |
+| `getSightingsByCat`(미니맵) | IF-CAT-006 |
+| `getSightingsByCat`(타임라인) | IF-CAT-003 (10건씩, `page` 늘려가며 무한스크롤) |
 | `getUserLevelInfo`(개수만 서버에서 받아 앱이 `computeLevel`로 계산) | IF-LVL-001 (`catCount`) |
 | `levels.js`의 `LEVELS` 상수 | 앱에 그대로 유지(IF-CFG-001 불필요) |
 | `matchConfig.js`의 상수 | IF-CFG-002 |

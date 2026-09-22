@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.catmytown.server.app.cat.CatDao">
+
+    <!-- 소유자가 아니거나 없는 고양이면 결과가 없다(catId만으로는 찾지 않음 — 다른 사용자 고양이인지 자체를 알려주지 않기 위함) -->
+    <select id="selectCatBasic" resultType="CatDetailRes">
+        SELECT c.id,
+               c.name,
+               c.photo_url,
+               c.created_at AS first_seen_at
+          FROM cats c
+         WHERE c.id = #{catId}
+           AND c.user_id = #{userId}
+    </select>
+
+    <select id="selectCatOwnerExists" resultType="int">
+        SELECT COUNT(*)
+          FROM cats
+         WHERE id = #{catId}
+           AND user_id = #{userId}
+    </select>
+
+    <select id="selectSightingCountByCat" resultType="int">
+        SELECT COUNT(*)
+          FROM sightings
+         WHERE cat_id = #{catId}
+    </select>
+
+    <select id="selectCatTagsByCat" resultType="string">
+        SELECT tag
+          FROM cat_tags
+         WHERE cat_id = #{catId}
+         ORDER BY id
+    </select>
+
+    <!-- seq: 이 고양이의 전체 목격 기록 중 몇 번째 만남인지(오래된 순 1부터) — 페이지네이션·좌표 유무와 무관하게 항상 전체 기준 -->
+    <select id="selectMarkers" resultType="CatMarkerRes">
+        SELECT id,
+               seq,
+               latitude,
+               longitude,
+               taken_at,
+               memo
+          FROM (
+                   SELECT id,
+                          ROW_NUMBER() OVER (ORDER BY taken_at ASC) AS seq,
+                          latitude,
+                          longitude,
+                          taken_at,
+                          memo
+                     FROM sightings
+                    WHERE cat_id = #{catId}
+               ) t
+         WHERE latitude IS NOT NULL
+           AND longitude IS NOT NULL
+         ORDER BY taken_at DESC
+    </select>
+
+    <!-- limit은 Service가 페이지 크기(10) + 1을 넘긴다 — 11번째가 있으면 다음 페이지가 있다는 뜻(hasMore) -->
+    <select id="selectSightingsPage" resultType="CatSightingRes">
+        SELECT id,
+               seq,
+               photo_url,
+               taken_at,
+               memo
+          FROM (
+                   SELECT id,
+                          ROW_NUMBER() OVER (ORDER BY taken_at ASC) AS seq,
+                          photo_url,
+                          taken_at,
+                          memo
+                     FROM sightings
+                    WHERE cat_id = #{catId}
+               ) t
+         ORDER BY taken_at DESC
+         LIMIT #{limit}
+        OFFSET #{offset}
+    </select>
+
+</mapper>

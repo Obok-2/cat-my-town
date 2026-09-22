@@ -50,8 +50,12 @@
 
 ## 코딩 규칙 (Java — server/)
 
-- **앱용 API**는 URL 앞에 `/app`을 붙이되 문자열을 직접 쓰지 않고 상수 `ApiUrl.APP`(`com.catmytown.server.common.ApiUrl`)를 쓴다(`@RequestMapping(ApiUrl.APP + "/collection")`). 기능별 패키지로 나눈다: `/app/collection` · `/app/camera` · `/app/level` → `com.catmytown.server.app.{collection,camera,level}`.
+- **앱용 API**는 URL 앞에 `/app`을 붙이되 문자열을 직접 쓰지 않고 상수 `ApiUrl.APP`(`com.catmytown.server.common.ApiUrl`)를 쓴다(`@RequestMapping(ApiUrl.APP + "/collection")`). **화면(도메인) 단위로 패키지를 나눈다** — 지금은
+  `/app/collection`(도감 목록) · `/app/cat`(고양이 상세 화면) · `/app/camera` · `/app/level` → `com.catmytown.server.app.{collection,cat,camera,level}`.
+  같은 "고양이" 관련이어도 화면이 다르면 패키지를 같이 쓰지 않는다(도감 목록은 collection, 고양이 상세는 cat — 새 화면이 생기면 그 화면 이름으로 새 패키지를 만든다).
   구조는 `XxxController` → `XxxService` → `XxxDao`(`@Mapper` 인터페이스) → Mapper XML.
+- **경로 변수(`@PathVariable`)는 쓰지 않는다.** id를 포함해 요청값은 전부 GET이면 `@RequestParam`, 본문이 있으면 `@RequestBody`로 받는다
+  (예: `GET /app/cat/detail?catId=12`이지 `GET /app/cat/{catId}`가 아니다).
 - **MyBatis 설정**은 `application.properties`에 이 형태로 둔다: `mybatis.config-location=classpath:mybatis/mybatis-config.xml` ·
   `mybatis.type-aliases-package=com.catmytown.server.model` · `mybatis.mapper-locations=mybatis/mappers/*.xml`.
   Mapper XML은 `src/main/resources/mybatis/mappers/` 한 폴더에 `XxxMapper.xml`로 두고(하위 폴더 없음) `namespace`는 Dao 인터페이스의 전체 이름.
@@ -89,3 +93,4 @@
 ## 절대 규칙
 
 1. **git commit·push는 사용자가 먼저 하기 전까지 하지 않는다.** 코드·문서를 수정해도 커밋하지 않고 작업 트리에만 남겨둔다. "커밋해", "푸시해"처럼 명시적으로 요청했을 때만 실행한다. (2026-09-21 — 동의 없이 커밋·푸시해서 항의받음)
+2. **테스트(단위 테스트 실행, Docker로 DB 띄우기, curl·헤드리스 브라우저로 직접 호출 검증 등)는 사용자가 하라고 하기 전까지 하지 않는다.** 코드만 작성해서 남겨두고, 검증은 사용자가 "테스트해", "검증해"처럼 명시적으로 요청했을 때만 한다. (2026-09-22 — 시키지도 않은 테스트를 계속 돌려서 토큰 낭비한다고 항의받음)
