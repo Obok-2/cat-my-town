@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { getCatById, getSightingsByCat } from '../data/store';
@@ -43,10 +44,10 @@ export default function CatDetailScreen({ route, navigation }) {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[styles.headerIcon, { color: colors.textSubtle }]}>←</Text>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12} accessibilityLabel="뒤로 가기">
+          <Ionicons name="arrow-back" size={22} color={colors.textSubtle} />
         </Pressable>
-        <Text style={[styles.headerIcon, { color: colors.textSubtle }]}>⋯</Text>
+        <Ionicons name="ellipsis-horizontal" size={22} color={colors.textSubtle} accessibilityLabel="더보기" />
       </View>
       <View style={styles.topRow}>
         {cat.photoUri ? (
@@ -92,7 +93,6 @@ export default function CatDetailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 22, paddingTop: 14 },
-  headerIcon: { fontSize: 20 },
   topRow: { flexDirection: 'row', gap: 16, paddingHorizontal: 22, paddingTop: 6, alignItems: 'center' },
   photo: { width: 88, height: 88, borderRadius: 24 },
   topInfo: { flex: 1, gap: 7 },

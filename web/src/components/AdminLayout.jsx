@@ -1,5 +1,6 @@
 import { MENU } from '../data/menu.js';
 import { navigate } from '../router.js';
+import brandMark from '../assets/brand-mark.png';
 import '../styles/admin.css';
 
 export default function AdminLayout({ activeRoute, onLogout, children }) {
@@ -7,7 +8,10 @@ export default function AdminLayout({ activeRoute, onLogout, children }) {
     <div className="admin">
       <aside className="sidebar">
         <div className="brand sidebar__brand">
-          우리동네고양이 <small>ADMIN</small>
+          <img className="brand__mark" src={brandMark} alt="" />
+          <span>
+            우리동네고양이 <small>ADMIN</small>
+          </span>
         </div>
 
         <nav className="sidebar__nav">

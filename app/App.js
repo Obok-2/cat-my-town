@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, Jua_400Regular } from '@expo-google-fonts/jua';
 import { GowunDodum_400Regular } from '@expo-google-fonts/gowun-dodum';
 import { IBMPlexMono_400Regular, IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono';
+import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider, useColors } from './src/theme/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import SplashScreenView from './src/screens/SplashScreen';
@@ -24,6 +25,7 @@ function Shell() {
   const [splashElapsed, setSplashElapsed] = useState(false);
   const navigationRef = useNavigationContainerRef();
   const [fontsLoaded] = useFonts({
+    ...Ionicons.font,
     Jua_400Regular,
     GowunDodum_400Regular,
     IBMPlexMono_400Regular,

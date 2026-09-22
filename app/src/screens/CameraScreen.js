@@ -98,7 +98,7 @@ export default function CameraScreen({ navigation }) {
           accessibilityLabel="내 정보"
           style={[styles.avatar, { backgroundColor: colors.tagPeachBg }]}
         >
-          <Text style={[styles.avatarGlyph, { color: colors.tagPeachText }]}>☻</Text>
+          <Ionicons name="person-outline" size={19} color={colors.tagPeachText} />
         </Pressable>
       </View>
 
@@ -112,7 +112,7 @@ export default function CameraScreen({ navigation }) {
         </View>
         <View pointerEvents="none" style={styles.hintRow}>
           <View style={[styles.hintBubble, { backgroundColor: colors.hintBubbleBg }]}>
-            <Text style={[styles.hintStar, { color: colors.accent }]}>✦</Text>
+            <Ionicons name="sparkles" size={15} color={colors.accent} />
             <Text style={[styles.hintText, { color: colors.hintBubbleText }]}>얼굴이 프레임 안에 들어오면 또렷해요</Text>
           </View>
         </View>
@@ -173,7 +173,6 @@ const styles = StyleSheet.create({
   dateText: { fontFamily: fonts.body, fontSize: 12 },
   headerTitle: { fontFamily: fonts.display, fontSize: 22 },
   avatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  avatarGlyph: { fontSize: 16 },
   viewfinderWrap: {
     flex: 1,
     marginHorizontal: 16,
@@ -190,7 +189,6 @@ const styles = StyleSheet.create({
   cornerBR: { bottom: 116, right: 0, borderRightWidth: 3, borderBottomWidth: 3, borderBottomRightRadius: 26 },
   hintRow: { position: 'absolute', left: 0, right: 0, top: 20, alignItems: 'center' },
   hintBubble: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  hintStar: { fontSize: 13 },
   hintText: { fontFamily: fonts.body, fontSize: 13 },
   torchButton: { position: 'absolute', left: 16, top: 64, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   zoomRow: { position: 'absolute', left: 0, right: 0, bottom: 160, flexDirection: 'row', justifyContent: 'center', gap: 8 },

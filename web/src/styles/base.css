@@ -76,7 +76,22 @@ p {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-family: var(--font-title);
+}
+
+.brand__mark {
+  display: block;
+  width: 1.8em;
+  height: 1.8em;
+  flex: none;
+  object-fit: contain;
+}
+
+.brand > span {
+  white-space: nowrap;
 }
 
 .brand small {

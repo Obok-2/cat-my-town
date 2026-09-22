@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 
@@ -7,7 +8,7 @@ import { fonts } from '../theme/fonts';
 const TAG_PALETTE = ['peach', 'mint'];
 
 // editable=false: AI가 찾은 특징 등 읽기 전용 표시.
-// editable=true: 이름 짓기 화면 — 제거 ✕ + 점선 테두리 "+ 직접 입력" 칩으로 추가.
+// editable=true: 이름 짓기 화면 — 닫기·추가 아이콘이 있는 편집용 칩.
 export default function TraitTagList({ tags, editable = false, onRemove, onAdd, centered = false }) {
   const colors = useColors();
   const [adding, setAdding] = useState(false);
@@ -27,13 +28,12 @@ export default function TraitTagList({ tags, editable = false, onRemove, onAdd, 
         const bg = kind === 'peach' ? colors.tagPeachBg : colors.tagMintBg;
         const fg = kind === 'peach' ? colors.tagPeachText : colors.tagMintText;
         return (
-          <View key={tag} style={[styles.chip, { backgroundColor: bg }]}>
-            <Text style={[styles.chipText, { color: fg }]}>
-              {tag}
-              {editable ? ' ✕' : ''}
-            </Text>
+          <View key={tag} style={[styles.chip, styles.tagChip, { backgroundColor: bg }]}>
+            <Text style={[styles.chipText, { color: fg }]}>{tag}</Text>
             {editable && (
-              <Pressable onPress={() => onRemove?.(tag)} style={StyleSheet.absoluteFill} hitSlop={4} />
+              <Pressable onPress={() => onRemove?.(tag)} hitSlop={6} accessibilityLabel={`${tag} 태그 삭제`}>
+                <Ionicons name="close" size={15} color={fg} />
+              </Pressable>
             )}
           </View>
         );
@@ -59,7 +59,8 @@ export default function TraitTagList({ tags, editable = false, onRemove, onAdd, 
             onPress={() => setAdding(true)}
             style={[styles.chip, styles.addChip, { borderColor: colors.borderStrong, backgroundColor: colors.card }]}
           >
-            <Text style={[styles.chipText, { color: colors.textMuted }]}>+ 직접 입력</Text>
+            <Ionicons name="add" size={16} color={colors.textMuted} />
+            <Text style={[styles.chipText, { color: colors.textMuted }]}>직접 입력</Text>
           </Pressable>
         ))}
     </View>
@@ -75,6 +76,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   chipText: { fontFamily: fonts.body, fontSize: 14 },
-  addChip: { borderWidth: 1.5, borderStyle: 'dashed' },
+  tagChip: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  addChip: { flexDirection: 'row', alignItems: 'center', gap: 2, borderWidth: 1.5, borderStyle: 'dashed' },
   chipInput: { borderWidth: 1.5, minWidth: 100, paddingVertical: 7 },
 });

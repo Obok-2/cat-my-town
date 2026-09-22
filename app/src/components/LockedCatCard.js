@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 
@@ -9,7 +10,7 @@ export default function LockedCatCard() {
   return (
     <View style={[styles.card, { backgroundColor: colors.lockedBg, borderColor: colors.lockedBorder }]}>
       <View style={styles.glyphWrap}>
-        <Text style={[styles.glyph, { color: colors.lockedGlyph }]}>???</Text>
+        <Ionicons name="lock-closed-outline" size={40} color={colors.lockedGlyph} />
       </View>
       <Text style={[styles.label, { color: colors.lockedText }]}>아직 만나지 못한 친구</Text>
     </View>
@@ -19,6 +20,5 @@ export default function LockedCatCard() {
 const styles = StyleSheet.create({
   card: { flex: 1, borderRadius: 22, borderWidth: 1.5, borderStyle: 'dashed', overflow: 'hidden' },
   glyphWrap: { aspectRatio: 1, alignItems: 'center', justifyContent: 'center' },
-  glyph: { fontFamily: fonts.display, fontSize: 36 },
   label: { fontFamily: fonts.body, fontSize: 12, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 13 },
 });

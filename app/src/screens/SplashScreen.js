@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
-import PlaceholderArt from '../components/PlaceholderArt';
 import { expo } from '../../app.json';
 
 // 목업 a0 "스플래시": 로고 + 한 줄 문구 + 로딩 점 3개 + 버전. 앱 실행 직후 잠깐만 보인다.
@@ -20,14 +19,7 @@ export default function SplashScreen() {
       <View style={[styles.circleA, { backgroundColor: colors.splashCircleA }]} />
       <View style={[styles.circleB, { backgroundColor: colors.splashCircleB }]} />
 
-      <PlaceholderArt
-        label={'일러스트\n손그림 고양이'}
-        round
-        stripe={9}
-        colorA={colors.splashArtA}
-        colorB={colors.splashArtB}
-        style={styles.art}
-      />
+      <Image source={require('../../assets/brand-mark.png')} style={styles.art} resizeMode="contain" />
       <View style={styles.titleWrap}>
         <Text style={[styles.title, { color: colors.text }]}>우리동네고양이</Text>
         <Text style={[styles.tagline, { color: colors.textSubtle }]}>오늘의 산책을 기록해요</Text>

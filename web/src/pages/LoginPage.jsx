@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { login } from '../auth.js';
+import brandMark from '../assets/brand-mark.png';
 import '../styles/login.css';
 
 export default function LoginPage({ onLogin }) {
@@ -23,15 +24,14 @@ export default function LoginPage({ onLogin }) {
     <div className="login">
       <aside className="login__intro">
         <div className="brand login__brand">
-          우리동네고양이 <small>ADMIN</small>
+          <img className="brand__mark" src={brandMark} alt="" />
+          <span>
+            우리동네고양이 <small>ADMIN</small>
+          </span>
         </div>
 
         <div className="login__pitch">
-          <div className="login__art stripe">
-            일러스트
-            <br />
-            손그림 고양이
-          </div>
+          <img className="login__art" src={brandMark} alt="우리동네고양이 고양이 마크" />
           <h1 className="login__headline">
             기록이 쌓이는 만큼
             <br />

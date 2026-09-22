@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { useAuth } from '../context/AuthContext';
@@ -54,8 +55,8 @@ export default function ProfileScreen({ navigation }) {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={[styles.backArrow, { color: colors.textSubtle }]}>←</Text>
+        <Pressable onPress={() => navigation.goBack()} hitSlop={12} accessibilityLabel="뒤로 가기">
+          <Ionicons name="arrow-back" size={22} color={colors.textSubtle} />
         </Pressable>
       </View>
       <View style={styles.content}>
@@ -90,7 +91,6 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   header: { paddingHorizontal: 22, paddingTop: 14 },
-  backArrow: { fontSize: 20 },
   content: { flex: 1, alignItems: 'center', paddingHorizontal: 28, paddingTop: 24 },
   avatar: { width: 88, height: 88, marginBottom: 16 },
   name: { fontFamily: fonts.display, fontSize: 20 },

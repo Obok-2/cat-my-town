@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Image, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { registerNewCat } from '../data/store';
@@ -52,8 +53,13 @@ export default function NamingScreen({ route, navigation }) {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12} style={styles.headerRow}>
-          <Text style={[styles.backArrow, { color: colors.textSubtle }]}>←</Text>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          hitSlop={12}
+          style={styles.headerRow}
+          accessibilityLabel="뒤로 가기"
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.textSubtle} />
           <Text style={[styles.headerTitle, { color: colors.text }]}>이름 짓기</Text>
         </Pressable>
       </View>
@@ -111,7 +117,6 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   header: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 4 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  backArrow: { fontSize: 20 },
   headerTitle: { fontFamily: fonts.display, fontSize: 20 },
   content: { paddingHorizontal: 30, paddingBottom: 40 },
   photoRow: { alignItems: 'center', marginTop: 10, marginBottom: 22 },
