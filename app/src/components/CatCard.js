@@ -7,6 +7,8 @@ import PlaceholderArt from './PlaceholderArt';
 // 목업 a6 카드 그리드 1칸: 정사각 사진(placeholder) + 우하단 목격 횟수 배지 + Jua 이름 + 대표 태그.
 export default function CatCard({ cat, onPress }) {
   const colors = useColors();
+  const photoSource = cat.photoSource ?? (cat.photoUri ? { uri: cat.photoUri } : null);
+
   return (
     <Pressable
       onPress={onPress}
@@ -15,9 +17,9 @@ export default function CatCard({ cat, onPress }) {
         { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.85 : 1 },
       ]}
     >
-      <View style={styles.photoWrap}>
-        {cat.photoUri ? (
-          <Image source={{ uri: cat.photoUri }} style={styles.photo} resizeMode="cover" />
+      <View style={[styles.photoWrap, { backgroundColor: colors.cardAlt }]}>
+        {photoSource ? (
+          <Image source={photoSource} style={styles.photo} resizeMode="cover" />
         ) : (
           <PlaceholderArt style={StyleSheet.absoluteFill} />
         )}
@@ -40,20 +42,27 @@ export default function CatCard({ cat, onPress }) {
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, borderRadius: 22, borderWidth: 1.5, overflow: 'hidden' },
-  photoWrap: { aspectRatio: 1, justifyContent: 'flex-end', alignItems: 'flex-end', padding: 8 },
-  photo: { ...StyleSheet.absoluteFillObject },
-  badge: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 12 },
+  card: { flex: 1, borderRadius: 24, borderWidth: 1.5, padding: 8, overflow: 'hidden' },
+  photoWrap: {
+    aspectRatio: 1,
+    borderRadius: 18,
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    padding: 8,
+  },
+  photo: { position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' },
+  badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 13 },
   badgeText: { fontFamily: fonts.body, fontSize: 11 },
-  name: { fontFamily: fonts.display, fontSize: 17, marginTop: 10, marginHorizontal: 12 },
+  name: { fontFamily: fonts.display, fontSize: 18, marginTop: 10, marginHorizontal: 4 },
   tag: {
     alignSelf: 'flex-start',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginTop: 5,
-    marginHorizontal: 12,
-    marginBottom: 13,
+    borderRadius: 11,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    marginTop: 6,
+    marginHorizontal: 4,
+    marginBottom: 5,
   },
   tagText: { fontFamily: fonts.body, fontSize: 11 },
 });
