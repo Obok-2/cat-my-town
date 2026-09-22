@@ -29,15 +29,10 @@
   **함수를 `.toString()`으로 직렬화하면 안 된다** — React Native의 Hermes는 빌드할 때 소스를 바이트코드로 바꿔서
   `함수.toString()`이 `function () { [bytecode] }`를 돌려주므로 네이티브에서만 조용히 깨진다(웹에서는 멀쩡해서 놓치기 쉽다).
   `DRAW_SOURCE` 안에서는 바깥 변수·import를 쓸 수 없고, 바깥 템플릿 리터럴에 들어가므로 백틱과 `${`도 쓰지 않는다.
-- JS 키는 `app/.env`의 `EXPO_PUBLIC_KAKAO_JS_KEY`에 둔다. **`.env`는 커밋하지 않고** `.env.example`만 올린다(저장소가 공개라서).
 - 카카오 개발자 콘솔에서 **두 가지를 켜야** SDK가 내려온다 — 안 켜져 있으면 각각 다른 오류가 난다(둘 다 앱 코드 문제 아님).
   ① [제품 설정 > 카카오맵] 활성화 ON — 꺼져 있으면 `NotAuthorizedError: disabled OPEN_MAP_AND_LOCAL service`
   ② [내 애플리케이션 > 플랫폼 > Web]에 도메인 등록(`http://localhost:8081`·`https://localhost`) — 안 돼 있으면 `AccessDeniedError: domain mismatched`
   이 오류가 나도 앱은 죽지 않고 격자 자리표시자로 넘어간다.
-- 좌표는 기획대로 **뭉갠 값만** 저장한다 — `store.js`의 `roundCoord()`로 소수점 5자리까지(=`schema.sql`의 `NUMERIC(8,5)`와 같은 자릿수).
-- ⚠️ **로컬 지도 테스트 시 8081 포트를 확인할 것**: Expo 웹 개발 서버(`expo start --web`)와 정적 빌드 확인용 임시 서버가 같은 포트를 쓴다.
-  이미 뭔가 8081을 쓰고 있으면 정적 서버가 조용히 `EADDRINUSE`로 실패하고, 브라우저는 원래 떠 있던(어쩌면 오래된 코드의) 서버로 계속 붙는다 —
-  "잘 된다"고 착각하기 쉬우니 포트를 점유한 프로세스를 확인하고 죽인 뒤 다시 띄워서 검증한다.
 
 ## 코딩 규칙 (React — app/, web/)
 
