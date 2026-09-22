@@ -8,7 +8,7 @@
 |---|---|
 | 문서명 | 우리동네고양이 앱 REST API 인터페이스 정의서 |
 | 대상 | 모바일 앱(`app/`) ↔ 백엔드(`server/`) |
-| 버전 / 상태 | v0.3 / **초안(검토 전)** — API 6개(IF-ME-002, IF-CAT-001, IF-LVL-001, IF-CAT-002, IF-CAT-003, IF-CAT-006)만 구현, 나머지는 **미구현** |
+| 버전 / 상태 | v0.4 / **초안(검토 전)** — 촬영 분석과 신규 고양이 등록을 포함해 구현 진행 중 |
 | 작성일 | 2026-09-21 |
 | 기준 자료 | 앱 코드(`app/src/data/store.js`·`levels.js`·`matchConfig.js`), 새 UIUX 목업(a0~a10), `산출물/schema.sql`, `README.md` |
 | 제외 범위 | 관리자 웹(`web/`)용 API — 관리자 인증·통계는 별도 문서 |
@@ -644,7 +644,8 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 }
 ```
 
-> 현재 구현 범위는 위 분석 API까지다. 아래 매칭 확정·신규 등록 API는 사진 저장과 만료되는 매칭 세션을 추가한 뒤 구현한다.
+> 현재 분석 API는 사진을 임시 보관하지 않는다. 기존 고양이 확정은 매칭 세션을 도입한 뒤 구현하고,
+> 신규 등록은 아래와 같이 분석 사진을 다시 전송하는 MVP 인터페이스로 구현했다.
 
 ---
 
@@ -691,35 +692,50 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | **[새로운 고양이예요]**(또는 후보 없음) → 이름 짓기 화면의 **[도감에 등록하기]**. 새 고양이(`cats`)와 첫 목격(`sightings`), 태그(`cat_tags`)를 만들고 이 사진의 임베딩을 **대표 임베딩**으로 저장한다. `users.level` 캐시도 갱신한다 |
-| Method / URL | `POST /api/v1/matches/{matchId}/register` |
+| 설명 | **[새로운 고양이예요]**(또는 후보 없음) → 이름 짓기 화면의 **[도감에 등록하기]**. 사진을 MinIO에 저장하고 새 고양이(`cats`)와 첫 목격(`sightings`), 태그(`cat_tags`)를 만들며 Voyage 임베딩을 **대표 임베딩**으로 저장한다. `users.level` 캐시도 갱신한다 |
+| Method / URL | `POST /app/cat/register` (`multipart/form-data`) |
 | 호출 화면 | 이름 짓기(a5), 레벨업 팝업(a8) |
 
 **Request**
 
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
-| Path | `matchId` | String(UUID) | Y | IF-MATCH-001의 `matchId` |
-| Body | `name` | String(1~12) | Y | 고양이 이름. 공백만은 불가. 최대 길이는 IF-CFG-002 `nameMaxLength` |
-| Body | `tags` | Array<String(1~30)> | N | 사용자가 수정·추가한 최종 태그(AI 제안 `tags`를 편집). 같은 고양이에 중복 불가 |
-| Body | `memo` | String(0~200) | N | 첫 만남 메모 |
+| Part | `file` | File[](JPEG/PNG, 최대 10MB) | Y | 분석에 사용한 촬영 사진. 현재는 정확히 1장만 허용 |
+| Part | `contents` | JSON | Y | `application/json` 형식의 등록 내용 |
+| `contents.name` | String(1~12) | Y | 고양이 이름. 공백만은 불가 |
+| `contents.tags` | Array<String(1~30)> | N | 최종 특징 태그. 중복은 서버에서 제거 |
+| `contents.memo` | String(0~200) | N | 첫 만남 메모 |
 
-**Response `201`**
+**Response `200` (`ResponseApi.data`)**
 
 | 항목 | 타입 | Null | 설명 |
 |---|---|---|---|
-| `cat` | Cat | N | 새로 등록된 고양이 |
-| `sighting` | Sighting | N | 첫 목격 기록(`seq`=1) |
-| `levelUp.leveledUp` | Boolean | N | 이번 등록으로 등급이 올랐으면 `true` → 앱이 **레벨업 팝업(a8)** 표시 |
-| `levelUp.level` | LevelInfo | N | 등록 후 레벨 정보. 팝업 문구·진행바를 이 값으로 채운다(`GET /me/level`을 다시 부르지 않아도 됨) |
+| `catId` | Long | N | 새 고양이 ID |
+| `sightingId` | Long | N | 첫 목격 ID |
+| `name` | String | N | 등록된 이름 |
+| `photoUrl` | String | N | 현재는 MinIO 객체 경로. 사진 조회 URL 처리는 후속 구현 |
+| `tags` | Array<String> | N | 중복 제거된 태그 |
+| `catCount` | Integer | N | 등록 후 사용자의 고양이 수 |
+| `level` | Integer | N | 등록 후 레벨(0~5) |
+| `leveledUp` | Boolean | N | 이번 등록으로 레벨이 올랐는지 여부 |
 
-**에러**: `400 INVALID_REQUEST`(이름 규칙 위반 등), `404 NOT_FOUND`, `409 MATCH_ALREADY_RESOLVED`, `410 MATCH_EXPIRED`
+**에러**: `400 FAIL`(사진·이름·태그·메모 형식 오류), `413 FAIL`(사진 10MB 초과), `503 FAIL`(Voyage 또는 MinIO 사용 불가)
 
 ```json
 {
-  "cat": { "id": 21, "name": "양말이", "tags": ["턱시도", "한쪽 귀 끝이 잘림"], "photoUrl": "https://…", "sightingCount": 1, "createdAt": "2026-09-21T18:24:00+09:00" },
-  "sighting": { "id": 303, "seq": 1, "photoUrl": "https://…", "takenAt": "2026-09-21T18:24:00+09:00", "memo": "골목 담벼락 위에서 졸고 있었다", "latitude": null, "longitude": null },
-  "levelUp": { "leveledUp": true, "level": { "level": 2, "title": "골목 탐험가", "catCount": 5, "ratio": 0.0, "remainToNext": 7, "nextTitle": "골목 스카우터" } }
+  "result": "SUCCESS",
+  "message": "SUCCESS",
+  "code": 200,
+  "data": {
+    "catId": 21,
+    "sightingId": 303,
+    "name": "양말이",
+    "photoUrl": "cats/1/550e8400-e29b-41d4-a716-446655440000.jpg",
+    "tags": ["턱시도", "한쪽 귀 끝이 잘림"],
+    "catCount": 5,
+    "level": 2,
+    "leveledUp": true
+  }
 }
 ```
 

@@ -2,6 +2,56 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.catmytown.server.app.cat.CatDao">
 
+    <insert id="insertCat" parameterType="CatCreateVo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO cats (
+            user_id,
+            name,
+            representative_embedding,
+            photo_url
+        ) VALUES (
+            #{userId},
+            #{name},
+            CAST(#{representativeEmbedding} AS vector),
+            #{photoUrl}
+        )
+    </insert>
+
+    <insert id="insertSighting" parameterType="SightingCreateVo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO sightings (
+            cat_id,
+            photo_url,
+            memo,
+            taken_at
+        ) VALUES (
+            #{catId},
+            #{photoUrl},
+            #{memo},
+            #{takenAt}
+        )
+    </insert>
+
+    <insert id="insertCatTag">
+        INSERT INTO cat_tags (
+            cat_id,
+            tag
+        ) VALUES (
+            #{catId},
+            #{tag}
+        )
+    </insert>
+
+    <select id="selectCatCountByUser" resultType="int">
+        SELECT COUNT(*)
+          FROM cats
+         WHERE user_id = #{userId}
+    </select>
+
+    <update id="updateUserLevel">
+        UPDATE users
+           SET level = #{level}
+         WHERE id = #{userId}
+    </update>
+
     <!-- 소유자가 아니거나 없는 고양이면 결과가 없다(catId만으로는 찾지 않음 — 다른 사용자 고양이인지 자체를 알려주지 않기 위함) -->
     <select id="selectCatBasic" resultType="CatDetailRes">
         SELECT c.id,

@@ -32,6 +32,9 @@ dependencies {
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.5'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // 촬영 사진 저장소 (S3 호환 MinIO)
+    implementation 'io.minio:minio:9.0.3'
+
     // 촬영 사진의 고양이 여부 판별 (ImageNet / PyTorch)
     implementation platform('ai.djl:bom:0.38.0')
     implementation 'ai.djl:api'
