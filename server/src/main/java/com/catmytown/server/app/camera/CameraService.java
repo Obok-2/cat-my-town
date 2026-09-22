@@ -8,6 +8,7 @@ import com.catmytown.server.model.CameraAnalysisRes;
 import com.catmytown.server.model.CameraAnalysisStatus;
 import com.catmytown.server.model.CameraCandidateRes;
 import com.catmytown.server.model.CameraCandidateVo;
+import com.catmytown.server.model.CameraWeekCountRes;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +46,11 @@ public class CameraService {
 
     @Value("${camera.match.max-candidates}")
     private int maxCandidates;
+
+    public ResponseApi getWeekCount(Long userId) {
+        CameraWeekCountRes response = cameraDao.selectWeekCount(userId);
+        return ResponseApi.success(response);
+    }
 
     public ResponseApi analyze(MultipartFile photo, Long userId) {
         validatePhoto(photo);

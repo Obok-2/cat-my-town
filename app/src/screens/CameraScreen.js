@@ -7,7 +7,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Location from 'expo-location';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
-import { getSightings } from '../data/store';
+import { getCameraWeekCount } from '../api/cameraApi';
 import PrimaryButton from '../components/PrimaryButton';
 import { prepareCameraPhoto } from '../utils/prepareCameraPhoto';
 
@@ -33,7 +33,7 @@ export default function CameraScreen({ navigation }) {
   // 촬영 탭(앱 시작 시 초기 화면)에 들어오면 버튼 없이 바로 권한을 물어본다(마운트 시 1회).
   // 웹은 getUserMedia 호출 시 브라우저가 자체 권한 팝업을 띄우므로 우리 쪽에서는 묻지 않는다.
   const [permission, requestPermission] = useCameraPermissions({ request: Platform.OS !== 'web' });
-  const [weekCount, setWeekCount] = useState(0);
+  const [weekCount, setWeekCount] = useState(undefined);
   const [capturing, setCapturing] = useState(false);
   const [torchOn, setTorchOn] = useState(false);
   const [zoom, setZoom] = useState(0);
@@ -42,14 +42,20 @@ export default function CameraScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
-      let mounted = true;
-      getSightings().then((sightings) => {
-        if (!mounted) return;
-        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        setWeekCount(sightings.filter((s) => s.takenAt >= weekAgo).length);
-      });
+      let active = true;
+
+      async function loadWeekCount() {
+        try {
+          const response = await getCameraWeekCount();
+          if (active) setWeekCount(response.data.data.catCount ?? 0);
+        } catch {
+          if (active) setWeekCount(null);
+        }
+      }
+
+      loadWeekCount();
       return () => {
-        mounted = false;
+        active = false;
       };
     }, [])
   );
@@ -185,7 +191,13 @@ export default function CameraScreen({ navigation }) {
         </View>
       </View>
 
-      <Text style={[styles.weekText, { color: colors.textMuted }]}>이번 주에 {weekCount}마리를 만났어요</Text>
+      <Text style={[styles.weekText, { color: colors.textMuted }]}>
+        {weekCount === undefined
+          ? '이번 주 기록을 확인하고 있어요'
+          : weekCount === null
+            ? '이번 주 기록을 불러오지 못했어요'
+            : `이번 주에 ${weekCount}마리를 만났어요`}
+      </Text>
     </SafeAreaView>
   );
 }

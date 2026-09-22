@@ -187,7 +187,7 @@
 | IF-ME-001 | 내 정보 조회 | GET | `/me` | 앱 시작, 내 정보 | 필수 | 미구현 |
 | IF-ME-002 | 수집 수 조회 | GET | `/app/collection/count` | 도감(a6) | 필수 | **구현** |
 | IF-LVL-001 | 레벨용 수집 수 조회 | GET | `/app/level/count` | 레벨(a10) | 필수 | **구현** |
-| IF-ME-003 | 이번 주 만난 수 조회 | GET | `/me/stats/week` | 홈 카메라(a2) | 필수 | 미구현 |
+| IF-ME-003 | 이번 주 만난 수 조회 | GET | `/app/camera/week-count` | 홈 카메라(a2) | 필수 | **구현** |
 | IF-ME-004 | 회원 탈퇴 | DELETE | `/me` | 내 정보 | 후순위 | 미구현 |
 | IF-CFG-001 | 등급표 조회 | GET | `/levels` | 레벨(a10) | ~~필수~~ 불필요(앱이 등급표 보유, 1.4) | — |
 | IF-CFG-002 | 앱 설정 조회 | GET | `/config/app` | 매칭 결과(a3·a4), 이름 짓기(a5) | 필수 | 미구현 |
@@ -321,10 +321,11 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 항목 | 내용 |
 |---|---|
 | 설명 | 홈 카메라 하단 "이번 주에 N마리를 만났어요" 문구용. 최근 7일 기준 |
-| Method / URL | `GET /api/v1/me/stats/week` |
+| Method / URL | `GET /app/camera/week-count` |
 | 호출 화면 | 홈 카메라(a2) — 화면에 돌아올 때마다 다시 호출 |
+| 구현 상태 | **구현·앱 연결 완료** |
 
-**Request** — 없음
+**Request** — 헤더 `X-User-Id`(임시 사용자 식별, 기본 1). 파라미터·본문 없음
 
 **Response `200`**
 
@@ -336,6 +337,10 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 - 화면 문구가 "마리"이므로 `catCount`를 쓰는 게 맞다. 현재 앱은 횟수(`sightingCount` 상당)를 세고 있다(7장 참고)
 
 **에러**: `401 UNAUTHORIZED`
+
+```json
+{ "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "sightingCount": 7, "catCount": 3 } }
+```
 
 ---
 
@@ -843,7 +848,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `logout` | Firebase `signOut()` (서버 호출 없음) |
 | `getCats` | IF-CAT-001 |
 | `getCatById` | IF-CAT-002 |
-| `getSightings`(이번 주 계산) | IF-ME-003 |
+| `getCameraWeekCount` | IF-ME-003 (`/app/camera/week-count`의 `catCount`) |
 | `getSightingsByCat`(미니맵) | IF-CAT-006 |
 | `getSightingsByCat`(타임라인) | IF-CAT-003 (10건씩, `page` 늘려가며 무한스크롤) |
 | `getUserLevelInfo`(개수만 서버에서 받아 앱이 `computeLevel`로 계산) | IF-LVL-001 (`catCount`) |

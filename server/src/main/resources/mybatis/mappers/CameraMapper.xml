@@ -2,6 +2,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.catmytown.server.app.camera.CameraDao">
 
+    <select id="selectWeekCount" resultType="CameraWeekCountRes">
+        SELECT COUNT(s.id) AS sighting_count,
+               COUNT(DISTINCT s.cat_id) AS cat_count
+          FROM sightings s
+          JOIN cats c ON c.id = s.cat_id
+         WHERE c.user_id = #{userId}
+           AND s.taken_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
+    </select>
+
     <select id="selectCatCount" resultType="int">
         SELECT COUNT(*)
           FROM cats

@@ -3,6 +3,16 @@ import { Platform } from 'react-native';
 
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
 
+export const getCameraWeekCount = async () => {
+  const data = await axios.get(`${API_URL}/app/camera/week-count`, {
+    headers: {
+      'X-User-Id': '1',
+    },
+  });
+
+  return data;
+};
+
 export const analyzeCameraPhoto = async (photoUri) => {
   const body = new FormData();
 
