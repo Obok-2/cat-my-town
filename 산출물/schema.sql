@@ -10,7 +10,8 @@ CREATE TABLE users (
     google_uid    VARCHAR(128)  NOT NULL UNIQUE,            -- 검증된 Google ID Token의 sub
     display_name  VARCHAR(50),
     level         SMALLINT      NOT NULL DEFAULT 0,         -- 캐싱된 값. 신규 고양이 등록 시점마다 갱신 (등록 개체 수 기준 Lv1~5: 1·5·12·16·30마리 이상, 0은 미등록)
-    created_at    TIMESTAMPTZ   NOT NULL DEFAULT now()
+    created_at    TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    last_login_at TIMESTAMPTZ                                -- 마지막 Google 로그인 시각 (로그인할 때마다 갱신)
 );
 
 -- 등록된 고양이 개체 (사용자별 도감 — 다른 사용자와 공유하지 않는다)

@@ -2,12 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.catmytown.server.app.auth.AuthDao">
 
+    <!-- Google 로그인마다 호출: 처음이면 가입, 이미 있으면 이메일·마지막 로그인 시각을 갱신한다 -->
     <select id="upsertGoogleUser" resultType="AuthUserVo">
-        INSERT INTO users (google_uid, display_name)
-        VALUES (#{googleUid}, #{displayName})
+        INSERT INTO users (google_uid, display_name, last_login_at)
+        VALUES (#{googleUid}, #{displayName}, now())
         ON CONFLICT (google_uid)
         DO UPDATE
-              SET display_name = EXCLUDED.display_name
+              SET display_name  = EXCLUDED.display_name,
+                  last_login_at = EXCLUDED.last_login_at
         RETURNING id,
                   display_name
     </select>

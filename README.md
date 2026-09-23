@@ -158,6 +158,7 @@ users
 - display_name (Google 이메일 — 이름은 수집하지 않음)
 - level (캐싱된 값, 등록 시점마다 갱신)
 - created_at
+- last_login_at (마지막 로그인, 로그인할 때마다 갱신)
 
 cats
 - id
