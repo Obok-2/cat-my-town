@@ -121,6 +121,7 @@
 .lp-footer { display: flex; align-items: center; gap: 30px; padding-block: 32px; }
 .lp-footer .lp-brand { font-size: 18px; }
 .lp-footer p { font-size: 12px; color: #747a69; }
+.lp-footer .lp-privacy-link { font-size: 12px; }
 .lp-footer > a:last-child { margin-left: auto; font-size: 12px; color: #737b67; }
 @media (prefers-reduced-motion: no-preference) { html:has(.lp) { scroll-behavior: smooth; } }
 @media (max-width: 1000px) {

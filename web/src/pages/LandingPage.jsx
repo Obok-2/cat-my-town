@@ -11,7 +11,7 @@ const steps = [
 ];
 const questions = [
   ['어떤 앱인가요?', '산책하며 만난 고양이의 사진과 이름, 목격 기록을 모으는 개인용 고양이 다이어리예요. 처음 만난 친구와 다시 만난 친구의 이야기를 나만의 도감에 담을 수 있어요.'],
-  ['다른 사람에게 내 기록이 보이나요?', '우리동네고양이는 나만의 기록을 위한 앱이에요. 다른 사람과 기록이나 고양이의 위치를 공유하는 커뮤니티 기능은 제공하지 않아요.'],
+  ['다른 사람에게 내 기록이 보이나요?', '내가 만난 고양이와 쌓아온 이야기는 다른 사용자에게 공개되지 않아요. 고양이 사진과 목격 위치도 나의 개인 도감에 기록돼요.'],
   ['AI가 같은 고양이인지 정확히 알아보나요?', 'AI는 내 사진 기록에서 닮은 고양이를 후보로 제안해요. 무늬나 촬영 각도에 따라 틀릴 수 있어, 같은 고양이인지 마지막 선택은 사용자가 해요.'],
   ['지금 다운로드할 수 있나요?', '지금은 정식 출시를 준비하고 있어요. 다운로드가 가능해지면 이 페이지에서 안내할게요.'],
 ];
@@ -88,7 +88,7 @@ export default function LandingPage() {
         <section className="lp-container lp-section" id="features" aria-labelledby="features-title">
           <div className="lp-section-heading"><p className="lp-eyebrow">A LITTLE MORE SPECIAL</p><h2 id="features-title">같은 길을 걸어도,<br />새로운 이야기가 생겨요.</h2><p>이름 없던 골목의 친구들이<br />하나둘, 기억하고 싶은 얼굴이 되는 일.</p></div>
           <div className="lp-features">
-            <article className="lp-feature lp-feature-large"><div><span className="lp-label">01 / 나만의 도감</span><h3>만날수록 쌓이는<br />우리 동네의 얼굴들.</h3><p>내가 만난 고양이에게 이름을 지어주고,<br />사진과 특징을 차곡차곡 모아요.</p></div><img src={catArt} alt="새로운 만남을 기념하는 고양이 일러스트" /><span className="lp-feature-tag">안녕, 오늘부터 너는 치즈야!</span></article>
+            <article className="lp-feature lp-feature-large"><div><span className="lp-label">01 / 나만의 도감</span><h3>만날수록 쌓이는<br />우리 동네의 얼굴들.</h3><p>내가 만난 고양이와 쌓아온 이야기는<br />다른 사용자에게 공개되지 않아요.</p></div><img src={catArt} alt="새로운 만남을 기념하는 고양이 일러스트" /><span className="lp-feature-tag">안녕, 오늘부터 너는 치즈야!</span></article>
             <article className="lp-feature lp-feature-match"><span className="lp-label">02 / AI 매칭</span><div className="lp-match-art" aria-hidden="true"><img src={brandMark} alt="" /><span>···</span><img src={brandMark} alt="" /></div><h3>어디서 본 것 같은데?</h3><p>AI가 내 기록에서 닮은 친구를 찾아줘요.<br />같은 고양이인지 마지막 확인은 내가 직접.</p></article>
             <article className="lp-feature lp-feature-record"><span className="lp-label">03 / 목격 타임라인</span><div className="lp-timeline" aria-hidden="true"><span>첫 만남</span><i /><span>두 번째 안부</span><i /><span>오늘</span></div><h3>다시 만나면, 한 장 더.</h3><p>사진과 메모, 만났던 장소까지.<br />따로 흩어져 있던 기억을 하나의 이야기로.</p></article>
           </div>
@@ -102,7 +102,7 @@ export default function LandingPage() {
 
         <section className="lp-download" id="download" aria-labelledby="download-title"><div className="lp-container"><span className="lp-coming">COMING SOON · 출시 준비 중</span><h2 id="download-title">다음 산책에서,<br />우리 만나요.</h2><p>조금 더 다정한 산책을 위한 앱.<br />정식 출시 후 이곳에서 다운로드 링크를 안내할게요.</p><div className="lp-store-status"><span>iOS · 준비 중</span><span>Android · 준비 중</span></div><a href="#top">처음으로 돌아가기 ↑</a></div></section>
       </main>
-      <footer className="lp-footer lp-container"><a className="lp-brand" href="/"><img src={brandMark} alt="" />우리동네고양이</a><p>© 2026 Obok-2. All rights reserved.</p><a href="/admin">관리자</a></footer>
+      <footer className="lp-footer lp-container"><a className="lp-brand" href="/"><img src={brandMark} alt="" />우리동네고양이</a><p>© 2026 Obok-2. All rights reserved.</p><a className="lp-privacy-link" href="/privacy">개인정보 처리 안내</a><a href="/admin">관리자</a></footer>
     </div>
   );
 }
