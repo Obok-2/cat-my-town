@@ -65,16 +65,7 @@ services:
     command: ["java", "-jar", "/app/app.jar"]
     environment:
       TZ: Asia/Seoul
-      # application.properties의 localhost:5455 대신 compose 내부 주소로 접속한다
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      MINIO_ENDPOINT: http://minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      MINIO_BUCKET: cat-photos
-      VOYAGE_API_KEY: ${VOYAGE_API_KEY:-}
+      # DB·MinIO·Voyage 접속 정보는 jar 안의 application.properties에서 읽는다
       # DJL이 처음 실행할 때 내려받는 PyTorch 엔진·모델을 호스트 폴더에 남겨 재시작 시 다시 받지 않는다
       DJL_CACHE_DIR: /app/.djl.ai
       ENGINE_CACHE_DIR: /app/.djl.ai
