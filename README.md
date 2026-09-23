@@ -7,6 +7,8 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 - 동네 커뮤니티 공유가 아니라 **철저히 개인용 도감** — 내가 찍은 고양이만 내 기록에 남음
 - 포켓몬 도감처럼, 만난 고양이를 하나씩 모아가는 수집 재미
 
+> **배포 상태**: 서버·홍보 웹은 배포 완료, 앱은 스토어 출시 준비 중(개발 빌드로 실기기 테스트) — 아직 Google Play·App Store에는 없습니다.
+>
 > **소개 사이트**: [https://mycat-town.duckdns.org](https://mycat-town.duckdns.org/) — 기능 소개·사용 방법·FAQ·[개인정보 처리 안내](https://mycat-town.duckdns.org/privacy)
 >
 > **화면 설계**: [시안 디자인 보기](https://github.com/Obok-2/cat-my-town/blob/main/design/%EC%9A%B0%EB%A6%AC%EB%8F%99%EB%84%A4%EA%B3%A0%EC%96%91%EC%9D%B4_%EB%AA%A9%EC%97%85.pdf) — 앱·관리자 웹 화면 시안 (PDF)
@@ -199,14 +201,3 @@ calibrated = Math.max(0, Math.min(100, calibrated));
 - 대응: 자동 확정 대신 **항상 사용자 최종 확인 UX**로 설계해 오매칭 리스크를 사용자 판단으로 보완
 - ImageNet의 고양이 계열 클래스는 6개뿐이라, 무늬가 특이하거나 몸이 많이 가려진 고양이는 판별 확률이 낮게 나올 수 있음 → 기준값 튜닝, 필요하면 길고양이 사진으로 파인튜닝
 - 참고 연구: 동물 개체 재식별 전문 모델 MegaDescriptor(WACV 2024) 대비, 현재는 범용 임베딩(Voyage AI)을 사용 — 향후 전문 모델 도입 검토 가능
-
----
-
-## 향후 확장 계획
-
-- Google Play·App Store 출시 (계정 삭제 기능, iOS는 Apple 로그인 추가)
-- Claude API로 매칭 설명 문장·무늬 태그 자동 제안
-- 실종묘 등록 및 자동 매칭 알림 (Whisker Tracker 벤치마킹)
-- 관리자 웹 나머지 메뉴(사용자·등록 고양이·AI 매칭 품질·신고/문의·설정) 구현 및 서버 API 연동
-- 카카오 로그인 추가
-- MegaDescriptor 등 재식별 특화 모델 도입 검토
