@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { getCollectionCats, getCollectionCount } from '../api/collectionApi';
+import { getAuthorizationHeaders } from '../storage/tokenStorage';
 import { computeLevel } from '../data/levels';
 import LevelProgressBar from '../components/LevelProgressBar';
 import CatCard from '../components/CatCard';
@@ -15,14 +16,18 @@ import PrimaryButton from '../components/PrimaryButton';
 const MAX_LOCKED_CARDS = 4;
 
 async function requestCollection() {
-  const [catsResponse, countResponse] = await Promise.all([getCollectionCats(), getCollectionCount()]);
+  const [catsResponse, countResponse, imageHeaders] = await Promise.all([
+    getCollectionCats(),
+    getCollectionCount(),
+    getAuthorizationHeaders(),
+  ]);
   const collectionCats = catsResponse.data.data.cats ?? [];
   const catCount = countResponse.data.data.catCount ?? collectionCats.length;
 
   return {
     cats: collectionCats.map((cat) => ({
       ...cat,
-      photoSource: cat.photoUrl ? { uri: cat.photoUrl } : null,
+      photoSource: cat.photoUrl ? { uri: cat.photoUrl, headers: imageHeaders } : null,
     })),
     levelInfo: computeLevel(catCount),
   };

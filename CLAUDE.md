@@ -19,6 +19,9 @@ export const login = async (id, pwd) => {
 };
 ```
 
+- JWT 인증 이후의 서버 요청은 예외적으로 `app/src/api/apiClient.js`의 axios 인스턴스를 사용한다. 이 인스턴스가
+  SecureStore의 Access Token을 `Authorization: Bearer ...` 헤더에 넣으므로 각 API 모듈에서 인증 헤더를 반복 작성하지 않는다.
+
 ## 서버 CORS 규칙 (`server/`)
 
 - CORS는 개별 컨트롤러의 `@CrossOrigin`으로 설정하지 않는다.

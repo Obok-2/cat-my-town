@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { getCatDetail, getCatMarkers, getCatSightings } from '../api/catApi';
+import { getAuthorizationHeaders } from '../storage/tokenStorage';
 import TraitTagList from '../components/TraitTagList';
 import SightingTimelineItem from '../components/SightingTimelineItem';
 import SightingMiniMap from '../components/SightingMiniMap';
@@ -17,18 +18,19 @@ function formatDate(ts) {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function normalizeSighting(sighting) {
+function normalizeSighting(sighting, imageHeaders) {
   return {
     ...sighting,
-    photoSource: sighting.photoUrl ? { uri: sighting.photoUrl } : null,
+    photoSource: sighting.photoUrl ? { uri: sighting.photoUrl, headers: imageHeaders } : null,
   };
 }
 
 async function requestCatDetail(catId) {
-  const [detailResponse, markersResponse, sightingsResponse] = await Promise.all([
+  const [detailResponse, markersResponse, sightingsResponse, imageHeaders] = await Promise.all([
     getCatDetail(catId),
     getCatMarkers(catId),
     getCatSightings(catId, 0),
+    getAuthorizationHeaders(),
   ]);
   const detail = detailResponse.data.data;
   const markerList = markersResponse.data.data.markers ?? [];
@@ -37,15 +39,15 @@ async function requestCatDetail(catId) {
   return {
     cat: {
       ...detail,
-      photoSource: detail.photoUrl ? { uri: detail.photoUrl } : null,
+      photoSource: detail.photoUrl ? { uri: detail.photoUrl, headers: imageHeaders } : null,
     },
     markers: markerList.map((marker) => ({
       ...marker,
       lat: Number(marker.latitude),
       lng: Number(marker.longitude),
-      photoSource: marker.photoUrl ? { uri: marker.photoUrl } : null,
+      photoSource: marker.photoUrl ? { uri: marker.photoUrl, headers: imageHeaders } : null,
     })),
-    sightings: (sightingPage.sightings ?? []).map(normalizeSighting),
+    sightings: (sightingPage.sightings ?? []).map((sighting) => normalizeSighting(sighting, imageHeaders)),
     hasMore: sightingPage.hasMore,
   };
 }
@@ -121,7 +123,8 @@ export default function CatDetailScreen({ route, navigation }) {
       const nextPage = page + 1;
       const response = await getCatSightings(catId, nextPage);
       const sightingPage = response.data.data;
-      const nextSightings = (sightingPage.sightings ?? []).map(normalizeSighting);
+      const imageHeaders = await getAuthorizationHeaders();
+      const nextSightings = (sightingPage.sightings ?? []).map((sighting) => normalizeSighting(sighting, imageHeaders));
       setSightings((previous) => [...previous, ...nextSightings]);
       setPage(nextPage);
       setHasMore(sightingPage.hasMore);

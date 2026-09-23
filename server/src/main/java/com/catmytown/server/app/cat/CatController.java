@@ -4,9 +4,9 @@ import com.catmytown.server.common.ApiUrl;
 import com.catmytown.server.common.ResponseApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,38 +24,38 @@ public class CatController {
 
     @GetMapping("/detail")
     public ResponseApi detail(
-            @RequestParam("catId") Long catId, @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
-        return catService.getCatDetail(catId, userId);
+            @RequestParam("catId") Long catId, Authentication authentication) {
+        return catService.getCatDetail(catId, Long.valueOf(authentication.getName()));
     }
 
     @GetMapping("/markers")
     public ResponseApi markers(
-            @RequestParam("catId") Long catId, @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
-        return catService.getCatMarkers(catId, userId);
+            @RequestParam("catId") Long catId, Authentication authentication) {
+        return catService.getCatMarkers(catId, Long.valueOf(authentication.getName()));
     }
 
     @GetMapping("/sightings")
     public ResponseApi sightings(
             @RequestParam("catId") Long catId,
-            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId,
+            Authentication authentication,
             @RequestParam(value = "page", defaultValue = "0") Integer page) {
-        return catService.getCatSightings(catId, userId, page);
+        return catService.getCatSightings(catId, Long.valueOf(authentication.getName()), page);
     }
 
     @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseApi register(
             @RequestPart("file") MultipartFile[] file,
             @RequestPart("contents") String contents,
-            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
-        return catService.register(file, contents, userId);
+            Authentication authentication) {
+        return catService.register(file, contents, Long.valueOf(authentication.getName()));
     }
 
     @PostMapping(value = "/sighting", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseApi addSighting(
             @RequestPart("file") MultipartFile[] file,
             @RequestPart("contents") String contents,
-            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
-        return catService.addSighting(file, contents, userId);
+            Authentication authentication) {
+        return catService.addSighting(file, contents, Long.valueOf(authentication.getName()));
     }
 
 }

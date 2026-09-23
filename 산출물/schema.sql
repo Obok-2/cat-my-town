@@ -4,10 +4,10 @@
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- 앱 사용자 (Google 로그인, 회원가입 없음)
+-- 앱 사용자 (Google Cloud OAuth 로그인, 별도 회원가입 없음)
 CREATE TABLE users (
     id            BIGSERIAL     PRIMARY KEY,
-    google_uid    VARCHAR(128)  NOT NULL UNIQUE,            -- Firebase Auth(Google) UID
+    google_uid    VARCHAR(128)  NOT NULL UNIQUE,            -- 검증된 Google ID Token의 sub
     display_name  VARCHAR(50),
     level         SMALLINT      NOT NULL DEFAULT 0,         -- 캐싱된 값. 신규 고양이 등록 시점마다 갱신 (등록 개체 수 기준 Lv1~5: 1·5·12·16·30마리 이상, 0은 미등록)
     created_at    TIMESTAMPTZ   NOT NULL DEFAULT now()

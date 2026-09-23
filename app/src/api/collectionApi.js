@@ -1,23 +1,13 @@
-import axios from 'axios';
-
-const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+import apiClient from './apiClient';
 
 export const getCollectionCats = async () => {
-  const data = await axios.get(`${API_URL}/app/collection/cats`, {
-    headers: {
-      'X-User-Id': '1',
-    },
-  });
+  const data = await apiClient.get('/app/collection/cats');
 
   return data;
 };
 
 export const getCollectionCount = async () => {
-  const data = await axios.get(`${API_URL}/app/collection/count`, {
-    headers: {
-      'X-User-Id': '1',
-    },
-  });
+  const data = await apiClient.get('/app/collection/count');
 
   return data;
 };
