@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Pressable, ActivityIndicator } from 'react-native';
+import { Alert, Image, Platform, View, Text, StyleSheet, SafeAreaView, Pressable, ActivityIndicator } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { useAuth } from '../context/AuthContext';
-import PlaceholderArt from '../components/PlaceholderArt';
 
 // 목업의 conic-gradient(빨·노·초·파 4등분) 구글 마크를 사분원 4개로 그린다.
 function GoogleMark() {
@@ -18,17 +17,22 @@ function GoogleMark() {
   );
 }
 
-// 목업 a1 "로그인": 구글 소셜 로그인 버튼 하나. 로고는 가운데, 버튼은 하단에 고정.
-// ⚠️ 실제 Firebase Authentication 연동 전까지는 버튼을 누르면 바로 로그인 처리되는 목업이다.
+// 목업 a1 "로그인": Google Cloud OAuth 로그인 버튼 하나. 로고는 가운데, 버튼은 하단에 고정.
 export default function LoginScreen() {
   const colors = useColors();
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
 
   async function handleLogin() {
+    setLoginError('');
     setLoading(true);
     try {
       await login();
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || '잠시 후 다시 시도해주세요.';
+      setLoginError(message);
+      if (Platform.OS !== 'web') Alert.alert('로그인하지 못했어요', message);
     } finally {
       setLoading(false);
     }
@@ -37,7 +41,12 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <View style={styles.hero}>
-        <PlaceholderArt label={'일러스트\n손그림 고양이'} round style={styles.illustration} />
+        <Image
+          source={require('../../assets/brand-mark.png')}
+          style={styles.illustration}
+          resizeMode="contain"
+          accessibilityLabel="우리동네고양이 로고"
+        />
         <View style={styles.titleWrap}>
           <Text style={[styles.title, { color: colors.text }]}>우리동네고양이</Text>
           <Text style={[styles.subtitle, { color: colors.textSubtle }]}>
@@ -47,6 +56,11 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.bottom}>
+        {!!loginError && (
+          <Text accessibilityRole="alert" style={[styles.footer, { color: colors.text }]}>
+            로그인하지 못했어요. {loginError}
+          </Text>
+        )}
         <Pressable
           onPress={handleLogin}
           disabled={loading}
@@ -69,7 +83,7 @@ export default function LoginScreen() {
             </>
           )}
         </Pressable>
-        <Text style={[styles.footer, { color: colors.textMuted }]}>기록은 이 기기의 내 계정에만 저장돼요</Text>
+        <Text style={[styles.footer, { color: colors.textMuted }]}>Google 계정으로 내 도감을 안전하게 관리해요</Text>
       </View>
     </SafeAreaView>
   );

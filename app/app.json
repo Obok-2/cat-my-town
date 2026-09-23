@@ -10,12 +10,19 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.obok2.catmytown",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,6 +40,12 @@
           "locationWhenInUsePermission": "우리동네고양이가 목격 위치를 기록하도록 허용해주세요."
         }
       ],
+      [
+        "react-native-nitro-google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.8280267462-ockas7pdj7eb2644kbsvsgt4fsfmivk7"
+        }
+      ],
       "expo-font",
       [
         "expo-splash-screen",
@@ -47,6 +60,11 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cd3d4d58-58c4-47df-b294-8da5cc153c88"
+      }
+    }
   }
 }

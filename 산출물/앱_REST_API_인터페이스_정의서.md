@@ -61,18 +61,18 @@
 
 | 항목 | 내용 |
 |---|---|
-| 인증 방식 | Firebase Authentication(Google). 앱이 받은 **Firebase ID 토큰**을 `Authorization: Bearer <토큰>` 헤더로 보낸다 |
-| 서버 검증 | Firebase Admin으로 토큰을 검증하고 `google_uid`로 사용자(`users`)를 찾는다 |
-| 인증 제외 | 없음 — 모든 인터페이스가 인증 필요(로그인 IF-AUTH-001도 토큰을 보낸다) |
+| 인증 방식 | Google Cloud OAuth 로그인 후 서버가 발급한 **자체 JWT**를 `Authorization: Bearer <토큰>` 헤더로 보낸다 |
+| 서버 검증 | 로그인 시 Google ID Token을 검증해 `sub`로 사용자(`users`)를 찾고, 이후 요청은 Spring Security가 자체 JWT를 검증한다 |
+| 인증 제외 | `/app/auth/google`만 인증 제외. 나머지 앱 API는 자체 JWT가 필요하다 |
 | 소유 범위 | 도감은 **사용자별로 완전히 분리**. 모든 조회·검색은 로그인한 사용자의 데이터로만 제한한다 |
 | 타인 데이터 | 다른 사용자의 고양이·매칭에 접근하면 존재하지 않는 것처럼 `404`(존재 여부를 알리지 않기 위해 `403`을 쓰지 않음) |
-| 로그아웃 | Firebase `signOut()`만 하면 되고 서버 호출은 없다(서버는 토큰만 검증하는 무상태) |
+| 로그아웃 | Google `signOut()` 후 SecureStore의 JWT를 삭제한다. Refresh Token과 서버 로그아웃 상태는 없다 |
 
 ### 2.3 공통 요청 헤더
 
 | 헤더 | 필수 | 값 | 설명 |
 |---|---|---|---|
-| `Authorization` | Y | `Bearer <Firebase ID 토큰>` | 인증 |
+| `Authorization` | Y | `Bearer <서버 Access JWT>` | 로그인 API를 제외한 요청 인증 |
 | `Content-Type` | 본문이 있을 때 Y | `application/json` 또는 `multipart/form-data` | |
 | `Accept` | N | `application/json` | |
 
@@ -112,7 +112,7 @@
 | HTTP | `result` | `code` | 발생 조건 | 앱 처리 |
 |---|---|---|---|---|
 | 400 | `FAIL` | 400 | 필수값 누락·형식/길이 위반·잘못된 헤더 값 | 입력 화면에 `message` 표시 |
-| 401 | `FAIL` | 401 | 토큰 없음·만료·위조 | Firebase 토큰 갱신 후 1회 재시도, 실패하면 로그인 화면 |
+| 401 | `FAIL` | 401 | 토큰 없음·만료·위조 | 저장된 JWT를 삭제하고 Google 로그인 화면으로 이동 |
 | 404 | `FAIL` | 404 | 없는 주소·없는 리소스(남의 것 포함) | 도감으로 돌아가기 |
 | 405 | `FAIL` | 405 | 지원하지 않는 HTTP 메서드 | — |
 | 500 | `ERROR` | 500 | 서버 내부 오류 | "잠시 후 다시 시도" |
@@ -183,8 +183,8 @@
 
 | 인터페이스 ID | 인터페이스명 | Method | URL | 호출 화면 | 우선순위 | 상태 |
 |---|---|---|---|---|---|---|
-| IF-AUTH-001 | 로그인/가입 처리 | POST | `/auth/login` | 로그인(a1) | 필수 | 미구현 |
-| IF-ME-001 | 내 정보 조회 | GET | `/me` | 앱 시작, 내 정보 | 필수 | 미구현 |
+| IF-AUTH-001 | Google 로그인/자체 JWT 발급 | POST | `/app/auth/google` | 로그인(a1) | 필수 | **구현** |
+| IF-ME-001 | 내 정보 조회 | GET | `/app/auth/me` | 앱 시작, 내 정보 | 필수 | **구현** |
 | IF-ME-002 | 수집 수 조회 | GET | `/app/collection/count` | 도감(a6) | 필수 | **구현** |
 | IF-LVL-001 | 레벨용 수집 수 조회 | GET | `/app/level/count` | 레벨(a10) | 필수 | **구현** |
 | IF-ME-003 | 이번 주 만난 수 조회 | GET | `/app/camera/week-count` | 홈 카메라(a2) | 필수 | **구현** |
@@ -227,23 +227,29 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 항목 | 내용 |
 |---|---|
-| 설명 | 앱이 구글 로그인(Firebase)으로 ID 토큰을 받은 직후 1회 호출한다. `users`에 해당 `google_uid`가 없으면 새로 만든다(별도 회원가입 화면 없음) |
-| Method / URL | `POST /api/v1/auth/login` |
+| 설명 | 앱이 Google Cloud OAuth로 ID Token을 받은 직후 호출한다. 서버가 토큰을 검증하고 `users`에 `sub`가 없으면 새로 만든 뒤 자체 JWT를 발급한다 |
+| Method / URL | `POST /app/auth/google` |
 | 호출 화면 | 로그인(a1) |
 
-**Request** — Header: `Authorization`(공통) / Path·Query·Body: 없음
+**Request**
+
+```json
+{ "idToken": "Google ID Token" }
+```
 
 **Response `200`**
 
 | 항목 | 타입 | Null | 설명 |
 |---|---|---|---|
-| `user` | User | N | 사용자 정보(2.7) |
-| `isNewUser` | Boolean | N | 이번 호출로 가입되었으면 `true` |
+| `accessToken` | String | N | 서버가 발급한 HS256 JWT |
+| `tokenType` | String | N | `Bearer` |
+| `expiresIn` | Long | N | 만료까지 남은 초. 기본 604800(7일) |
+| `user` | Object | N | 내부 사용자 ID와 표시 이름 |
 
 **에러**: `401 UNAUTHORIZED`
 
 ```json
-{ "user": { "id": 1, "displayName": "산책자", "level": 3, "createdAt": "2026-04-02T09:00:00+09:00" }, "isNewUser": false }
+{ "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "accessToken": "eyJ...", "tokenType": "Bearer", "expiresIn": 604800, "user": { "id": 1, "displayName": "산책자" } } }
 ```
 
 ---
@@ -253,7 +259,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 항목 | 내용 |
 |---|---|
 | 설명 | 로그인한 사용자의 정보를 조회한다(앱 재시작 후 로그인 상태 복원용) |
-| Method / URL | `GET /api/v1/me` |
+| Method / URL | `GET /app/auth/me` |
 | 호출 화면 | 앱 시작, 내 정보 |
 
 **Request** — 없음(헤더만)
@@ -273,7 +279,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 호출 화면 | 도감(a6) — 화면에 돌아올 때마다 다시 호출. 레벨 화면은 별도 API(IF-LVL-001)를 쓴다 |
 | 구현 상태 | **구현·검증 완료**(단위 테스트 + 로컬 DB 실제 호출) |
 
-**Request** — 헤더 `X-User-Id`(임시 사용자 식별, 기본 1. Firebase 인증을 붙이면 토큰으로 대체). 파라미터·본문 없음
+**Request** — 공통 Bearer 인증 헤더. 파라미터·본문 없음
 
 **Response `200`** — `data`
 
@@ -281,7 +287,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 |---|---|---|---|
 | `catCount` | Integer | N | 등록한 고양이 수(없으면 0) |
 
-**에러**: `400 FAIL`(`X-User-Id` 형식 오류)
+**에러**: `401 FAIL`(JWT 없음·만료·위조)
 
 ```json
 { "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "catCount": 12 } }
@@ -298,7 +304,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 호출 화면 | 레벨(a10) — 탭에 돌아올 때마다 다시 호출 |
 | 구현 상태 | **구현**(단위 테스트 5개 통과). 실제 DB 호출은 미확인(Docker가 꺼져 있었음) — 쿼리는 IF-ME-002와 동일 |
 
-**Request** — 헤더 `X-User-Id`(임시 사용자 식별, 기본 1). 파라미터·본문 없음
+**Request** — 공통 Bearer 인증 헤더. 파라미터·본문 없음
 
 **Response `200`** — `data`
 
@@ -306,7 +312,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 |---|---|---|---|
 | `catCount` | Integer | N | 등록한 고양이 수(없으면 0) |
 
-**에러**: `400 FAIL`(`X-User-Id` 형식 오류)
+**에러**: `401 FAIL`(JWT 없음·만료·위조)
 
 ```json
 { "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "catCount": 12 } }
@@ -325,7 +331,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 호출 화면 | 홈 카메라(a2) — 화면에 돌아올 때마다 다시 호출 |
 | 구현 상태 | **구현·앱 연결 완료** |
 
-**Request** — 헤더 `X-User-Id`(임시 사용자 식별, 기본 1). 파라미터·본문 없음
+**Request** — 공통 Bearer 인증 헤더. 파라미터·본문 없음
 
 **Response `200`**
 
@@ -425,7 +431,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 호출 화면 | 도감(a6) — 화면에 돌아올 때마다 다시 호출(등록 직후 바로 반영되어야 함) |
 | 구현 상태 | **구현·검증 완료**(단위 테스트 + 로컬 DB 실제 호출) |
 
-**Request** — 헤더 `X-User-Id`(임시, IF-ME-002와 동일). 파라미터·본문 없음
+**Request** — 공통 Bearer 인증 헤더. 파라미터·본문 없음
 
 **Response `200`** — `data`
 
@@ -438,7 +444,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | `cats[].sightingCount` | Integer | N | 만난 횟수(목격 기록 수) |
 | `cats[].tags` | Array<String> | N | 특징 태그(추가한 순서, 없으면 빈 배열). 앱 카드는 첫 번째만 표시 |
 
-**에러**: `400 FAIL`(`X-User-Id` 형식 오류)
+**에러**: `401 FAIL`(JWT 없음·만료·위조)
 
 ```json
 { "result": "SUCCESS", "message": "SUCCESS", "code": 200, "data": { "cats": [
@@ -458,7 +464,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 호출 화면 | 고양이 상세(a7) |
 | 구현 상태 | **구현**(단위 테스트 + 로컬 DB 실제 호출로 검증) |
 
-**Request** — 헤더 `X-User-Id`(임시, 기본 1)
+**Request** — 공통 Bearer 인증 헤더
 
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
@@ -495,7 +501,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 호출 화면 | 고양이 상세(a7) |
 | 구현 상태 | **구현**(단위 테스트 + 로컬 DB 실제 호출로 검증) |
 
-**Request** — 헤더 `X-User-Id`(임시, 기본 1)
+**Request** — 공통 Bearer 인증 헤더
 
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
@@ -536,7 +542,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 호출 화면 | 고양이 상세(a7) |
 | 구현 상태 | **구현**(단위 테스트 + 로컬 DB 실제 호출로 검증) |
 
-**Request** — 헤더 `X-User-Id`(임시, 기본 1)
+**Request** — 공통 Bearer 인증 헤더
 
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
@@ -616,7 +622,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
-| Header | `X-User-Id` | Long | N | 임시 사용자 ID. 생략 시 `1` |
+| Header | `Authorization` | String | Y | `Bearer <서버 Access JWT>` |
 | Query | `catId` | Long | 조건부 | 대표 사진을 조회할 고양이 ID |
 | Query | `sightingId` | Long | 조건부 | 개별 사진을 조회할 목격 ID |
 
@@ -702,7 +708,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 구분 | 항목 | 타입 | 필수 | 설명 |
 |---|---|---|---|---|
-| Header | `X-User-Id` | Long | N | 임시 사용자 ID. 생략 시 `1` |
+| Header | `Authorization` | String | Y | `Bearer <서버 Access JWT>` |
 | Part | `file` | File[] | Y | 분석에 사용한 JPEG/PNG 사진 정확히 1장 |
 | Part | `contents` | JSON String | Y | `{"analysisId":"UUID","catId":12,"tags":["턱시도"],"memo":"","latitude":37.12345,"longitude":127.12345}`. `catId`는 현재 사용자 소유여야 함 |
 | `contents.tags` | Array<String(1~30)> | N | 해당 목격에서 관찰한 특징. 중복 제거, 최대 5개, 쉼표 사용 불가 |
@@ -824,8 +830,8 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 화면 | 진입 시 호출 | 사용자 동작 시 호출 |
 |---|---|---|
-| 스플래시(a0) | — | (Firebase 로그인 상태만 확인) |
-| 로그인(a1) | — | Firebase 구글 로그인 → IF-AUTH-001 |
+| 스플래시(a0) | IF-ME-001 | SecureStore JWT가 있으면 사용자 조회, 실패하면 로그인 |
+| 로그인(a1) | — | Google Cloud OAuth → IF-AUTH-001 |
 | 홈 카메라(a2) | IF-ME-003 | 셔터 → IF-MATCH-001 |
 | 매칭 결과(a3·a4) | (IF-CFG-002는 앱 시작 시 1회 캐시) | [이 고양이예요] → 목격 기록 작성 / [새로운 고양이예요]·[이름 짓기] → 이름 짓기 화면 이동 |
 | 목격 기록 작성 | — | [목격 기록 저장하기] → IF-MATCH-002 |
@@ -834,7 +840,7 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 | 도감(a6) | IF-CAT-001, IF-ME-002 | 카드 탭 → 상세로 이동 |
 | 고양이 상세(a7) | IF-CAT-002, IF-CAT-006, IF-CAT-003(첫 페이지) | 타임라인 스크롤 끝 → IF-CAT-003(다음 page) |
 | 레벨(a10) | IF-LVL-001 (등급표는 앱이 보유) | — |
-| 내 정보 | IF-ME-001 | 로그아웃(Firebase만) / (개발) IF-DEV-001·002 |
+| 내 정보 | IF-ME-001 | Google 로그아웃 + SecureStore JWT 삭제 / (개발) IF-DEV-001·002 |
 
 ---
 
@@ -844,8 +850,8 @@ POST /app/camera/analyze ─┬─► NOT_CAT       (고양이 아님)
 
 | 지금(목데이터) | 서버 연동 후 |
 |---|---|
-| `loginWithGoogleMock` / `getUser` | Firebase 로그인 + IF-AUTH-001 / IF-ME-001 |
-| `logout` | Firebase `signOut()` (서버 호출 없음) |
+| Google 로그인 / 로그인 복원 | Google ID Token + IF-AUTH-001 / 자체 JWT + IF-ME-001 |
+| `logout` | Google `signOut()` + SecureStore JWT 삭제(서버 호출 없음) |
 | `getCats` | IF-CAT-001 |
 | `getCatById` | IF-CAT-002 |
 | `getCameraWeekCount` | IF-ME-003 (`/app/camera/week-count`의 `catCount`) |

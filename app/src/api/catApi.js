@@ -1,36 +1,26 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
-
-const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+import apiClient from './apiClient';
 
 export const getCatDetail = async (catId) => {
-  const data = await axios.get(`${API_URL}/app/cat/detail`, {
+  const data = await apiClient.get('/app/cat/detail', {
     params: { catId },
-    headers: {
-      'X-User-Id': '1',
-    },
   });
 
   return data;
 };
 
 export const getCatMarkers = async (catId) => {
-  const data = await axios.get(`${API_URL}/app/cat/markers`, {
+  const data = await apiClient.get('/app/cat/markers', {
     params: { catId },
-    headers: {
-      'X-User-Id': '1',
-    },
   });
 
   return data;
 };
 
 export const getCatSightings = async (catId, page) => {
-  const data = await axios.get(`${API_URL}/app/cat/sightings`, {
+  const data = await apiClient.get('/app/cat/sightings', {
     params: { catId, page },
-    headers: {
-      'X-User-Id': '1',
-    },
   });
 
   return data;
@@ -52,11 +42,7 @@ export const registerNewCat = async (photoUri, contents) => {
 
   body.append('contents', JSON.stringify(contents));
 
-  const data = await axios.post(`${API_URL}/app/cat/register`, body, {
-    headers: {
-      'X-User-Id': '1',
-    },
-  });
+  const data = await apiClient.post('/app/cat/register', body);
 
   return data;
 };
@@ -77,11 +63,7 @@ export const registerCatSighting = async (photoUri, contents) => {
 
   body.append('contents', JSON.stringify(contents));
 
-  const data = await axios.post(`${API_URL}/app/cat/sighting`, body, {
-    headers: {
-      'X-User-Id': '1',
-    },
-  });
+  const data = await apiClient.post('/app/cat/sighting', body);
 
   return data;
 };

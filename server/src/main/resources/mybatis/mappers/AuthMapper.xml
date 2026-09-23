@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.catmytown.server.app.auth.AuthDao">
+
+    <select id="upsertGoogleUser" resultType="AuthUserVo">
+        INSERT INTO users (google_uid, display_name)
+        VALUES (#{googleUid}, #{displayName})
+        ON CONFLICT (google_uid)
+        DO UPDATE
+              SET display_name = EXCLUDED.display_name
+        RETURNING id,
+                  display_name
+    </select>
+
+    <select id="selectUser" resultType="AuthUserVo">
+        SELECT id,
+               display_name
+          FROM users
+         WHERE id = #{userId}
+    </select>
+
+</mapper>

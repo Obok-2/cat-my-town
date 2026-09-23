@@ -7,7 +7,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // ⚠️ 로컬 전용 목 데이터 레이어. server/ 가 비어있어 실제 API가 없다 — 기기 안 AsyncStorage에만 쌓인다.
 // 데이터 모양은 design/우리동네고양이_목업.pdf 8페이지 "DATA SHAPE"를 그대로 따른다.
 const KEYS = {
-  user: '@cat-my-town/user',
   cats: '@cat-my-town/cats',
   sightings: '@cat-my-town/sightings',
 };
@@ -34,24 +33,6 @@ async function readJson(key, fallback) {
 
 function writeJson(key, value) {
   return AsyncStorage.setItem(key, JSON.stringify(value));
-}
-
-export async function getUser() {
-  return readJson(KEYS.user, { loggedIn: false, displayName: null });
-}
-
-// 목업 9페이지: 회원가입 없이 구글 소셜 로그인 버튼 하나. 실제 Firebase 연동 전까지는
-// 버튼을 누르면 바로 로그인 처리하는 자리표시자다.
-export async function loginWithGoogleMock(displayName = '산책자') {
-  const user = { loggedIn: true, displayName };
-  await writeJson(KEYS.user, user);
-  return user;
-}
-
-export async function logout() {
-  const user = { loggedIn: false, displayName: null };
-  await writeJson(KEYS.user, user);
-  return user;
 }
 
 export async function getCats() {

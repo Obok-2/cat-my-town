@@ -1,0 +1,38 @@
+# This repository also contains server, web, infrastructure, and documents.
+# They are not required to build the Expo app.
+server/
+web/
+infra/
+docs/
+산출물/
+CLAUDE.md
+AGENTS.md
+
+# Dependencies and generated output
+**/node_modules/
+**/.expo/
+**/dist/
+**/web-build/
+**/.gradle/
+**/build/
+**/.kotlin/
+**/android/
+**/ios/
+**/.idea/
+**/.vscode/
+
+# Local files
+**/.env*.local
+**/*.orig.*
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.key
+**/*.mobileprovision
+**/.metro-health-check*
+**/npm-debug.*
+**/yarn-debug.*
+**/yarn-error.*
+**/.DS_Store
+**/*.pem
+**/*.tsbuildinfo

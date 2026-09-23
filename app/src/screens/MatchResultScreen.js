@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { analyzeCameraPhoto } from '../api/cameraApi';
+import { getAuthorizationHeaders } from '../storage/tokenStorage';
 import MatchCandidateCard from '../components/MatchCandidateCard';
 import TraitTagList from '../components/TraitTagList';
 import PrimaryButton from '../components/PrimaryButton';
@@ -33,11 +34,12 @@ export default function MatchResultScreen({ route, navigation }) {
       try {
         const response = await analyzeCameraPhoto(photoUri);
         const analysis = response.data.data;
+        const imageHeaders = await getAuthorizationHeaders();
         const candidates = analysis.candidates.map((candidate) => ({
           cat: {
             id: candidate.catId,
             name: candidate.name,
-            photoSource: candidate.photoUrl ? { uri: candidate.photoUrl } : null,
+            photoSource: candidate.photoUrl ? { uri: candidate.photoUrl, headers: imageHeaders } : null,
             sightingCount: candidate.sightingCount,
             tags: candidate.tags ?? [],
           },

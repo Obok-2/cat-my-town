@@ -1,14 +1,9 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
-
-const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
+import apiClient from './apiClient';
 
 export const getCameraWeekCount = async () => {
-  const data = await axios.get(`${API_URL}/app/camera/week-count`, {
-    headers: {
-      'X-User-Id': '1',
-    },
-  });
+  const data = await apiClient.get('/app/camera/week-count');
 
   return data;
 };
@@ -27,11 +22,7 @@ export const analyzeCameraPhoto = async (photoUri) => {
     });
   }
 
-  const data = await axios.post(`${API_URL}/app/camera/analyze`, body, {
-    headers: {
-      'X-User-Id': '1',
-    },
-  });
+  const data = await apiClient.post('/app/camera/analyze', body);
 
   return data;
 };

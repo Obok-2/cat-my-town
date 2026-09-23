@@ -10,8 +10,8 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,8 +27,8 @@ public class PhotoController {
     public ResponseEntity<Resource> photo(
             @RequestParam(value = "catId", required = false) Long catId,
             @RequestParam(value = "sightingId", required = false) Long sightingId,
-            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
-        PhotoData photo = photoService.getPhoto(catId, sightingId, userId);
+            Authentication authentication) {
+        PhotoData photo = photoService.getPhoto(catId, sightingId, Long.valueOf(authentication.getName()));
         Resource resource = new ByteArrayResource(photo.getBytes());
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(photo.getContentType()))
