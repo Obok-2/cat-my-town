@@ -101,9 +101,12 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 - expo-camera, expo-splash-screen
 - Firebase Authentication (Google)
 
-**관리자 웹**
+**홍보 사이트 · 관리자 웹**
 - React + Vite (JavaScript)
-- 외부 라우터·차트 라이브러리 없이 해시 라우터와 CSS/SVG 차트를 직접 구현
+- `/`: 앱 소개·사용 방법·FAQ·출시 준비 안내를 담은 원페이지 홍보 사이트
+- `/admin`: 관리자 로그인, `/admin/dashboard` 등 관리자 메뉴는 경로 기반 라우팅
+- 배포 서버에서는 `/admin/*` 직접 접속과 새로고침을 위해 `index.html`로 연결하는 SPA fallback 필요
+- 외부 라우터·차트 라이브러리 없이 라우터와 CSS/SVG 차트를 직접 구현
 - 운영자 로그인, 대시보드(KPI·일별 촬영/신규 등록·AI 매칭 수락률·레벨 분포·최근 활동), CSV 내보내기
 - 현재는 목 데이터로 동작하며 서버 API 연동 예정
 

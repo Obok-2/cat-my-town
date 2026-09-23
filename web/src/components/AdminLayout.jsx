@@ -29,6 +29,7 @@ export default function AdminLayout({ activeRoute, onLogout, children }) {
         </nav>
 
         <div className="sidebar__spacer" />
+        <a href="/">앱 소개 사이트로</a>
 
         <div className="sidebar__profile">
           <div className="sidebar__avatar" />

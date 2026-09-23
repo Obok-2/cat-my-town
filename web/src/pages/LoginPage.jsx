@@ -110,6 +110,7 @@ export default function LoginPage({ onLogin }) {
           <p className="login__note">
             계정 발급은 내부 운영팀에 요청하세요. 이 화면에는 회원가입이 없습니다.
           </p>
+          <a className="login__link" href="/">앱 소개 사이트로 돌아가기</a>
         </form>
       </main>
     </div>
