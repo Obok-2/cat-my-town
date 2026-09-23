@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { useAuth } from '../context/AuthContext';
-import { getUserLevelInfo, seedDemoData, clearAllCats } from '../data/store';
+import { getUserLevelInfo /* , seedDemoData, clearAllCats */ } from '../data/store';
 import GhostButton from '../components/GhostButton';
 import PlaceholderArt from '../components/PlaceholderArt';
 
@@ -15,7 +15,7 @@ export default function ProfileScreen({ navigation }) {
   const colors = useColors();
   const { user, logout } = useAuth();
   const [levelInfo, setLevelInfo] = useState({ level: 0, title: '', catCount: 0 });
-  const [busy, setBusy] = useState(false);
+  // const [busy, setBusy] = useState(false); // 개발용 도구 주석 처리로 사용하지 않음
 
   useFocusEffect(
     useCallback(() => {
@@ -27,30 +27,31 @@ export default function ProfileScreen({ navigation }) {
     }, [])
   );
 
-  async function handleSeed() {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await seedDemoData();
-      const l = await getUserLevelInfo();
-      setLevelInfo(l);
-      navigation.navigate('Tabs', { screen: 'Collection' });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleClear() {
-    if (busy) return;
-    setBusy(true);
-    try {
-      await clearAllCats();
-      const l = await getUserLevelInfo();
-      setLevelInfo(l);
-    } finally {
-      setBusy(false);
-    }
-  }
+  // 개발용 도구(데모 데이터 채우기·도감 비우기) — 아래 화면 버튼과 함께 주석 처리
+  // async function handleSeed() {
+  //   if (busy) return;
+  //   setBusy(true);
+  //   try {
+  //     await seedDemoData();
+  //     const l = await getUserLevelInfo();
+  //     setLevelInfo(l);
+  //     navigation.navigate('Tabs', { screen: 'Collection' });
+  //   } finally {
+  //     setBusy(false);
+  //   }
+  // }
+  //
+  // async function handleClear() {
+  //   if (busy) return;
+  //   setBusy(true);
+  //   try {
+  //     await clearAllCats();
+  //     const l = await getUserLevelInfo();
+  //     setLevelInfo(l);
+  //   } finally {
+  //     setBusy(false);
+  //   }
+  // }
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
@@ -71,6 +72,7 @@ export default function ProfileScreen({ navigation }) {
 
         <View style={styles.spacer} />
 
+        {/* 개발용 도구 — 로컬 목데이터(AsyncStorage)만 바꾸고 서버 도감에는 반영되지 않아 주석 처리
         {__DEV__ && (
           <View style={styles.devSection}>
             <Text style={[styles.devLabel, { color: colors.textMuted }]}>개발용</Text>
@@ -79,6 +81,7 @@ export default function ProfileScreen({ navigation }) {
             <GhostButton label="도감 비우기" onPress={handleClear} disabled={busy} />
           </View>
         )}
+        */}
 
         <View style={styles.logoutWrap}>
           <GhostButton label="로그아웃" onPress={logout} />
