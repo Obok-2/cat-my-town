@@ -28,10 +28,8 @@ public class AuthService {
     @Transactional
     public ResponseApi loginWithGoogle(AuthGoogleReq request) {
         Jwt googleToken = googleTokenVerifier.verify(request.getIdToken());
-        String displayName = googleToken.getClaimAsString("name");
-        if (displayName == null || displayName.isBlank()) {
-            displayName = "산책자";
-        }
+        // 이름은 수집하지 않고 display_name 컬럼에 Google 계정 이메일을 저장한다
+        String displayName = googleToken.getClaimAsString("email");
 
         AuthUserVo user = authDao.upsertGoogleUser(googleToken.getSubject(), displayName);
         AuthUserRes userResponse = new AuthUserRes(user.getId(), user.getDisplayName());
