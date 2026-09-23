@@ -6,7 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { useAuth } from '../context/AuthContext';
-import { getUserLevelInfo /* , seedDemoData, clearAllCats */ } from '../data/store';
+import { getLevelCount } from '../api/levelApi';
+import { computeLevel } from '../data/levels';
+// import { seedDemoData, clearAllCats } from '../data/store';
 import GhostButton from '../components/GhostButton';
 import PlaceholderArt from '../components/PlaceholderArt';
 
@@ -17,10 +19,21 @@ export default function ProfileScreen({ navigation }) {
   const [levelInfo, setLevelInfo] = useState({ level: 0, title: '', catCount: 0 });
   // const [busy, setBusy] = useState(false); // 개발용 도구 주석 처리로 사용하지 않음
 
+  // 서버의 등록 고양이 수로 레벨을 계산한다(레벨 화면과 같은 방식). 실패하면 기본값(0마리)을 그대로 둔다.
   useFocusEffect(
     useCallback(() => {
       let mounted = true;
-      getUserLevelInfo().then((l) => mounted && setLevelInfo(l));
+
+      async function loadLevel() {
+        try {
+          const response = await getLevelCount();
+          if (mounted) setLevelInfo(computeLevel(response.data.data.catCount ?? 0));
+        } catch {
+          // 프로필은 로그아웃이 주 기능이라 레벨 조회 실패는 화면에 따로 표시하지 않는다
+        }
+      }
+
+      loadLevel();
       return () => {
         mounted = false;
       };

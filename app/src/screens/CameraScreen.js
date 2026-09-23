@@ -1,5 +1,5 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform, Alert } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Platform, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,15 +30,28 @@ const ZOOM_STEPS = [
 // 목업에 없는 손전등 토글(왼쪽 위)과 확대 버튼(셔터 위)을 추가했다. 웹 카메라는 대부분 지원하지 않아 앱에서만 보인다.
 export default function CameraScreen({ navigation }) {
   const colors = useColors();
-  // 촬영 탭(앱 시작 시 초기 화면)에 들어오면 버튼 없이 바로 권한을 물어본다(마운트 시 1회).
   // 웹은 getUserMedia 호출 시 브라우저가 자체 권한 팝업을 띄우므로 우리 쪽에서는 묻지 않는다.
-  const [permission, requestPermission] = useCameraPermissions({ request: Platform.OS !== 'web' });
+  const [permission, requestPermission] = useCameraPermissions();
   const [weekCount, setWeekCount] = useState(undefined);
   const [capturing, setCapturing] = useState(false);
   const [torchOn, setTorchOn] = useState(false);
   const [zoom, setZoom] = useState(0);
   const isFocused = useIsFocused();
   const cameraRef = useRef(null);
+
+  // 촬영 탭(로그인 후 첫 화면)이 열리면 버튼 없이 카메라 → 위치 순서로 권한을 묻는다.
+  // 안드로이드는 권한 팝업을 한 번에 하나만 띄울 수 있어 순서대로 요청한다.
+  // requestPermission은 expo 권한 훅이 고정해 주는 함수라 탭이 처음 열릴 때 1회만 돈다.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    async function requestOnOpen() {
+      const camera = await requestPermission();
+      if (camera.granted) await Location.requestForegroundPermissionsAsync();
+    }
+
+    requestOnOpen();
+  }, [requestPermission]);
 
   useFocusEffect(
     useCallback(() => {
@@ -60,12 +73,20 @@ export default function CameraScreen({ navigation }) {
     }, [])
   );
 
+  // 목격 위치는 고양이 상세 지도의 마커가 되므로 앱에서는 반드시 기록한다.
+  // 위치 권한이 없거나 위치를 못 잡으면 촬영 흐름을 진행하지 않는다(웹은 위치 없이 진행).
   async function handleShutter() {
     if (!cameraRef.current || capturing) return;
     setCapturing(true);
     try {
+      if (Platform.OS !== 'web' && !(await ensureLocationPermission())) return;
+
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.9 });
       const [preparedPhoto, location] = await Promise.all([prepareCameraPhoto(photo), getCaptureLocation()]);
+      if (Platform.OS !== 'web' && !location) {
+        Alert.alert('위치를 가져오지 못했어요', '위치 서비스(GPS)를 켜고 다시 찍어 주세요.');
+        return;
+      }
       navigation.navigate('Capture', {
         screen: 'MatchResult',
         params: {
@@ -81,11 +102,25 @@ export default function CameraScreen({ navigation }) {
     }
   }
 
+  // 셔터를 누를 때마다 위치 권한을 확인한다. 이미 허용돼 있으면 팝업 없이 바로 통과하고,
+  // 탭이 열릴 때 거부했더라도 다시 물을 수 있으면 여기서 한 번 더 묻는다.
+  async function ensureLocationPermission() {
+    const permission = await Location.requestForegroundPermissionsAsync();
+    if (permission.granted) return true;
+
+    const buttons = permission.canAskAgain
+      ? [{ text: '확인' }]
+      : [
+          { text: '취소', style: 'cancel' },
+          { text: '설정 열기', onPress: () => Linking.openSettings() },
+        ];
+    Alert.alert('위치 권한이 필요해요', '고양이를 만난 위치를 지도에 남기려면 위치 권한이 필요해요.', buttons);
+    return false;
+  }
+
   async function getCaptureLocation() {
     if (Platform.OS === 'web') return null;
     try {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (!permission.granted) return null;
       return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
     } catch {
       return null;
@@ -108,7 +143,11 @@ export default function CameraScreen({ navigation }) {
                 ? '설정에서 카메라 권한을 허용해주세요'
                 : '길고양이를 촬영하려면 카메라 권한이 필요해요'}
             </Text>
-            {!deniedPermanently && <PrimaryButton label="카메라 권한 허용하기" onPress={requestPermission} />}
+            {deniedPermanently ? (
+              <PrimaryButton label="설정 열기" onPress={() => Linking.openSettings()} />
+            ) : (
+              <PrimaryButton label="카메라 권한 허용하기" onPress={requestPermission} />
+            )}
           </View>
         </SafeAreaView>
       );
