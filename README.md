@@ -20,7 +20,7 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 ```
 1. 로그인 (Google 로그인)
 2. 카메라 화면으로 진입
-3. 길고양이 사진 촬영 (긴 변 1280px·JPEG로 줄여서 서버 전송, 위치 권한을 허용하면 촬영 위치도 함께 기록)
+3. 길고양이 사진 촬영 (긴 변 1280px·JPEG로 줄여서 서버 전송, 촬영 위치를 함께 기록 — 목격 지도의 핀이 되므로 카메라·위치 권한이 모두 있어야 촬영 진행)
 4. AI 처리
    ├─ 고양이 여부 판별 (ResNet-18, ImageNet) — 고양이가 아니면 여기서 중단 (NOT_CAT)
    ├─ 이미지 임베딩 생성 (Voyage AI)
@@ -65,7 +65,7 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 | Lv.4 | 동네 관찰자 | 16~29마리 |
 | Lv.5 | 고양이 박사 | 30마리 이상 |
 
-레벨 값은 매번 COUNT 쿼리 대신, 등록 시점에 계산해서 `users` 테이블에 캐싱합니다.
+레벨은 등록한 고양이 수로 계산합니다(서버 `LevelPolicy` 한 곳에서 기준 관리). `users.level` 캐시 컬럼은 있지만, 사용자 수가 적은 지금은 매번 계산해도 부담이 없어 갱신하지 않습니다.
 
 ### 도감(컬렉션)·고양이 상세
 - 등록한 고양이들을 그리드로 확인, 당겨서 새로고침
@@ -117,10 +117,13 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 - React + Vite (JavaScript), [https://mycat-town.duckdns.org](https://mycat-town.duckdns.org/)에 배포
 - `/`: 앱 소개·사용 방법·FAQ·출시 준비 안내를 담은 원페이지 홍보 사이트
 - `/privacy`: 개인정보 처리 안내
-- `/admin`: 관리자 로그인, `/admin/dashboard` 등 관리자 메뉴는 경로 기반 라우팅
-- 배포 서버에서는 `/admin/*`·`/privacy` 직접 접속과 새로고침을 위해 `index.html`로 연결하는 SPA fallback 필요
-- 외부 라우터·차트 라이브러리 없이 라우터와 CSS/SVG 차트를 직접 구현
-- 관리자 웹은 현재 목 데이터로 동작하며 서버 API 연동 예정
+- `/admin`: 관리자 로그인·대시보드 — 서버 API에 연결되어 실제 데이터로 동작
+  - 로그인: `admin_users`(BCrypt) 계정으로 관리자 전용 JWT 발급, 앱 사용자 토큰과 분리(앱 토큰으로 관리자 API 호출 불가)
+  - 대시보드: 누적·30일 신규 사용자, 7일 활성 사용자, 등록 고양이, 오늘·어제 촬영 수, 최근 7일 추이, 레벨 분포, 최근 로그인(이메일 일부 가림)
+  - 사용자·고양이 관리 등 나머지 메뉴는 준비 중
+- API는 같은 도메인의 `/api`로 호출하고, 웹 서버 nginx가 백엔드로 프록시(브라우저에 백엔드 주소를 노출하지 않고 CORS 없이 동작)
+- nginx SPA fallback(`try_files … /index.html`)으로 `/admin/*`·`/privacy` 직접 접속과 새로고침 지원
+- 외부 라우터·차트 라이브러리 없이 라우터와 CSS 차트를 직접 구현
 
 ---
 
@@ -141,7 +144,7 @@ server/  Spring Boot / MyBatis 백엔드
 web/     홍보 사이트 · 관리자 웹 (React + Vite)
 infra/   Docker Compose (PostgreSQL + pgvector, MinIO, 서버 컨테이너, 웹 Nginx)
 design/  화면 시안 · 목업
-산출물/  DB 스키마(schema.sql), 앱 REST API 인터페이스 정의서
+산출물/  DB 스키마(schema.sql), 앱·관리자 REST API 인터페이스 정의서
 docs/    진행상황
 ```
 
@@ -176,8 +179,11 @@ sightings
 - latitude / longitude (소수 5자리로 반올림)
 - taken_at (촬영일시)
 
+admin_users
+- id, email, password_hash (BCrypt), name, role — 관리자 웹 로그인 계정 (가입 기능 없이 DB에 직접 등록)
+
 match_logs / match_candidates
-- AI 매칭 결과와 보여준 후보 기록 (관리자 대시보드 수락률·일치율 집계용)
+- AI 매칭 결과와 보여준 후보를 남기기 위한 테이블 (아직 기록하지 않아 대시보드에 매칭 통계는 없음)
 ```
 
 ---
