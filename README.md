@@ -40,7 +40,6 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 - 서버에서 **ResNet-18**(ImageNet 사전학습 이미지 분류 모델, DJL + PyTorch)로 사진 속 대상이 고양이인지 먼저 확인
 - ImageNet의 고양이 계열 클래스(tabby cat, tiger cat, Persian cat, Siamese cat, Egyptian cat, lynx) 확률 합이 기준값(기본 0.15) 이상일 때만 다음 단계로 진행
 - 고양이가 아닌 사진은 임베딩 생성 전에 걸러서 **외부 API 비용과 오등록을 방지**하고, 앱에는 다시 찍어 달라고 안내
-- GPU 없는 서버(ARM 포함)에서도 CPU로 추론
 
 ### AI 매칭
 - **임베딩**: Voyage AI `voyage-multimodal-3.5`로 목격 사진마다 1024차원 벡터 생성
@@ -131,6 +130,15 @@ flowchart LR
 - 서버·DB·사진 저장소는 한 Docker Compose로 묶고, DB·MinIO는 외부에 열지 않고 컨테이너 내부 주소로만 접속합니다.
 - 사진 원본은 DB가 아니라 MinIO에 두고, DB에는 경로와 임베딩(1024차원 벡터)만 저장합니다.
 
+**배포 환경**
+
+| 구분 | 클라우드 · 사양 | 올라간 것 |
+|---|---|---|
+| 백엔드 서버 | Oracle Cloud (Ampere A1, **ARM64**) · 2 OCPU · 12 GB RAM · Rocky Linux 8 | nginx(공유), Docker Compose: Spring Boot, PostgreSQL + pgvector, MinIO |
+| 웹 서버 | AWS Lightsail (서울) · 2 vCPU · 2 GB RAM · 60 GB SSD | nginx: 홍보 사이트·관리자 웹 정적 파일, `/api` 프록시 |
+
+- 사이드 프로젝트라 비용을 줄이려고 서버를 새로 늘리지 않고, 이미 운영 중인 서버 자원에 함께 올렸습니다.
+
 **웹 서버와 백엔드 서버를 나눈 이유**
 원래는 한 서버에 모두 올리려 했지만, 백엔드 서버의 80·443 포트를 이미 다른 서비스의 nginx가 쓰고 있었습니다.
 그 nginx를 공유하되 `/cat/` 경로만 이 서버로 넘기도록 분리했고(기존 서비스와 `/app/` 경로가 겹치지 않게),
@@ -207,7 +215,7 @@ users
 - id
 - google_uid (검증된 Google ID Token의 sub)
 - display_name (Google 이메일 — 이름은 수집하지 않음)
-- level (캐싱된 값, 등록 시점마다 갱신)
+- level (캐시용 컬럼, 현재는 갱신하지 않고 고양이 수로 계산)
 - created_at
 - last_login_at (마지막 로그인, 로그인할 때마다 갱신)
 
