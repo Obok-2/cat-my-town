@@ -90,6 +90,54 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 
 ---
 
+## 시스템 구성
+
+```mermaid
+flowchart LR
+    subgraph Client[사용자]
+        App[모바일 앱<br/>React Native]
+        Browser[브라우저<br/>홍보 사이트 · 관리자 웹]
+    end
+
+    subgraph WebServer[웹 서버]
+        WebNginx[nginx<br/>정적 파일 · HTTPS<br/>/api 프록시]
+    end
+
+    subgraph BackendServer[백엔드 서버]
+        Proxy[nginx 리버스 프록시<br/>HTTPS · /cat/ 경로]
+        subgraph Compose[Docker Compose]
+            Spring[Spring Boot<br/>JDK 17 · DJL ResNet-18]
+            PG[(PostgreSQL<br/>+ pgvector)]
+            MinIO[(MinIO<br/>사진 저장소)]
+        end
+    end
+
+    Voyage[Voyage AI<br/>이미지 임베딩]
+    Google[Google<br/>ID Token 검증]
+    Kakao[카카오 지도 SDK]
+
+    Browser -->|HTTPS| WebNginx
+    App -->|HTTPS REST + JWT| WebNginx
+    WebNginx -->|/api → 백엔드| Proxy
+    Proxy --> Spring
+    Spring --> PG
+    Spring --> MinIO
+    Spring -->|사진 임베딩| Voyage
+    Spring -->|로그인 토큰 검증| Google
+    App -->|목격 위치 지도| Kakao
+```
+
+- **앱과 관리자 웹** 모두 웹 서버 도메인의 `/api`로 요청하고, 웹 서버 nginx가 백엔드로 넘깁니다. 입구가 하나라 백엔드 주소가 드러나지 않고, 관리자 웹은 같은 도메인이라 CORS가 필요 없습니다.
+- 서버·DB·사진 저장소는 한 Docker Compose로 묶고, DB·MinIO는 외부에 열지 않고 컨테이너 내부 주소로만 접속합니다.
+- 사진 원본은 DB가 아니라 MinIO에 두고, DB에는 경로와 임베딩(1024차원 벡터)만 저장합니다.
+
+**웹 서버와 백엔드 서버를 나눈 이유**
+원래는 한 서버에 모두 올리려 했지만, 백엔드 서버의 80·443 포트를 이미 다른 서비스의 nginx가 쓰고 있었습니다.
+그 nginx를 공유하되 `/cat/` 경로만 이 서버로 넘기도록 분리했고(기존 서비스와 `/app/` 경로가 겹치지 않게),
+홍보 사이트·관리자 웹은 별도 웹 서버에 두어 기존 서비스 설정에 영향을 주지 않도록 했습니다.
+
+---
+
 ## 기술 스택
 
 **백엔드**
