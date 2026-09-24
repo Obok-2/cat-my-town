@@ -52,7 +52,8 @@ flowchart LR
     subgraph BackendServer[백엔드 서버]
         Proxy[nginx 리버스 프록시<br/>HTTPS · /cat/ 경로]
         subgraph Compose[Docker Compose]
-            Spring[Spring Boot<br/>JDK 17 · DJL ResNet-18]
+            Spring[Spring Boot<br/>JDK 17]
+            Vision[vision 서버<br/>FastAPI · RT-DETR · DINOv2]
             PG[(PostgreSQL<br/>+ pgvector)]
             MinIO[(MinIO<br/>사진 저장소)]
         end
@@ -68,6 +69,7 @@ flowchart LR
     Proxy --> Spring
     Spring --> PG
     Spring --> MinIO
+    Spring -->|고양이 판별 · 자르기| Vision
     Spring -->|사진 임베딩| Voyage
     Spring -->|로그인 토큰 검증| Google
     App -->|목격 위치 지도| Kakao
@@ -96,8 +98,8 @@ flowchart LR
 ## 핵심 기능
 
 ### 고양이 판별 (사전 필터)
-- 서버에서 **ResNet-18**(ImageNet 사전학습 이미지 분류 모델, DJL + PyTorch)로 사진 속 대상이 고양이인지 먼저 확인
-- ImageNet의 고양이 계열 클래스(tabby cat, tiger cat, Persian cat, Siamese cat, Egyptian cat, lynx) 확률 합이 기준값(기본 0.15) 이상일 때만 다음 단계로 진행
+- 내부 **vision 서버**(FastAPI)의 **RT-DETR v2**(COCO 사전학습 객체 탐지 모델, Apache 2.0)로 사진 속에서 고양이를 찾고, 고양이 확률이 기준값(기본 0.3) 이상일 때만 다음 단계로 진행
+- 찾은 고양이는 네모로 잘라서 다음 단계(임베딩)에 넘겨 **배경 영향을 줄임**
 - 고양이가 아닌 사진은 임베딩 생성 전에 걸러서 **외부 API 비용과 오등록을 방지**하고, 앱에는 다시 찍어 달라고 안내
 
 ### AI 매칭
@@ -151,8 +153,8 @@ calibrated = Math.max(0, Math.min(100, calibrated));
 2. 카메라 화면으로 진입
 3. 길고양이 사진 촬영 (긴 변 1280px·JPEG로 줄여서 서버 전송, 촬영 위치를 함께 기록 — 목격 지도의 핀이 되므로 카메라·위치 권한이 모두 있어야 촬영 진행)
 4. AI 처리
-   ├─ 고양이 여부 판별 (ResNet-18, ImageNet) — 고양이가 아니면 여기서 중단 (NOT_CAT)
-   ├─ 이미지 임베딩 생성 (Voyage AI)
+   ├─ 고양이 여부 판별 + 고양이만 자르기 (vision 서버, RT-DETR) — 고양이가 아니면 여기서 중단 (NOT_CAT)
+   ├─ 잘라낸 이미지 임베딩 생성 (Voyage AI)
    ├─ 내 기존 등록 고양이들과 유사도 비교 (pgvector, 본인 데이터 내에서만 검색)
    └─ 일치율 40% 이상인 후보를 최대 3마리까지 제시 (없으면 NEW_CAT)
 5. 사용자 최종 판단
@@ -175,7 +177,7 @@ calibrated = Math.max(0, Math.min(100, calibrated));
 - 이미지 저장: MinIO (S3 호환)
 
 **AI**
-- 고양이 판별(사전 필터): ResNet-18 ImageNet (DJL + PyTorch, 서버 추론)
+- 고양이 판별·자르기(사전 필터): RT-DETR v2 (Hugging Face transformers + PyTorch, 내부 vision 서버 추론)
 - 이미지 임베딩: Voyage AI (voyage-multimodal-3.5)
 - 벡터 검색: pgvector HNSW 인덱스 (사용자별 스코프 제한)
 

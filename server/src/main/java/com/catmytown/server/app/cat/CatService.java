@@ -1,5 +1,7 @@
 package com.catmytown.server.app.cat;
 
+import com.catmytown.server.app.camera.VisionClient;
+import com.catmytown.server.app.camera.VisionResult;
 import com.catmytown.server.app.camera.VoyageImageEmbeddingClient;
 import com.catmytown.server.app.camera.AnalysisEmbeddingStore;
 import com.catmytown.server.app.photo.PhotoUrlService;
@@ -41,6 +43,9 @@ public class CatService {
 
     @Autowired
     private CatDao catDao;
+
+    @Autowired
+    private VisionClient visionClient;
 
     @Autowired
     private VoyageImageEmbeddingClient voyageImageEmbeddingClient;
@@ -270,7 +275,12 @@ public class CatService {
         if (analysisId != null && !analysisId.isBlank()) {
             return analysisEmbeddingStore.get(analysisId, userId);
         }
-        return voyageImageEmbeddingClient.createImageEmbedding(photoBytes, contentType);
+        // 분석 없이 등록하는 첫 고양이도 다른 사진과 같은 방식(고양이만 잘라서)으로 임베딩해야 비교할 수 있다
+        VisionResult vision = visionClient.analyze(photoBytes, contentType);
+        if (!vision.isCat()) {
+            throw new BusinessException(400, "고양이 사진이 아닙니다.");
+        }
+        return voyageImageEmbeddingClient.createImageEmbedding(vision.getCroppedImage(), "image/jpeg");
     }
 
     private String normalizeRequired(String value, int maxLength, String message) {

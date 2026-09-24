@@ -24,7 +24,7 @@ public class CameraService {
     private CameraDao cameraDao;
 
     @Autowired
-    private CatImageClassifier catImageClassifier;
+    private VisionClient visionClient;
 
     @Autowired
     private VoyageImageEmbeddingClient voyageImageEmbeddingClient;
@@ -62,22 +62,23 @@ public class CameraService {
             throw new BusinessException(400, "사진을 읽을 수 없습니다.");
         }
 
-        CatDetectionResult detection = catImageClassifier.classify(photoBytes);
+        VisionResult detection = visionClient.analyze(photoBytes, photo.getContentType());
         if (!detection.isCat()) {
             return ResponseApi.success(CameraAnalysisRes.notCat(
-                    detection.getLabel(), toPercent(detection.getCatProbability())));
+                    detection.getLabel(), toPercent(detection.getConfidence())));
         }
 
         int catCount = cameraDao.selectCatCount(userId);
         if (catCount == 0) {
             return ResponseApi.success(CameraAnalysisRes.newCat(
-                    detection.getLabel(), toPercent(detection.getCatProbability())));
+                    detection.getLabel(), toPercent(detection.getConfidence())));
         }
         if (cameraDao.selectMatchableCatCount(userId) != catCount) {
             throw new BusinessException(503, "등록된 고양이의 비교 데이터가 준비되지 않았습니다.");
         }
 
-        List<Double> embedding = voyageImageEmbeddingClient.createImageEmbedding(photoBytes, photo.getContentType());
+        // 배경 영향을 줄이려고 사진 전체가 아니라 vision 서버가 고양이 네모로 잘라낸 이미지로 임베딩한다
+        List<Double> embedding = voyageImageEmbeddingClient.createImageEmbedding(detection.getCroppedImage(), "image/jpeg");
         String analysisId = analysisEmbeddingStore.save(userId, embedding);
         double minimumSimilarity = lowerBound + matchThreshold / 100.0 * (upperBound - lowerBound);
         List<CameraCandidateVo> matched = cameraDao.selectMatchingCandidates(
@@ -85,7 +86,7 @@ public class CameraService {
 
         if (matched.isEmpty()) {
             CameraAnalysisRes response = CameraAnalysisRes.newCat(
-                    detection.getLabel(), toPercent(detection.getCatProbability()));
+                    detection.getLabel(), toPercent(detection.getConfidence()));
             response.setAnalysisId(analysisId);
             return ResponseApi.success(response);
         }
@@ -106,7 +107,7 @@ public class CameraService {
         response.setStatus(CameraAnalysisStatus.EXISTING_CAT);
         response.setCat(true);
         response.setDetectedLabel(detection.getLabel());
-        response.setCatProbability(toPercent(detection.getCatProbability()));
+        response.setCatProbability(toPercent(detection.getConfidence()));
         response.setAnalysisId(analysisId);
         response.setCandidates(candidates);
         return ResponseApi.success(response);
