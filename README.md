@@ -15,6 +15,25 @@ AI가 "예전에 등록한 고양이와 같은 개체인지"를 판별해서 알
 
 ---
 
+## 앱 화면
+
+실제 앱 화면입니다. 아이폰에서 테스트용 Expo Go로 실행해 캡처했습니다(오른쪽 위 파란 버튼은 Expo Go 개발자 도구).
+직접 촬영한 길고양이를 등록하고, 강아지 사진은 고양이가 아니라고 걸러내는 흐름입니다.
+
+| 촬영 | 새 고양이 발견 | 이름·태그 등록 |
+|:---:|:---:|:---:|
+| <img src="docs/images/02-camera.jpg" width="220"> | <img src="docs/images/03-new-cat.jpg" width="220"> | <img src="docs/images/04-naming.jpg" width="220"> |
+
+| 레벨업 | 도감 | 고양이 상세 (목격 지도·타임라인) |
+|:---:|:---:|:---:|
+| <img src="docs/images/05-level-up.jpg" width="220"> | <img src="docs/images/06-collection.jpg" width="220"> | <img src="docs/images/10-cat-detail-map.jpg" width="220"> |
+
+| 기존 고양이 후보 제안 | 고양이 아님 판별 | 레벨 등급표 |
+|:---:|:---:|:---:|
+| <img src="docs/images/07-match-result.jpg" width="220"> | <img src="docs/images/08-not-cat.jpg" width="220"> | <img src="docs/images/09-level.jpg" width="220"> |
+
+---
+
 ## 시스템 구성
 
 ```mermaid
