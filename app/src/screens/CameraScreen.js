@@ -8,6 +8,7 @@ import * as Location from 'expo-location';
 import { useColors } from '../theme/ThemeContext';
 import { fonts } from '../theme/fonts';
 import { getCameraWeekCount } from '../api/cameraApi';
+import CatGuide from '../components/CatGuide';
 import PrimaryButton from '../components/PrimaryButton';
 import { prepareCameraPhoto } from '../utils/prepareCameraPhoto';
 
@@ -26,8 +27,9 @@ const ZOOM_STEPS = [
   { label: '3x', zoom: 0.4 },
 ];
 
-// 목업 a2 "홈 (카메라)": 앱 실행 시 즉시 카메라, 프레임 가이드 + 단일 셔터.
-// 목업에 없는 손전등 토글(왼쪽 위)과 확대 버튼(셔터 위)을 추가했다. 웹 카메라는 대부분 지원하지 않아 앱에서만 보인다.
+// 목업 a2 "홈 (카메라)": 앱 실행 시 즉시 카메라 + 단일 셔터.
+// 목업에 없는 것을 추가했다: 손전등 토글(왼쪽 위)과 확대 버튼(셔터 위)은 웹 카메라가 대부분 지원하지 않아 앱에서만 보이고,
+// 네 모서리 프레임 대신 앉은 고양이 안내선(얼굴 정면 + 몸통, CatGuide)을 얹어 매번 비슷한 각도로 찍도록 안내한다(매칭 정확도 개선 ②).
 export default function CameraScreen({ navigation }) {
   const colors = useColors();
   // 웹은 getUserMedia 호출 시 브라우저가 자체 권한 팝업을 띄우므로 우리 쪽에서는 묻지 않는다.
@@ -172,16 +174,11 @@ export default function CameraScreen({ navigation }) {
 
       <View style={styles.viewfinderWrap}>
         <CameraView ref={cameraRef} style={styles.camera} facing="back" zoom={zoom} enableTorch={torchOn && isFocused} />
-        <View pointerEvents="none" style={styles.frameGuide}>
-          <View style={[styles.corner, styles.cornerTL, { borderColor: colors.frameGuide }]} />
-          <View style={[styles.corner, styles.cornerTR, { borderColor: colors.frameGuide }]} />
-          <View style={[styles.corner, styles.cornerBL, { borderColor: colors.frameGuide }]} />
-          <View style={[styles.corner, styles.cornerBR, { borderColor: colors.frameGuide }]} />
-        </View>
+        <CatGuide />
         <View pointerEvents="none" style={styles.hintRow}>
           <View style={[styles.hintBubble, { backgroundColor: colors.hintBubbleBg }]}>
             <Ionicons name="sparkles" size={15} color={colors.accent} />
-            <Text style={[styles.hintText, { color: colors.hintBubbleText }]}>얼굴이 프레임 안에 들어오면 또렷해요</Text>
+            <Text style={[styles.hintText, { color: colors.hintBubbleText }]}>고양이 전체가 선 안에, 얼굴은 정면으로 맞춰 주세요</Text>
           </View>
         </View>
         {Platform.OS !== 'web' && (
@@ -255,12 +252,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#2E2A26',
   },
   camera: { flex: 1 },
-  frameGuide: { ...StyleSheet.absoluteFillObject, margin: 34 },
-  corner: { position: 'absolute', width: 74, height: 74 },
-  cornerTL: { top: 76, left: 0, borderLeftWidth: 3, borderTopWidth: 3, borderTopLeftRadius: 26 },
-  cornerTR: { top: 76, right: 0, borderRightWidth: 3, borderTopWidth: 3, borderTopRightRadius: 26 },
-  cornerBL: { bottom: 116, left: 0, borderLeftWidth: 3, borderBottomWidth: 3, borderBottomLeftRadius: 26 },
-  cornerBR: { bottom: 116, right: 0, borderRightWidth: 3, borderBottomWidth: 3, borderBottomRightRadius: 26 },
   hintRow: { position: 'absolute', left: 0, right: 0, top: 20, alignItems: 'center' },
   hintBubble: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   hintText: { fontFamily: fonts.body, fontSize: 13 },
