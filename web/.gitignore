@@ -1,3 +1,6 @@
 node_modules/
 dist/
 *.local
+
+# 서버 주소 등 로컬 설정 (.env.example만 커밋)
+.env

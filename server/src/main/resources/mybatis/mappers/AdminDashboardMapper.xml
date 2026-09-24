@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.catmytown.server.admin.dashboard.AdminDashboardDao">
+
+    <!-- KPI 숫자. 오늘·어제의 경계는 한국 시간 자정이다 -->
+    <select id="selectSummary" resultType="AdminDashboardSummaryRes">
+        <![CDATA[
+        WITH bounds AS (
+            SELECT date_trunc('day', now() AT TIME ZONE 'Asia/Seoul') AT TIME ZONE 'Asia/Seoul' AS today_start
+        )
+        SELECT (SELECT COUNT(*)
+                  FROM users)                                          AS total_users,
+               (SELECT COUNT(*)
+                  FROM users
+                 WHERE created_at >= now() - INTERVAL '30 days')       AS new_users_30d,
+               (SELECT COUNT(*)
+                  FROM users
+                 WHERE last_login_at >= now() - INTERVAL '7 days')     AS active_users_7d,
+               (SELECT COUNT(*)
+                  FROM cats)                                           AS total_cats,
+               (SELECT COUNT(*)
+                  FROM cats
+                 WHERE created_at >= now() - INTERVAL '30 days')       AS new_cats_30d,
+               (SELECT COUNT(*)
+                  FROM sightings)                                      AS total_sightings,
+               (SELECT COUNT(*)
+                  FROM sightings
+                 WHERE taken_at >= b.today_start)                      AS today_sightings,
+               (SELECT COUNT(*)
+                  FROM sightings
+                 WHERE taken_at >= b.today_start - INTERVAL '1 day'
+                   AND taken_at <  b.today_start)                      AS yesterday_sightings
+          FROM bounds b
+        ]]>
+    </select>
+
+    <!-- 최근 #{days}일(오늘 포함) 날짜별 목격 기록 수·신규 고양이 수. 기록이 없는 날도 0으로 나온다 -->
+    <select id="selectDaily" resultType="AdminDashboardDailyRes">
+        WITH days AS (
+            SELECT (now() AT TIME ZONE 'Asia/Seoul')::date - g.n AS day
+              FROM generate_series(0, #{days} - 1) AS g(n)
+        )
+        SELECT d.day,
+               (SELECT COUNT(*)
+                  FROM sightings s
+                 WHERE (s.taken_at AT TIME ZONE 'Asia/Seoul')::date = d.day)   AS sighting_count,
+               (SELECT COUNT(*)
+                  FROM cats c
+                 WHERE (c.created_at AT TIME ZONE 'Asia/Seoul')::date = d.day) AS new_cat_count
+          FROM days d
+         ORDER BY d.day
+    </select>
+
+    <!-- 사용자별 등록 고양이 수를 세고, 같은 고양이 수를 가진 사용자 수로 묶는다(레벨 계산은 서비스에서) -->
+    <select id="selectCatCountDistribution" resultType="AdminDashboardLevelVo">
+        SELECT t.cat_count,
+               COUNT(*) AS user_count
+          FROM (SELECT u.id,
+                       COUNT(c.id) AS cat_count
+                  FROM users u
+                  LEFT JOIN cats c ON c.user_id = u.id
+                 GROUP BY u.id) t
+         GROUP BY t.cat_count
+    </select>
+
+    <!-- 최근 활동: 마지막 로그인 시각이 최근인 사용자 (한 번도 기록되지 않은 사용자는 제외) -->
+    <select id="selectRecentActivity" resultType="AdminDashboardActivityRes">
+        SELECT id           AS user_id,
+               display_name AS email,
+               last_login_at
+          FROM users
+         WHERE last_login_at IS NOT NULL
+         ORDER BY last_login_at DESC
+         LIMIT #{limit}
+    </select>
+
+</mapper>

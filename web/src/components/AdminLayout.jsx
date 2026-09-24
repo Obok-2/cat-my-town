@@ -1,9 +1,12 @@
+import { getAdmin } from '../auth.js';
 import { MENU } from '../data/menu.js';
 import { navigate } from '../router.js';
 import brandMark from '../assets/brand-mark.png';
 import '../styles/admin.css';
 
 export default function AdminLayout({ activeRoute, onLogout, children }) {
+  const admin = getAdmin();
+
   return (
     <div className="admin">
       <aside className="sidebar">
@@ -34,8 +37,8 @@ export default function AdminLayout({ activeRoute, onLogout, children }) {
         <div className="sidebar__profile">
           <div className="sidebar__avatar" />
           <div className="sidebar__who">
-            <span>김운영</span>
-            <small>운영 관리자</small>
+            <span>{admin?.name ?? '관리자'}</span>
+            <small>{admin?.email ?? ''}</small>
           </div>
         </div>
         <button type="button" className="sidebar__logout" onClick={onLogout}>

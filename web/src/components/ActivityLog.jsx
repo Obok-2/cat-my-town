@@ -1,26 +1,26 @@
+import { formatDateTime } from '../utils/format.js';
+
+// rows: [{ userId, email(가린 값), lastLoginAt }] — 최근에 로그인한 사용자
 export default function ActivityLog({ rows }) {
   return (
     <div className="card">
       <div className="card__head">
-        <h2>최근 활동</h2>
-        {/* 전체 보기 페이지는 아직 없음 — 작업 중 화면(사용자 메뉴)으로 연결하지 않고 표시만 유지 */}
-        <span className="activity__all">전체 보기</span>
+        <h2>최근 로그인</h2>
       </div>
 
       <div className="activity__row activity__row--head">
-        <div>시각</div>
-        <div>이벤트</div>
-        <div>일치율</div>
+        <div>마지막 로그인</div>
         <div>사용자</div>
+        <div>ID</div>
       </div>
 
       <div className="activity__list">
+        {rows.length === 0 && <p className="activity__empty">아직 로그인 기록이 없습니다.</p>}
         {rows.map((row) => (
-          <div key={`${row.time}-${row.user}`} className="activity__row">
-            <div className="activity__time">{row.time}</div>
-            <div>{row.event}</div>
-            <div className="activity__score">{row.score}</div>
-            <div className="activity__user">{row.user}</div>
+          <div key={row.userId} className="activity__row">
+            <div className="activity__time">{formatDateTime(row.lastLoginAt)}</div>
+            <div>{row.email}</div>
+            <div className="activity__user">u_{row.userId}</div>
           </div>
         ))}
       </div>

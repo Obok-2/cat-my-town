@@ -4,6 +4,7 @@ import com.catmytown.server.app.camera.VoyageImageEmbeddingClient;
 import com.catmytown.server.app.camera.AnalysisEmbeddingStore;
 import com.catmytown.server.app.photo.PhotoUrlService;
 import com.catmytown.server.common.BusinessException;
+import com.catmytown.server.common.LevelPolicy;
 import com.catmytown.server.common.PhotoStorageService;
 import com.catmytown.server.common.ResponseApi;
 import com.catmytown.server.common.TagParser;
@@ -333,19 +334,7 @@ public class CatService {
     }
 
     private int calculateLevel(int catCount) {
-        if (catCount >= 30) {
-            return 5;
-        }
-        if (catCount >= 16) {
-            return 4;
-        }
-        if (catCount >= 12) {
-            return 3;
-        }
-        if (catCount >= 5) {
-            return 2;
-        }
-        return catCount >= 1 ? 1 : 0;
+        return LevelPolicy.calculate(catCount);
     }
 
     private String toVectorLiteral(List<Double> embedding) {

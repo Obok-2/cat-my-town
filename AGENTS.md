@@ -48,6 +48,8 @@
   `/app/collection`(도감 목록) · `/app/cat`(고양이 상세 화면) · `/app/camera` · `/app/level` → `com.catmytown.server.app.{collection,cat,camera,level}`.
   같은 "고양이" 관련이어도 화면이 다르면 패키지를 같이 쓰지 않는다(도감 목록은 collection, 고양이 상세는 cat — 새 화면이 생기면 그 화면 이름으로 새 패키지를 만든다).
   구조는 `XxxController` → `XxxService` → `XxxDao`(`@Mapper` 인터페이스) → Mapper XML.
+- **관리자 웹용 API**는 `ApiUrl.ADMIN`(`/admin`)을 붙이고 `com.catmytown.server.admin.{auth,dashboard,...}`에 화면 단위로 둔다. 클래스·모델 이름은 `Admin`으로 시작한다(`AdminDashboardRes`).
+  `/admin/auth/login`만 공개이고 나머지 `/admin/**`는 관리자 토큰(`role=ADMIN`, aud `cat-my-town-admin`)만, `/app/**`는 앱 토큰(`role=USER`)만 허용한다(`SecurityConfig`).
 - **경로 변수(`@PathVariable`)는 쓰지 않는다.** id를 포함해 요청값은 전부 GET이면 `@RequestParam`, 본문이 있으면 `@RequestBody`로 받는다
   (예: `GET /app/cat/detail?catId=12`이지 `GET /app/cat/{catId}`가 아니다).
 - **MyBatis 설정**은 `application.properties`에 이 형태로 둔다: `mybatis.config-location=classpath:mybatis/mybatis-config.xml` ·

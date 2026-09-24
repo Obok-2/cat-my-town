@@ -1,84 +1,121 @@
-import { useState } from 'react';
-import { dashboard } from '../data/dashboard.js';
+import { useCallback, useEffect, useState } from 'react';
+import { getDashboard } from '../api/adminApi.js';
+import { getAccessToken } from '../auth.js';
+import { LEVEL_TITLES } from '../data/levels.js';
 import { downloadCsv } from '../utils/csv.js';
+import { formatDateTime } from '../utils/format.js';
 import KpiCard from '../components/KpiCard.jsx';
 import DailyChart from '../components/DailyChart.jsx';
-import MatchDonut from '../components/MatchDonut.jsx';
 import LevelDistribution from '../components/LevelDistribution.jsx';
 import ActivityLog from '../components/ActivityLog.jsx';
 
-const PERIODS = [
-  { key: '7d', label: '최근 7일' },
-  { key: '30d', label: '최근 30일' },
-];
+const numberFormat = new Intl.NumberFormat('ko-KR');
 
-function exportCsv() {
-  const { kpis, daily, matching, levels, activity } = dashboard;
+function buildKpis(summary) {
+  const diff = summary.todaySightings - summary.yesterdaySightings;
+  const todayDelta = diff === 0 ? '어제와 같음' : `${diff > 0 ? '▲' : '▼'} ${numberFormat.format(Math.abs(diff))}건 (어제 대비)`;
+  const activeRate = summary.totalUsers > 0 ? Math.round((summary.activeUsers7d / summary.totalUsers) * 100) : 0;
+
+  return [
+    { label: '누적 사용자', value: numberFormat.format(summary.totalUsers), delta: `최근 30일 +${numberFormat.format(summary.newUsers30d)}` },
+    { label: '등록된 고양이', value: numberFormat.format(summary.totalCats), delta: `최근 30일 +${numberFormat.format(summary.newCats30d)}` },
+    { label: '오늘 촬영', value: numberFormat.format(summary.todaySightings), delta: todayDelta },
+    { label: '7일 활성 사용자', value: numberFormat.format(summary.activeUsers7d), delta: `전체의 ${activeRate}%` },
+  ];
+}
+
+function exportCsv(data) {
+  const kpis = buildKpis(data.summary);
   downloadCsv('dashboard.csv', [
-    ['기준 시각', dashboard.asOf],
+    ['기준 시각', formatDateTime(data.asOf)],
     [],
     ['KPI', '값', '변화'],
     ...kpis.map((k) => [k.label, k.value, k.delta]),
     [],
-    ['일자', '촬영(%)', '신규 고양이(%)'],
-    ...daily.map((d) => [d.day, d.shots, d.newCats]),
-    [],
-    ['AI 매칭', '건수'],
-    ['같은 고양이 확정', matching.confirmed],
-    ['새 고양이로 정정', matching.corrected],
+    ['일자', '촬영', '신규 고양이'],
+    ...data.daily.map((d) => [d.day, d.sightingCount, d.newCatCount]),
     [],
     ['레벨', '사용자'],
-    ...levels.map((l) => [l.name, l.users]),
+    ...data.levels.map((l) => [`Lv.${l.level} ${LEVEL_TITLES[l.level] ?? ''}`, l.userCount]),
     [],
-    ['시각', '이벤트', '일치율', '사용자'],
-    ...activity.map((a) => [a.time, a.event, a.score, a.user]),
+    ['마지막 로그인', '사용자', 'ID'],
+    ...data.activity.map((a) => [formatDateTime(a.lastLoginAt), a.email, a.userId]),
   ]);
 }
 
-export default function DashboardPage() {
-  // 목데이터 단계라 기간을 바꿔도 수치는 그대로다. 서버 연동 시 period로 조회한다.
-  const [period, setPeriod] = useState('30d');
+export default function DashboardPage({ onUnauthorized }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const load = useCallback(async () => {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      onUnauthorized();
+      return;
+    }
+    setLoading(true);
+    setErrorMessage('');
+    try {
+      const response = await getDashboard(accessToken);
+      setData(response.data.data);
+    } catch (error) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        onUnauthorized();
+        return;
+      }
+      setErrorMessage(error.response?.data?.message || '대시보드를 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  }, [onUnauthorized]);
+
+  // 화면에 들어올 때 한 번 불러온다. load는 onUnauthorized(App에서 고정)에만 의존해 다시 돌지 않는다.
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
     <div className="dash">
       <header className="dash__head">
         <div>
           <h1>대시보드</h1>
-          <p>{dashboard.asOf} 기준 · 5분마다 갱신</p>
+          <p>{data ? `${formatDateTime(data.asOf)} 기준` : '불러오는 중…'}</p>
         </div>
         <div className="dash__tools">
-          {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              className={`chip${period === p.key ? ' is-active' : ''}`}
-              aria-pressed={period === p.key}
-              onClick={() => setPeriod(p.key)}
-            >
-              {p.label}
-            </button>
-          ))}
-          <button type="button" className="chip" onClick={exportCsv}>
+          <button type="button" className="chip" onClick={load} disabled={loading}>
+            {loading ? '불러오는 중…' : '새로고침'}
+          </button>
+          <button type="button" className="chip" onClick={() => exportCsv(data)} disabled={!data}>
             CSV 내보내기
           </button>
         </div>
       </header>
 
-      <section className="dash__kpis">
-        {dashboard.kpis.map((kpi) => (
-          <KpiCard key={kpi.label} {...kpi} />
-        ))}
-      </section>
+      {errorMessage && (
+        <p className="dash__status" role="alert">
+          {errorMessage}
+        </p>
+      )}
 
-      <section className="dash__row dash__row--chart">
-        <DailyChart data={dashboard.daily} />
-        <MatchDonut {...dashboard.matching} />
-      </section>
+      {data && (
+        <>
+          <section className="dash__kpis">
+            {buildKpis(data.summary).map((kpi) => (
+              <KpiCard key={kpi.label} {...kpi} />
+            ))}
+          </section>
 
-      <section className="dash__row dash__row--log">
-        <LevelDistribution levels={dashboard.levels} />
-        <ActivityLog rows={dashboard.activity} />
-      </section>
+          <section className="dash__row">
+            <DailyChart data={data.daily} />
+          </section>
+
+          <section className="dash__row dash__row--log">
+            <LevelDistribution levels={data.levels} />
+            <ActivityLog rows={data.activity} />
+          </section>
+        </>
+      )}
     </div>
   );
 }

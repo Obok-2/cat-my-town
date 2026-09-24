@@ -9,14 +9,22 @@ export default function LoginPage({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    const result = login({ email, password, remember });
-    if (result.ok) {
-      onLogin();
-    } else {
-      setMessage(result.message);
+    if (submitting) return;
+    setSubmitting(true);
+    setMessage('');
+    try {
+      const result = await login({ email, password, remember });
+      if (result.ok) {
+        onLogin();
+      } else {
+        setMessage(result.message);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -38,7 +46,7 @@ export default function LoginPage({ onLogin }) {
             동네가 보입니다
           </h1>
           <p className="login__desc">
-            사용자 개인 기록은 열람하지 않으며, 대시보드에는 익명 집계 지표만 표시됩니다.
+            사용자 개인 기록은 열람하지 않으며, 대시보드에는 집계 지표와 일부를 가린 계정 정보만 표시됩니다.
           </p>
         </div>
 
@@ -103,8 +111,8 @@ export default function LoginPage({ onLogin }) {
             </p>
           )}
 
-          <button type="submit" className="btn-primary">
-            로그인
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting ? '로그인 중…' : '로그인'}
           </button>
 
           <p className="login__note">
