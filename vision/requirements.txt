@@ -1,6 +1,6 @@
 fastapi>=0.115
 uvicorn[standard]>=0.30
 python-multipart>=0.0.9
-ultralytics>=8.3
+# RT-DETR v2는 4.49부터 들어 있다
+transformers>=4.50
 pillow>=10.0
-numpy>=1.26
