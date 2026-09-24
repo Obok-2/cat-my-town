@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+# 모델 가중치는 첫 실행 때 자동으로 내려받는다
+*.pt
+.ultralytics/
