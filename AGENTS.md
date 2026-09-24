@@ -80,8 +80,6 @@
   컨트롤러는 요청을 받아 Service를 호출하고 그 결과를 그대로 반환하기만 하며, 로직과 `ResponseApi` 생성은 Service에 둔다.
 - **요청·응답 객체**: 응답 데이터는 `XxxRes`, 요청 본문·파라미터가 있으면 `XxxReq`(없으면 만들지 않는다), 쿼리 결과만 담는 내부용은 `XxxVo`로 이름 짓고 모두 `com.catmytown.server.model` 패키지에 둔다.
   클래스 이름이 MyBatis 별칭이라 겹치지 않게 기능명을 앞에 붙인다(예: `CollectionCatRes`). `Res`는 `ResponseApi`의 `data`에 담기는 내용이며, Service가 `ResponseApi.success(new XxxRes(...))`로 만든다.
-- **람다식·스트림·메서드 참조(`->`, `::`)와 `->`를 쓰는 switch 식은 쓰지 않는다.** 읽기 어려우므로 `for`문·`if`문·일반 `switch`로 풀어서 쓴다(컬렉션 묶기·변환도 `for`문으로).
-  이벤트 핸들러 같은 인터페이스 구현이 필요하면 람다 대신 클래스로 구현한다.
 - **서버 오류의 상세 원인은 클라이언트에 알리지 않는다(보안).** 응답에는 일반 문구(`서버 오류가 발생했습니다.`)만 내려가고, 예외 메시지·스택트레이스·DB 접속 정보 등은 서버 로그에만 남긴다.
   예외 메시지를 응답 `message`에 그대로 넣지 않고, Tomcat 오류 페이지의 서버 이름·버전도 숨긴다(`TomcatErrorPageConfig`).
 - 의존성 주입은 **필드에 `@Autowired`** 로 한다. `@RequiredArgsConstructor` 생성자 주입은 쓰지 않는다.
