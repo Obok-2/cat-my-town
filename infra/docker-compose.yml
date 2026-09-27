@@ -30,9 +30,11 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?infra/.env에 MINIO_ROOT_USER를 설정하세요}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?infra/.env에 MINIO_ROOT_PASSWORD를 설정하세요}
     ports:
+      # 127.0.0.1로 묶어서 이 서버 밖(인터넷)에서는 접속할 수 없게 막는다.
+      # 원격 서버에서 콘솔(9001)을 쓰려면 SSH 터널로 연결한다: ssh -L 9001:localhost:9001 <서버계정>@<서버>
       # 다른 프로그램이 9000/9001 을 쓰고 있으면 앞쪽(호스트) 번호만 바꾼다
-      - "9000:9000" # S3 API
-      - "9001:9001" # 웹 콘솔 http://localhost:9001
+      - "127.0.0.1:9000:9000" # S3 API
+      - "127.0.0.1:9001:9001" # 웹 콘솔
     volumes:
       - /home/rocky/my_cat_project/minio:/data
 

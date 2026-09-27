@@ -1,0 +1,4 @@
+# Claude Code 로컬 설정·MCP 접속 정보(토큰이 들어갈 수 있음)는 저장소에 올리지 않는다
+.claude/settings.local.json
+**/.claude/settings.local.json
+.mcp.json
