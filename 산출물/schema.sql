@@ -36,6 +36,9 @@ CREATE TABLE sightings (
     taken_at    TIMESTAMPTZ   NOT NULL                      -- 촬영일시
 );
 CREATE INDEX idx_sightings_cat_id_taken_at ON sightings (cat_id, taken_at DESC);
+-- ANN 인덱스 학습·실험 목적으로 걸어 둔 것이고, 지금 매칭 쿼리는 이 인덱스를 타지 않는다(README「벡터 검색」참고).
+-- 매칭이 고양이별 상위 2개 평균을 윈도우 함수로 구하는 구조라 그 사용자의 목격 사진 전체를 정확히 계산하고,
+-- WHERE user_id로 이미 범위가 좁아져서(개인당 최대 수백 건) 지금 규모에서는 그래도 충분하다.
 CREATE INDEX idx_sightings_embedding ON sightings USING hnsw (embedding vector_cosine_ops);
 
 -- AI 매칭 결과 로그 — 관리자 대시보드의 수락률·일치율 집계용 (촬영 1건 = 1행)
