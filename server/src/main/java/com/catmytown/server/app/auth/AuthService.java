@@ -49,4 +49,11 @@ public class AuthService {
         return ResponseApi.success(new AuthUserRes(user.getId(), user.getDisplayName()));
     }
 
+    // 회원 탈퇴: 고양이·목격 기록·사진은 그대로 남겨두고(기록 보존), users 행만 재식별이 불가능하도록 익명화한다.
+    @Transactional
+    public ResponseApi withdraw(Long userId) {
+        authDao.anonymizeUser(userId);
+        return ResponseApi.success(null);
+    }
+
 }

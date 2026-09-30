@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { getMyProfile, loginWithGoogle } from '../api/authApi';
+import { getMyProfile, loginWithGoogle, withdrawAccount } from '../api/authApi';
 import { signInWithGoogle, signOutFromGoogle } from '../auth/googleAuth';
 import { getAccessToken, removeAccessToken, saveAccessToken } from '../storage/tokenStorage';
 
@@ -46,8 +46,22 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // 탈퇴 요청이 실패해도(네트워크 오류 등) 로컬 로그인 상태는 그대로 두어, 호출한 화면이 실패를 알리고
+  // 사용자가 다시 시도할 수 있게 한다. 성공한 뒤에는 로그아웃과 동일하게 로컬 정리를 한다.
+  const withdraw = useCallback(async () => {
+    await withdrawAccount();
+    try {
+      await signOutFromGoogle();
+    } finally {
+      await removeAccessToken();
+      setUser({ loggedIn: false, displayName: null });
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, ready, login, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, ready, login, logout, withdraw }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 

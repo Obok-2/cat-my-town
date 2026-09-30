@@ -21,4 +21,15 @@
          WHERE id = #{userId}
     </select>
 
+    <!-- users 행은 지우지 않고 식별 정보만 지운다(회원 탈퇴). 고양이·목격 기록·사진은 그대로 남긴다.
+         google_uid 는 NOT NULL 이라 NULL 대신
+         재사용될 수 없는 값으로 바꾼다(구글 UID는 항상 숫자만이라 'withdrawn_' 접두사와 절대 겹치지 않음) -->
+    <update id="anonymizeUser">
+        UPDATE users
+           SET google_uid    = 'withdrawn_' || id,
+               display_name  = NULL,
+               last_login_at = NULL
+         WHERE id = #{userId}
+    </update>
+
 </mapper>

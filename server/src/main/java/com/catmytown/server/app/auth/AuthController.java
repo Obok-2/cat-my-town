@@ -29,4 +29,9 @@ public class AuthController {
         return authService.getMe(Long.valueOf(authentication.getName()));
     }
 
+    @PostMapping("/withdraw")
+    public ResponseApi withdraw(Authentication authentication) {
+        return authService.withdraw(Long.valueOf(authentication.getName()));
+    }
+
 }

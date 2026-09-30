@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,8 +15,9 @@ import PlaceholderArt from '../components/PlaceholderArt';
 // 목업에 없는 화면 — 카메라 화면 우상단 아바타로 들어오는 최소 기능(로그아웃·개발용 도구)만 둔다.
 export default function ProfileScreen({ navigation }) {
   const colors = useColors();
-  const { user, logout } = useAuth();
+  const { user, logout, withdraw } = useAuth();
   const [levelInfo, setLevelInfo] = useState({ level: 0, title: '', catCount: 0 });
+  const [withdrawing, setWithdrawing] = useState(false);
   // const [busy, setBusy] = useState(false); // 개발용 도구 주석 처리로 사용하지 않음
 
   // 서버의 등록 고양이 수로 레벨을 계산한다(레벨 화면과 같은 방식). 실패하면 기본값(0마리)을 그대로 둔다.
@@ -39,6 +40,36 @@ export default function ProfileScreen({ navigation }) {
       };
     }, [])
   );
+
+  // react-native-web의 Alert.alert는 버튼이 여러 개인 확인창을 지원하지 않아 눌러도 아무 반응이 없다
+  // (경고 없이 조용히 무시됨) — 웹에서는 브라우저 기본 confirm으로 대신한다.
+  function handleWithdrawPress() {
+    const message =
+      '탈퇴하면 이 계정으로는 다시 로그인할 수 없어요. 같은 구글 계정으로 다시 로그인하면 ' +
+      '지금까지 모은 도감을 이어볼 수 없고 새 계정으로 처음부터 시작해요.\n\n정말 탈퇴할까요?';
+
+    if (Platform.OS === 'web') {
+      if (window.confirm(`회원 탈퇴\n\n${message}`)) handleWithdrawConfirm();
+      return;
+    }
+
+    Alert.alert('회원 탈퇴', message, [
+      { text: '취소', style: 'cancel' },
+      { text: '탈퇴', style: 'destructive', onPress: handleWithdrawConfirm },
+    ]);
+  }
+
+  async function handleWithdrawConfirm() {
+    if (withdrawing) return;
+    setWithdrawing(true);
+    try {
+      await withdraw();
+    } catch {
+      Alert.alert('탈퇴 실패', '잠시 후 다시 시도해주세요.');
+    } finally {
+      setWithdrawing(false);
+    }
+  }
 
   // 개발용 도구(데모 데이터 채우기·도감 비우기) — 아래 화면 버튼과 함께 주석 처리
   // async function handleSeed() {
@@ -97,8 +128,20 @@ export default function ProfileScreen({ navigation }) {
         */}
 
         <View style={styles.logoutWrap}>
-          <GhostButton label="로그아웃" onPress={logout} />
+          <GhostButton label="로그아웃" onPress={logout} disabled={withdrawing} />
         </View>
+        <Pressable
+          onPress={handleWithdrawPress}
+          disabled={withdrawing}
+          style={({ pressed }) => [
+            styles.withdrawButton,
+            { borderColor: colors.danger, opacity: withdrawing ? 0.5 : pressed ? 0.7 : 1 },
+          ]}
+        >
+          <Text style={[styles.withdrawText, { color: colors.danger }]}>
+            {withdrawing ? '탈퇴 처리 중…' : '회원 탈퇴'}
+          </Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -113,7 +156,18 @@ const styles = StyleSheet.create({
   level: { fontFamily: fonts.body, fontSize: 13, marginTop: 6 },
   stat: { fontFamily: fonts.body, fontSize: 12, marginTop: 4 },
   spacer: { flex: 1 },
-  logoutWrap: { width: '100%', marginTop: 16, paddingBottom: 24 },
+  logoutWrap: { width: '100%', marginTop: 16 },
+  withdrawButton: {
+    width: '100%',
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    marginBottom: 24,
+  },
+  withdrawText: { fontFamily: fonts.body, fontSize: 17 },
   devSection: { width: '100%', marginBottom: 8 },
   devLabel: { fontFamily: fonts.mono, fontSize: 11, letterSpacing: 1, marginBottom: 10 },
 });

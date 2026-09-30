@@ -13,4 +13,6 @@ public interface AuthDao {
 
     AuthUserVo selectUser(@Param("userId") Long userId);
 
+    void anonymizeUser(@Param("userId") Long userId);
+
 }

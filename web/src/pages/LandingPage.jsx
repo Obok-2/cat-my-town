@@ -102,7 +102,7 @@ export default function LandingPage() {
 
         <section className="lp-download" id="download" aria-labelledby="download-title"><div className="lp-container"><span className="lp-coming">COMING SOON · 출시 준비 중</span><h2 id="download-title">다음 산책에서,<br />우리 만나요.</h2><p>조금 더 다정한 산책을 위한 앱.<br />정식 출시 후 이곳에서 다운로드 링크를 안내할게요.</p><div className="lp-store-status"><span>iOS · 준비 중</span><span>Android · 준비 중</span></div><a href="#top">처음으로 돌아가기 ↑</a></div></section>
       </main>
-      <footer className="lp-footer lp-container"><a className="lp-brand" href="/"><img src={brandMark} alt="" />우리동네고양이</a><p>© 2026 Obok-2. All rights reserved.</p><a className="lp-privacy-link" href="/privacy">개인정보 처리 안내</a><a href="/admin">관리자</a></footer>
+      <footer className="lp-footer lp-container"><a className="lp-brand" href="/"><img src={brandMark} alt="" />우리동네고양이</a><p>© 2026 Obok-2. All rights reserved.</p><a className="lp-privacy-link" href="/privacy">개인정보 처리 안내</a><a className="lp-privacy-link" href="/account-deletion">계정 삭제 요청</a><a href="/admin">관리자</a></footer>
     </div>
   );
 }

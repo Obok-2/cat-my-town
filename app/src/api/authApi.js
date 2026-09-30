@@ -11,3 +11,8 @@ export const getMyProfile = async () => {
   const data = await apiClient.get('/app/auth/me');
   return data;
 };
+
+export const withdrawAccount = async () => {
+  const data = await apiClient.post('/app/auth/withdraw');
+  return data;
+};
