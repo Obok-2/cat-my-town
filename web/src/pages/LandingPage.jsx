@@ -69,10 +69,10 @@ export default function LandingPage() {
         <section className="lp-hero lp-container" aria-labelledby="hero-title">
           <div className="lp-hero-copy">
             <p className="lp-eyebrow"><span /> 산책길의 작은 발견을 모아요</p>
-            <h1 id="hero-title">평범한 산책이<br /><em>고양이 도감</em>이<br />되는 순간.</h1>
+            <h1 id="hero-title">평범한 산책이<br /><em>AI가 알아보는</em><br />고양이 도감이<br />되는 순간.</h1>
             <p className="lp-lead">어제 그 골목에서 만난 고양이, 오늘도 만났나요?<br />스쳐 지나간 인연을 사진으로 담고<br />나만의 동네 이야기를 만들어가요.</p>
             <div className="lp-actions"><a className="lp-button" href="#download">우리동네고양이 만나보기 <Arrow /></a><a className="lp-text-link" href="#how-it-works">어떻게 기록하나요? <span aria-hidden="true">↓</span></a></div>
-            <div className="lp-hero-note"><img src={brandMark} alt="" /><span>한 번의 만남도, 여러 번의 안부도.<br /><strong>오롯이 나만을 위한 고양이 기록장.</strong></span></div>
+            <div className="lp-hero-note"><img src={brandMark} alt="" /><span>사진을 찍으면 AI가 먼저 알아봐요.<br /><strong>예전에 만난 친구인지, 처음 보는 얼굴인지.</strong></span></div>
           </div>
           <div className="lp-hero-art">
             <div className="lp-orbit" aria-hidden="true" />
