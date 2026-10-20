@@ -2,12 +2,18 @@ import { useState } from 'react';
 import brandMark from '../assets/brand-mark.png';
 import catArt from '../assets/registration-complete-cat.png';
 import levelArt from '../assets/level-up-cat.png';
+import cameraScreen from '../assets/screenshots/02-camera.jpg';
+import namingScreen from '../assets/screenshots/04-naming.jpg';
+import collectionScreen from '../assets/screenshots/06-collection.jpg';
+import matchScreen from '../assets/screenshots/07-match-result.jpg';
+import levelScreen from '../assets/screenshots/09-level.jpg';
+import mapScreen from '../assets/screenshots/10-cat-detail-map.jpg';
 import '../styles/landing.css';
 
 const steps = [
-  { number: '01', title: '반가운 순간을 찍어요', text: '산책길에 고양이를 만났다면, 조금 떨어진 곳에서 조용히 사진 한 장.' },
-  { number: '02', title: '우리, 만난 적 있나요?', text: 'AI가 내 도감 속 닮은 고양이를 찾아줘요. 같은 친구인지는 직접 확인해요.' },
-  { number: '03', title: '이야기를 한 장 더해요', text: '처음 만났다면 이름을, 다시 만났다면 오늘의 기록을. 나만의 도감이 쌓여요.' },
+  { image: cameraScreen, alt: '고양이를 카메라 프레임에 담은 실제 촬영 화면', number: '01', title: '반가운 순간을 찍어요', text: '산책길에 고양이를 만났다면, 조금 떨어진 곳에서 조용히 사진 한 장.' },
+  { image: matchScreen, alt: '닮은 고양이 후보와 일치율을 보여주는 실제 AI 매칭 화면', number: '02', title: '우리, 만난 적 있나요?', text: 'AI가 내 도감 속 닮은 고양이를 찾아줘요. 같은 친구인지는 직접 확인해요.' },
+  { image: namingScreen, alt: '이름과 특징 태그, 첫 만남 메모를 입력하는 실제 이름 짓기 화면', number: '03', title: '이야기를 한 장 더해요', text: '처음 만났다면 이름을, 다시 만났다면 오늘의 기록을. 나만의 도감이 쌓여요.' },
 ];
 const questions = [
   ['어떤 앱인가요?', '산책하며 만난 고양이의 사진과 이름, 목격 기록을 모으는 개인용 고양이 다이어리예요. 처음 만난 친구와 다시 만난 친구의 이야기를 나만의 도감에 담을 수 있어요.'],
@@ -20,37 +26,29 @@ function Arrow() {
   return <span aria-hidden="true">↗</span>;
 }
 
+const previews = [
+  { id: 'collection', label: '나의 도감', image: collectionScreen, alt: '치즈냥과 아직 만나지 못한 친구들이 보이는 실제 도감 화면', caption: '한 번의 만남이, 나만의 도감 한 페이지로.' },
+  { id: 'map', label: '목격 지도', image: mapScreen, alt: '고양이를 만난 장소와 목격 타임라인이 보이는 실제 상세 화면', caption: '다시 보고 싶은 순간, 만났던 장소까지.' },
+  { id: 'level', label: '나의 레벨', image: levelScreen, alt: '현재 레벨과 다섯 단계의 등급표가 보이는 실제 레벨 화면', caption: '친구가 늘어날수록, 한 단계 더 자라는 산책.' },
+];
+
 function Preview() {
-  const [tab, setTab] = useState('collection');
+  const [selected, setSelected] = useState(previews[0].id);
+  const current = previews.find((preview) => preview.id === selected);
+
   return (
-    <div className="lp-phone" aria-label="앱 기능 소개용 예시">
-      <div className="lp-phone-top"><span>9:41</span><span aria-hidden="true">● ● ▰</span></div>
-      <div className="lp-phone-heading"><span>나의 작은 동네</span><img src={brandMark} alt="" /></div>
-      <div className="lp-preview-tabs" role="group" aria-label="앱 미리보기 선택">
-        <button id="collection-tab" type="button" aria-pressed={tab === 'collection'} aria-controls="preview-panel" onClick={() => setTab('collection')}>나의 도감</button>
-        <button id="record-tab" type="button" aria-pressed={tab === 'record'} aria-controls="preview-panel" onClick={() => setTab('record')}>목격 기록</button>
+    <div className="lp-preview">
+      <div className="lp-preview-tabs" role="group" aria-label="실제 앱 화면 선택">
+        {previews.map((preview) => (
+          <button key={preview.id} id={`preview-${preview.id}`} type="button" aria-pressed={selected === preview.id} aria-controls="preview-panel" onClick={() => setSelected(preview.id)}>{preview.label}</button>
+        ))}
       </div>
-      <div id="preview-panel" role="region" aria-labelledby={tab === 'collection' ? 'collection-tab' : 'record-tab'}>
-        {tab === 'collection' ? <>
-          <div className="lp-level"><span>Lv. 2 동네 탐정</span><strong>조금씩 친해지는 중</strong><div><i /></div></div>
-          <div className="lp-cat-grid">
-            {[['치즈', catArt, '살금살금, 첫 만남'], ['나비', brandMark, '다시 만나 반가워'], ['콩이', levelArt, '골목에서 만난 친구'], ['다음 친구는?', null, '어디서 만나게 될까']].map(([name, src, note]) => (
-              <div className={`lp-cat-card${!src ? ' lp-cat-empty' : ''}`} key={name}>
-                {src ? <img src={src} alt="" /> : <span aria-hidden="true">?</span>}
-                <strong>{name}</strong><small>{note}</small>
-              </div>
-            ))}
-          </div>
-        </> : <div className="lp-record">
-          <img src={catArt} alt="기록 예시의 고양이 일러스트" />
-          <h3>치즈와의 두 번째 만남</h3>
-          <p>햇볕 좋은 골목 모퉁이.<br />오늘도 늘 그 자리에서 낮잠을 자고 있었어요.</p>
-          <span>치즈무늬 · 골목 산책</span>
-          <div className="lp-record-line">첫 만남 <i /> 다시 만난 오늘</div>
-        </div>}
-      </div>
-      <p className="lp-preview-note">서비스 이해를 돕기 위한 예시 화면</p>
-      <div className="lp-home-indicator" />
+      <figure id="preview-panel" className="lp-preview-panel" aria-labelledby={`preview-${selected}`}>
+        <div className="lp-phone">
+          <img src={current.image} alt={current.alt} width="480" height="1039" fetchPriority={selected === 'collection' ? 'high' : 'auto'} />
+        </div>
+        <figcaption aria-live="polite"><span>실제 앱 화면</span>{current.caption}</figcaption>
+      </figure>
     </div>
   );
 }
@@ -94,7 +92,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="lp-how" id="how-it-works" aria-labelledby="how-title"><div className="lp-container"><div className="lp-section-heading"><p className="lp-eyebrow">YOUR FIRST CAT STORY</p><h2 id="how-title">시작은 사진 한 장이면 충분해요.</h2></div><div className="lp-steps">{steps.map((step) => <article key={step.number}><span>{step.number}</span><h3>{step.title}</h3><p>{step.text}</p></article>)}</div><p className="lp-kind-note">고양이의 하루를 방해하지 않도록, 편안한 거리에서 조용히 기록해주세요.</p></div></section>
+        <section className="lp-how" id="how-it-works" aria-labelledby="how-title"><div className="lp-container"><div className="lp-section-heading"><p className="lp-eyebrow">YOUR FIRST CAT STORY</p><h2 id="how-title">시작은 사진 한 장이면 충분해요.</h2></div><div className="lp-steps">{steps.map((step) => <article key={step.number}><span>{step.number}</span><h3>{step.title}</h3><p>{step.text}</p><div className="lp-step-screen"><img src={step.image} alt={step.alt} width="480" height="1039" loading="lazy" decoding="async" /></div></article>)}</div><p className="lp-kind-note">고양이의 하루를 방해하지 않도록, 편안한 거리에서 조용히 기록해주세요.</p></div></section>
 
         <section className="lp-container lp-growth"><div className="lp-growth-art"><img src={levelArt} alt="깃발을 들고 있는 고양이 일러스트" /></div><div><p className="lp-eyebrow">ONE CAT AT A TIME</p><h2>고양이를 알아가는 만큼,<br />나의 산책도 자라나요.</h2><p>첫 만남의 설렘부터 익숙한 골목의 반가움까지.<br />새로운 친구를 기록하며 도감을 채우고,<br />한 단계씩 성장하는 재미를 만나보세요.</p><a className="lp-text-link" href="#download">나의 첫 도감 시작하기 <Arrow /></a></div></section>
 
