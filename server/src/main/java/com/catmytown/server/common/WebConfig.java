@@ -10,12 +10,13 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                // 로컬 개발 주소 + 배포한 관리자 웹(https://mycat-town.duckdns.org/admin)
+                // 로컬 개발 주소 + 배포한 관리자 웹(https://mycat-town.duckdns.org/admin, https://my-cat.awonsoft.com/admin)
                 .allowedOriginPatterns(
                         "http://localhost:*",
                         "http://127.0.0.1:*",
                         "http://192.168.*:*",
-                        "https://mycat-town.duckdns.org")
+                        "https://mycat-town.duckdns.org",
+                        "https://my-cat.awonsoft.com")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .maxAge(3600);
